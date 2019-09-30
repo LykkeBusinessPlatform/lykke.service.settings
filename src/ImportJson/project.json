@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "emitEntryPoint": true
+  },
+
+  "dependencies": {
+     "Services": "1.0.0",
+    "Core": "1.0.0",
+    "AzureRepositories": "1.0.0",
+    "Newtonsoft.Json": "9.0.1"
+
+  },
+  
+  "frameworks": {
+    "netcoreapp1.1": {
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "type": "platform",
+          "version": "1.1.0"
+        }
+      },
+      "imports": "portable-net45+win8"
+    }
+  }
+}

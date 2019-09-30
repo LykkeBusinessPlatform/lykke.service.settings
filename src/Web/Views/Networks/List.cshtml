@@ -1,0 +1,88 @@
+﻿@model Core.Networks.INetwork[]
+
+<table class="table table-striped table-bordered">
+    <tr>
+        <th>Id</th>
+        <th>IP or Part of IP</th>
+        <th style="text-align: center">Actions</th>
+    </tr>
+    @foreach (var network in Model)
+    {
+        <tr>
+            <td>
+                @network.Name
+            </td>
+            <td>
+                <div id="view-@network.Id">
+                    @network.Ip
+                </div>
+                <div id="edit-@network.Id" class="hidden">
+                    <input class="form-control" type="text" id="@network.Id" value="@network.Ip"/>
+                </div>
+            </td>
+            <td class="actions" style="text-align: center">
+                <div id="view-actions-@network.Id">
+                    <a href="javascript:;" class="elemEdit" onclick="editNetwork('@network.Id')"></a>
+                    <a href="javascript:;" class="elemCancel" onclick="deleteNetwork('@network.Id')"></a>
+                </div>
+                <div id="edit-actions-@network.Id" class="hidden">
+                    <a href="javascript:;" class="elemSave" onclick="saveNetwork('@network.Id')"></a>
+                    <a href="javascript:;" class="elemDelete" onclick="cancelEdit('@network.Id')"></a>
+                </div>
+            </td>
+        </tr>
+    }
+    <tr>
+        <td>
+            <input type="text" class="form-control" id="network_name" placeholder="Network name" />
+        </td>
+        <td>
+            <input type="text" class="form-control" id="network_ip" placeholder="127.0.0.1 or 127.0.0" />
+        </td>
+        <td class="actions" style="text-align: center">
+            <a href="javascript:;" class="elemSave" id="add_network" onclick="addNetwork()"></a>
+            <a href="javascript:;" class="elemDelete" id="clear_network" onclick="clean()"></a>
+        </td>
+    </tr>
+</table>
+
+<script>
+    var currentIpValue = '';
+
+    function addNetwork() {
+        Request.doRequest({ url: '@Url.Action("AddNetwork")', divResult: '.editItems', showLoading: false, params: {name: $('#network_name').val(), ip: $('#network_ip').val() } });
+    }
+
+    function saveNetwork(id) {
+        Request.doRequest({ url: '@Url.Action("UpdateNetwork")', divResult: '.editItems', showLoading: false, params: {id: id, name: $('#view-'+id).val(), ip: $('#'+id).val() } });
+    }
+
+    function editNetwork(id) {
+        $('#view-' + id).addClass('hidden');
+        $('#view-actions-' + id).addClass('hidden');
+        currentIpValue = $('#' + id).val();
+        $('#edit-' + id).removeClass('hidden');
+        $('#edit-actions-' + id).removeClass('hidden');
+    }
+
+    function cancelEdit(id) {
+        $('#edit-' + id).addClass('hidden');
+        $('#edit-actions-' + id).addClass('hidden');
+        $('#' + id).val(currentIpValue);
+        $('#view-' + id).removeClass('hidden');
+        $('#view-actions-' + id).removeClass('hidden');
+        $('.error').removeClass('error');
+    }
+
+    function deleteNetwork(id) {
+        if (confirm('Do you want to delete this network?')) {
+            Request.doRequest({ url: '@Url.Action("DeleteNetwork")', divResult: '.editItems', showLoading: false, params: {id: id } });
+        }
+    }
+
+    function clean() {
+        $('#network_name').val('');
+        $('#network_ip').val('');
+        $('.error').removeClass('error');
+    }
+</script>

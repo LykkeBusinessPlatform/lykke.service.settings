@@ -1,0 +1,93 @@
+﻿@model Core.Extensions.PaginatedList<Web.Models.ConnectionUrlHistoryModel>
+
+@{
+    ViewBag.Title = "Connection Url History";
+    var pagesWithCurrentPage = 3;
+    var pagesToShow = 5;
+    var pagesBeforeOrAfterCurrentPage = 2;
+}
+
+<h2>Connection Url History</h2>
+
+<table class="table table-striped table-bordered">
+    <tr>
+        <th class="text-center">Id</th>
+        <th class="text-center">Repository Id</th>
+        <th class="text-center">Ip</th>
+        <th class="text-center">User Agent</th>
+        <th class="text-center">DateTime</th>
+    </tr>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.RowKey</td>
+            <td>@item.RepositoryId</td>
+            <td>@item.Ip</td>
+            <td>@item.UserAgent</td>
+            <td>@item.Timestamp</td>
+        </tr>
+    }
+</table>
+
+@{
+    var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.HasNextPage ? "disabled" : "";
+}
+
+@if (Model.TotalPages > 1)
+{
+    <a asp-controller="Home"
+       asp-action="ConnectionUrlHistory"
+       asp-route-page="1"
+       class="btn btn-default @prevDisabled">
+        First
+    </a>
+
+    <a asp-controller="Home"
+       asp-action="ConnectionUrlHistory"
+       asp-route-page="@(Model.PageIndex - 1)"
+       class="btn btn-default @prevDisabled">
+        Previous
+    </a>
+    @if (Model.PageIndex > pagesWithCurrentPage && Model.TotalPages > pagesToShow)
+    {
+        @:...
+    }
+
+    @for (var i = 1; i <= Model.TotalPages; i++)
+    {
+        if (i == Model.PageIndex 
+            || (i < Model.PageIndex && i >= Model.PageIndex - pagesBeforeOrAfterCurrentPage) 
+            || (i < Model.PageIndex + pagesWithCurrentPage && i > Model.PageIndex) 
+            || (i > Model.TotalPages - pagesWithCurrentPage && Model.PageIndex > Model.TotalPages - pagesWithCurrentPage) 
+            || (i <= pagesToShow && Model.PageIndex + pagesBeforeOrAfterCurrentPage <= pagesToShow) 
+            || (i > Model.TotalPages - pagesToShow && Model.PageIndex - pagesBeforeOrAfterCurrentPage >= i))
+        {
+            <a asp-controller="Home"
+               asp-action="ConnectionUrlHistory"
+               asp-route-page="@(i)"
+               class="@(i == Model.PageIndex ? "btn btn-primary":"btn btn-default")">
+                @i
+            </a>
+        }
+    }
+
+    @if (Model.PageIndex + pagesWithCurrentPage <= Model.TotalPages)
+    {
+        @:...
+    }
+
+    <a asp-controller="Home"
+       asp-action="ConnectionUrlHistory"
+       asp-route-page="@(Model.PageIndex + 1)"
+       class="btn btn-default @nextDisabled">
+        Next
+    </a>
+
+    <a asp-controller="Home"
+       asp-action="ConnectionUrlHistory"
+       asp-route-page="@Model.TotalPages"
+       class="btn btn-default @nextDisabled">
+        Last
+    </a>
+}

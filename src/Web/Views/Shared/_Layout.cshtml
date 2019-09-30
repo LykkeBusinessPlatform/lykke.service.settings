@@ -1,0 +1,78 @@
+﻿@using System.Linq
+@using System.Reflection
+@using Web.Extensions
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Lykke Setting Service</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link href="~/lib/jquery-ui/css/jquery-ui.min.css" rel="stylesheet" />
+
+    @RenderSection("Header", false)
+
+</head>
+<body>
+    <nav class="navbar navbar-lykke navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <a asp-area="" asp-controller="Home" asp-action="Repository" class="navbar-brand">Setting Service</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    @if (ViewContext.HttpContext.User.Identity.IsAuthenticated)
+                    {
+                        <li><a asp-area="" asp-controller="Home" asp-action="Repository">Repositories</a></li>
+                        <li><a asp-area="" asp-controller="Home" asp-action="ConnectionUrlHistory">Logs</a></li>
+                        <li><a asp-area="" asp-controller="Home" asp-action="KeyValue">Key Value</a></li>
+                        <li><a asp-area="" asp-controller="Networks" asp-action="Index">Networks</a></li>
+                        if (ViewContext.HttpContext.IsAdmin())
+                        {
+                            <li><a asp-area="" asp-controller="Account" asp-action="ManageUsers">Manage Users</a></li>
+                            <li><a asp-area="" asp-controller="ApplicationSettings" asp-action="Settings">Application Settings</a></li>
+                        }
+                        <li><a asp-area="" asp-controller="Account" asp-action="ChangePassword">Change Password</a></li>
+                        <li><a asp-area="" asp-controller="Account" asp-action="SignOut" onclick="javascript: myIFrame.location='https://www.google.com/accounts/Logout'; $.unlockJson();">Sign Out</a></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; @(DateTime.UtcNow.Year) - Supported by Lykke (@(Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion))</p>
+        </footer>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+    <script type="text/javascript">
+		$.unlockJsonUrl = '@Url.Action("UnlockJson","Home")';
+		var fixedCls = '.navbar-fixed-top,.navbar-fixed-bottom';
+		var oldSSB = $.fn.modal.Constructor.prototype.setScrollbar;
+		$.fn.modal.Constructor.prototype.setScrollbar = function () {
+			oldSSB.apply(this);
+			if (this.bodyIsOverflowing && this.scrollbarWidth)
+				$(fixedCls).css('padding-right', this.scrollbarWidth);
+		}
+
+		var oldRSB = $.fn.modal.Constructor.prototype.resetScrollbar;
+		$.fn.modal.Constructor.prototype.resetScrollbar = function () {
+			oldRSB.apply(this);
+			$(fixedCls).css('padding-right', '');
+		}
+    </script>
+    <script src="~/js/cookie.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/request.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery-ui/js/jquery-ui.min.js"></script>
+
+    @RenderSection("Scripts", required: false)
+    <iframe name='myIFrame' id="myIFrame" style='display:none'></iframe>
+</body>
+</html>

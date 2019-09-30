@@ -1,0 +1,564 @@
+﻿@using Web.Models
+@model dynamic
+
+@{
+    ViewBag.Title = "Key Value";
+    var search = Context.Request.Query["search"].ToString();
+}
+
+
+<div class="keyValue">
+    <div class="controls">
+
+        @*<a href="javascript:;" class="btn  btn-default disabled" >Update</a>*@
+        <a href="javascript:;" class="btn  btn-default showKey" style="display: none;">Show Values</a>
+
+        @if (!string.IsNullOrEmpty(search))
+        {
+            <a href="@Url.Action("KeyValue")" class="btn btn-default">Clear Search</a>
+        }
+
+        <form action="@Url.Action("KeyValue")" method="get" class="input-group col-md-3 pull-right search-form">
+            <input type="text" id="search" name="search" class="form-control" placeholder="search" value="@search"/>
+            <span class="input-group-btn">
+                <a class="btn btn-default search-btn" href="javascript:;">Search</a>
+            </span>
+        </form>
+
+    </div>
+    <h2>Lykke Key Value</h2>
+    <div class="list">
+        @foreach (var en in Model)
+        {
+            <div class="form-group">
+                <label for="@en.RowKey">@en.RowKey</label>
+                <div>
+                    <div class="input-group">
+                        @{
+                            var data = Model as List<KeyValueModel>;
+                            var duplication = data.FirstOrDefault(x => x.RowKey != en.RowKey && x.Value == en.Value);
+                            if (duplication != null)
+                            {
+                                <div class="input-group-btn showWarning"></div>
+                            }
+                        }
+
+                        @if (en.IsOld)
+                        {
+
+                            <input type="text" id="@en.RowKey" eTag="@en.ETag" readonly="readonly" class="form-control" placeholder="@en.RowKey" inValue="@en.Value" />
+                            <span class="input-group-btn">
+                                <a class="btn  btn-warning editKV" href="javascript:;" title="Edit value '@en.RowKey'" rowId="@en.RowKey">Edit</a>
+                                <a class="btn  btn-danger remKV" href="javascript:;" title="Remove unused '@en.RowKey'" rowId="@en.RowKey">Remove</a>
+                            </span>
+                        }
+                        else
+                        {
+                            <input type="text" id="@en.RowKey" eTag="@en.ETag" readonly="readonly" class="form-control" placeholder="@en.RowKey" inValue="@en.Value" />
+                            <span class="input-group-btn">
+                                <a class="btn  btn-warning editKV" href="javascript:;" title="Edit value '@en.RowKey'" rowId="@en.RowKey">Edit</a>
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<a href="javascript:;" class="scrollup">Scroll</a>
+<a href="javascript:;" class="btn  btn-default showKey showup" style="display: none;">Show Values</a>
+
+<div id="depModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Modal Header</h4>
+            </div>
+            <div class="modal-body">
+                <table class="table borderless">
+                    <tr>
+                        <th id="title"></th>
+                    </tr>
+                    <tr>
+                        <td id="data"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="modal-footer">
+                
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="editModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Modal Header</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editInput">Value</label>
+                    <input type="text" id="editInput" eTag="" class="form-control" placeholder="" value="" />
+                </div>
+                <div class="form-group">
+                    <label for="editHistory">History</label>
+                    <ui id="editHistory">
+                        
+                    </ui>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editHistory">Override value</label>
+                    <div class="editItems" id="overrideValues"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="update">Save</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="duplicateAlertModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Duplicate Alert</h4>
+            </div>
+            <div class="modal-body" id="duplicateAlertBody">
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="createAnyway">Create Anyway</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Header
+    {
+    <style type="text/css">
+        input.error @Html.Raw(ViewData["errorInputs"]) {
+            color: #b94a48;
+            border-color: #ee5f5b;
+        }
+    </style>
+}
+
+@section Scripts
+    {
+    <script type="text/javascript">
+
+        $(function() {
+
+            $.keyValuesShowsInterval = @ViewData["KeyValuesShowsInterval"];
+
+            $.removeKeyValue = function(kvId) {
+
+                $.post('@Url.Action("DeleteKeyValue")',
+                    { 'keyValueId': kvId },
+                    function(data) {
+                        if (data.status == 0) {
+                            $.showMessage('success',
+                                'The "' + kvId + '" key value has been deletedsuccessfully',
+                                [
+                                    {
+                                        text: 'Ok',
+                                        action: function() {}
+                                    }
+                                ]);
+
+                        } else if (data.status == 1) {
+                            $.showMessage('error',
+                                'The "' + kvId + '" has not been deleted. Internal error occurs.',
+                                [
+                                    {
+                                        text: 'Ok',
+                                        action: function() {}
+                                    }
+                                ]);
+
+                        }
+                        $.updateKeyValueList(data.data);
+                    }
+                );
+            };
+
+
+            $.hideInputValues = function() {
+                $('.list div.form-group').each(function() {
+                    var d = $(this);
+                    var inp = $(this).find('input');
+
+                    inp.val('');
+                });
+            };
+
+            $.showInputValues = function() {
+                $('.list div.form-group').each(function() {
+                    var d = $(this);
+                    var inp = $(this).find('input');
+                    if (inp.attr('inValue')) {
+                        inp.val(inp.attr('inValue'));
+                    }
+
+                });
+            };
+
+            $.showKeyValues = function(elem) {
+                if ($(elem).text() == 'Show Values') {
+                    $.kvTimer = setTimeout($.hideKeyValues, $.keyValuesShowsInterval * 1000);
+                    $('.showKey').text('Hide Values');
+                    $.showInputValues();
+                    return;
+                }
+
+
+                $.hideKeyValues();
+
+            };
+
+            $.hideKeyValues = function() {
+                $('.showKey').text('Show Values');
+                if ($.kvTimer) {
+                    clearTimeout($.kvTimer);
+                    $.kvTimer = null;
+                }
+                $.hideInputValues();
+            };
+
+
+            if ($.keyValuesShowsInterval != 0) {
+
+                var showUpVisible = $('.showup').is(":visible");
+                $('.showKey').show();
+                if (!showUpVisible) {
+                    $('.showup').hide();
+                }
+
+            } else {
+                $.showInputValues();
+            }
+
+
+            $('.showKey').click(function() {
+                $.showKeyValues(this);
+            });
+
+
+            $.onRemKvClicked = function() {
+                var id = $(this).attr('rowId');
+                if (confirm('The Key Value "' + id + '" will be removed. Continue?')) {
+                    $.removeKeyValue(id);
+                }
+            };
+
+            $.onEditKvClicked = function() {
+                var elem = $(this).parents('.input-group').find('input[type="text"]');
+                var rowId = $(this).attr('rowId');
+                $('#editInput').attr('eTag', elem.attr('eTag'));
+                $('#editInput').val(elem.attr('inValue'));
+                $('#editInput').attr('rowId', rowId);
+
+
+                //var rel = $.keyJsonRelations[kvId];
+                $('#editModal .modal-title').text('Edit Value of ' + rowId);
+                Request.doRequest({ url: '@Url.Action("List", "Override")', divResult: '#overrideValues', params: {key: rowId} });
+                $('#editModal').modal();
+
+                var url = '@Url.Action("GetKvHistory")';
+                var hLst = $('#editHistory');
+                hLst.empty();
+                $.post(url,
+                    { 'keyValueId': rowId },
+                    function (data) {
+                        var hLst = $('#editHistory');
+                        hLst.empty();
+                        if (data.history.length == 0) {
+                            var elem = $('<li>Empty history list</li>');
+                            hLst.append(elem);
+                        } else {
+                            for (var i = 0; i < data.history.length; i++) {
+                                var h = data.history[i];
+                                var elem = $('<li><span class="snEdDate">' + h.date + '</span><span class="snEdName">' + h.name + '</span><span class="snEdIp">' + h.ip + '</span><span class="snEdValue">' + h.value + '</span></li>');
+                                hLst.append(elem);
+                            }
+                        }
+                    }
+                );
+            };
+
+            $.updateKeyValueList = function(newData) {
+                $('.list').empty();
+                for (var i = 0; i < newData.length; i++) {
+                    var nd = newData[i];
+
+                    var elem = $('<div class="form-group"><label for="' +
+                        nd.rowKey +
+                        '">' +
+                        nd.rowKey +
+                        '</label>' +
+                        (!nd.isOld
+                        ? '<div class="input-group">' +
+                        '<input type="text" id="' +
+                        nd.rowKey +
+                        '"  readonly="readonly" class="form-control" placeholder="' +
+                        nd.rowKey +
+                        '" eTag="' +
+                        nd.eTag +
+                        '" inValue="' +
+                        nd.value +
+                        '" class="form-control"/>' +
+                        '<span class="input-group-btn">' +
+                        '<a class="btn  btn-warning editKV" href="javascript:;" title="Edit value \'' +
+                        nd.rowKey +
+                        '\'" rowId="' +
+                        nd.rowKey +
+                        '">Edit</a></span></div>'
+                            : '<div class="input-group">' +
+                            '<input type="text" id="' +
+                            nd.rowKey +
+                            '" readonly="readonly" class="form-control" placeholder="' +
+                            nd.rowKey +
+                            '" eTag="' +
+                            nd.eTag +
+                            '" inValue="' +
+                            nd.value +
+                            '" class="form-control"/>' +
+                            '<span class="input-group-btn">' +
+                            '<a class="btn  btn-warning editKV" href="javascript:;" title="Edit value \'' +
+                            nd.rowKey +
+                            '\'" rowId="' +
+                            nd.rowKey +
+                            '">Edit</a>' +
+                            '<a class="btn  btn-danger remKV" href="javascript:;" title="Remove unused \'' +
+                            nd.rowKey +
+                            '\'" rowId="' +
+                            nd.rowKey +
+                            '">Remove</a></span></div>') +
+                        '</div>');
+                    $('.list').append(elem);
+
+                    var input = $('input[id="' + nd.rowKey + '"]');
+                    input.attr('eTag', nd.eTag);
+                    input.val(nd.value);
+                    // $.onInputChange(input);
+
+
+                }
+               // $('#update').addClass('disabled');
+                $.hideKeyValues();
+                if ($.keyValuesShowsInterval == 0) {
+                    $.showInputValues();
+                }
+                $('input[eTag]').change(function() {
+                    $.onInputChange($(this));
+                });
+                $('.remKV').click($.onRemKvClicked);
+                $('.editKV').click($.onEditKvClicked);
+                $.updateBadges();
+            };
+
+
+            $('.remKV').click($.onRemKvClicked);
+            $('.editKV').click($.onEditKvClicked);
+
+            $.sendKeyValueToServer = function(forced) {
+                var url = forced ? '@Url.Action("ForceUploadKeyValueChanges")' : '@Url.Action("UploadKeyValueChanges")';
+
+                $.post(url,
+                    { 'entities': $.keyValueToSave },
+                    function(data) {
+                        if (data.status == 0) {
+                            $.showMessage('success',
+                                'New values was updated successfully',
+                                [
+                                    {
+                                        text: 'Ok',
+                                        action: function() {}
+                                    }
+                                ]);
+                            $.updateKeyValueList(data.data);
+                        } else if (data.status == 1) {
+                            $.showMessage('error',
+                                'Can not update values. Final json is broken',
+                                [
+                                    {
+                                        text: 'Undo',
+                                        action: function() { $.updateKeyValueList(data.data); }
+                                    },
+                                    {
+                                        text: 'Leave',
+                                        action: function() {}
+                                    }
+                                ]);
+                        } else if (data.status == 2) {
+                            $.showMessage('error',
+                                'Your version of values is out of date.',
+                                [
+                                    {
+                                        text: 'Update',
+                                        action: function() { $.updateKeyValueList(data.data); }
+                                    },
+                                    {
+                                        text: 'Force',
+                                        action: function() {
+                                            $.sendKeyValueToServer(true);
+                                        }
+                                    }
+                                ]);
+                        } else if (data.status === 5) {
+                            var duplicatedKeys = data.duplicatedKeys.join(', ');
+                            $('#duplicateAlertBody').html('');
+                            $('#duplicateAlertBody').html('<h4>This value already set in keys: ' + duplicatedKeys);
+                            $('#duplicateAlertModal').modal('show');
+                        }
+                    }
+                );
+            };
+
+
+            $.keysToUpload = [];
+            $.forceSaveKeyValue = function() {
+                if (typeof ($.keyValueToSave) == 'object') {
+                    $.sendKeyValueToServer(true);
+                }
+            };
+
+            $.saveKeyValue = function(key, eTag, value) {
+                $.keyValueToSave = {
+                    Key: key,
+                    ETag: eTag,
+                    Value: value
+                }
+                $.sendKeyValueToServer(false);
+            };
+
+            $(window).scroll(function() {
+                if ($.keyValuesShowsInterval != 0) {
+                    if ($(this).scrollTop() > 100) {
+                        $('.showup').fadeIn();
+                    } else {
+                        $('.showup').fadeOut();
+                    }
+                }
+                if ($(this).scrollTop() > 100) {
+                    $('.scrollup').fadeIn();
+                } else {
+                    $('.scrollup').fadeOut();
+                }
+            });
+            $('.scrollup').click(function() {
+                $("html, body").animate({
+                        scrollTop: 0
+                    },
+                    600);
+                return false;
+            });
+
+            $('#update').click(function() {
+                $.keyValueToSave = [];
+                //for (var i = 0; i < $.keysToUpload.length; i++) {
+                var inp = $('#editInput');
+                    $.keyValueToSave.push({
+                        Key: inp.attr('rowId'),
+                        ETag: inp.attr('eTag'),
+                        Value: inp.val()
+                    });
+                //}
+                $.sendKeyValueToServer(false);
+            });
+
+            $('#createAnyway').click(function () {
+                $.keyValueToSave = [];
+                //for (var i = 0; i < $.keysToUpload.length; i++) {
+                var inp = $('#editInput');
+                $.keyValueToSave.push({
+                    Key: inp.attr('rowId'),
+                    ETag: inp.attr('eTag'),
+                    Value: inp.val()
+                });
+
+                $.sendKeyValueToServer(true);
+            });
+
+            $.onBageClick = function() {
+                $('.list').on('click','.badge', function() {
+                    var data;
+                    var kvId = $(this).attr('dId');
+                    var title = $(this).data("title")
+                    if (title == "Sections") {
+                        data = $.keyJsonRelations[kvId];
+                    } else {
+                        data = $.accessJsonRelations[kvId];
+                    }
+
+                    $('#depModal .modal-title').text('Dependencies of ' + kvId);
+                    $('#depModal #title').html(title);
+                    $('#depModal #data').html(data.join('<br/>'));
+                    $('#depModal').modal();
+                });
+            }
+
+            $.updateBadges = function () {
+                function badgeUi(el, id, title, data) {
+                    if (data && data.length > 0) {
+                        var sections = $('<span class="badge" data-title="' + title + '" dId="' + id + '">' + data.length + '</span>');
+                        sections.insertAfter(el);
+                    }
+                };
+                $('.list div.form-group').each(function() {
+                    var d = $(this);
+                    var id = d.find('input').attr('id');
+                    badgeUi(d.find('label'), id, "Sections", $.keyJsonRelations[id]);
+                    badgeUi(d.find('label'), id, "Access Tokens", $.accessJsonRelations[id]);
+                });
+            };
+
+            $.keyJsonRelations = '';@*@Html.Raw(ViewData["keyRelations"]?.ToString().Replace("'", "\\'"));*@
+            $.accessJsonRelations = ''@*@Html.Raw(ViewData["accessRelations"]?.ToString().Replace("'", "\\'"))*@;
+            $.updateBadges();
+            $.onBageClick();
+
+            $.keyValueSearch = function () {
+                var form = $(".search-form");
+                var search = $('#search', form).val();
+                if (!search) {
+                    $.showMessage('error',
+                        'Please fill in the search input',
+                        [
+                            {
+                                text: 'Ok',
+                                action: function () { }
+                            }
+                        ]);
+                    return;
+                }
+
+                form.submit();
+            };
+
+            $('.search-btn').click($.keyValueSearch);
+
+
+        });
+
+    </script>
+}

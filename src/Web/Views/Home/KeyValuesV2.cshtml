@@ -1,0 +1,920 @@
+﻿@using Web.Extensions
+@using Newtonsoft.Json
+@using Core.Extensions
+@model dynamic
+
+@{
+    ViewBag.Title = "Key Value";
+    var filter = Context.Request.Query["filter"].ToString();
+    var search = Context.Request.Query["search"].ToString();
+    var isProduction = Convert.ToBoolean(ViewData["isProduction"]);
+}
+
+<div class="keyValue">
+    <div class="controls">
+
+        @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(filter))
+        {
+            <a href="@Url.Action("KeyValue")" class="btn btn-default">Clear Search</a>
+        }
+
+        <form action="@Url.Action("KeyValue")" method="get" class="input-group col-md-6 pull-right filter-search-form">
+            <input type="text" id="filter" name="filter" class="form-control" placeholder="filter by repository" value="@filter" />
+            <span class="input-group-btn">
+            </span>
+            <input type="text" id="search" name="search" class="form-control" placeholder="search" value="@search" />
+            <span class="input-group-btn">
+                <a class="btn btn-default search-btn" href="javascript:;">Search</a>
+            </span>
+        </form>
+
+        <div class="pull-right col-md-2">
+            <input type="checkbox" id="showEmptyValues" name="showEmptyValues" />
+            <label for="showEmptyValues">Show only empty keys</label>
+        </div>
+    </div>
+
+    <div>
+        <h2>Lykke Key Value</h2>
+    </div>
+
+    <div class="editItems" id="keyValueTable">
+        <table class="table table-striped table-bordered">
+            <tr>
+                <th>Key</th>
+                <th>Type</th>
+                <th>Repositories</th>
+                <th>Value</th>
+            </tr>
+            @foreach (var en in Model)
+            {
+                <tr class="infoTr" rowId="@en.RowKey">
+                    <td class="col-md-2" style="@("background-color:" + (!en.IsUsedInRepository?"yellow":""))">@en.RowKey</td>
+                    <td class="col-md-2">@(en.Types == null ? " " : String.Join(", ", en.Types))</td>
+                    <td class="col-md-2">
+                        @if (en.RepositoryNames == null)
+                        {
+                            @: @String.Empty
+                        }
+                        else
+                        {
+                            <ul class="list-unstyled list-container" id="@("list-" + en.RowKey)">
+                                @for (int i = 0; i < en.RepositoryNames.Length; i++)
+                                {
+                                    if (i <= 2)
+                                    {
+                                        <li>@en.RepositoryNames[i]</li>
+                                    }
+                                }
+                            </ul>
+                            @if (en.RepositoryNames.Length > 3)
+                            {
+                                <span class="expandButton" data-id="@en.RowKey">expand...</span>
+                            }
+                        }
+                    </td>
+                    <td class="col-md-6" style="position:relative;">
+                        <div class="col-md-10">
+                            <input type="text" id="@en.RowKey" eTag="@en.ETag" isJson="@en.IsJsonType.ToString()" readonly="readonly" class="form-control" value="@en.Value" />
+                        </div>
+                        @if (en.HasFullAccess == null || en.HasFullAccess)
+                        {
+                            <a href="javascript:;" class="col-md-1 elemEdit editKV icon" title="Edit value '@en.RowKey'" emptyValueType="@(!String.IsNullOrEmpty(en.EmptyValueType)?en.EmptyValueType:String.Empty)" rowId="@en.RowKey" data-command="@en.MustGenerateValue.ToString()" data-hasFullAccess="@en.HasFullAccess" tag="@en.Tag" useNotTagged="@en.UseNotTaggedValue"></a>
+                        }
+                        else
+                        {
+                            <a href="javascript:;" class="col-md-1 elemEdit icon" style="background-color: #aaa9a9;"></a>
+                        }
+                        @if (!en.IsUsedInRepository)
+                        {
+                            <a href="javascript:;" class="col-md-1 elemDelete remKV icon" title="Remove unused '@en.RowKey'" rowId="@en.RowKey"></a>
+                        }
+                        @if (en.IsDuplicated != null && en.IsDuplicated && isProduction)
+                        {
+                            <div class="input-group-btn col-md-1 showWarning" style="height: 34px;width: 34px; position: absolute; left:-10px;"></div>
+                        }
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>
+<a href="javascript:;" class="scrollup">Scroll</a>
+
+<div id="editModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Edit Key Values</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editInput">Value</label>
+                    <span>&nbsp;&nbsp;&nbsp;</span>
+
+                    <input class="" type="checkbox" id="useNotTagged" name="useNotTagged" />
+                    <label id="useNotTagged-label" for="useNotTagged">Use Value from not tagged</label>
+
+                    <div class="inline-div">
+                        <input type="checkbox" id="emptyValue" name="emptyValue" />
+                        <label for="emptyValue">Empty</label>
+                    </div>
+
+                    <div class="inline-div">
+                        <input type="checkbox" id="nullValue" name="nullValue" />
+                        <label for="nullValue">Null</label>
+                    </div>
+
+                    <input type="text" id="editInput" eTag="" class="form-control" placeholder="" value="" />
+
+                    <div class="jsonView">
+                        <div class="controls">
+                            <a id="edit" href="javascript:;" class="btn  btn-default disabled">Edit</a>
+                            <span>&nbsp;&nbsp;</span>
+                            @if (ViewContext.HttpContext.IsAdmin())
+                            {
+                                <a id="forceUnlock" href="javascript:;" class="btn btn-default" style="display: none;">Unlock</a>
+                                <span>&nbsp;&nbsp;</span>
+                            }
+                            <a id="codeTree" href="javascript:;" class="btn codeTree  btn-default">Code</a>
+                            <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                            <span id="timerInfo"></span>
+                        </div>
+                        <h2>Lykke Settings File</h2>
+                        <div id="jsoneditor"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editHistory">History</label>
+                    <ui id="editHistory">
+
+                    </ui>
+                </div>
+
+                <div class="form-group">
+                    <label for="editHistory">Override value</label>
+                    <div class="editItems" id="overrideValues"></div>
+                </div>
+            </div>
+            <div class="modal-footer" id="keyValueUpdateButtons">
+
+                @if (ViewBag.RabbitConn)
+                {
+                    <button type="button" class="btn btn-primary save" data-dismiss="modal" id="update-all">Save on <strong>ALL</strong> instances</button>
+                    <button type="button" class="btn btn-primary save" data-dismiss="modal" id="update">Save on <strong>CURRENT</strong>  instance</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary save" data-dismiss="modal" id="update">Save</button>
+                }
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="overloadModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Overload Values</h4>
+            </div>
+            <div class="modal-body" id="overridesTable">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="duplicateAlertModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Duplicate Alert</h4>
+            </div>
+            <div class="modal-body" id="duplicateAlertBody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="createAnyway">Create Anyway</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section header{
+    <style type="text/css">
+        .icon {
+            height: 30px;
+            width: 30px;
+        }
+    </style>
+    <link href="~/lib/jsoneditor/dist/jsoneditor.min.css" rel="stylesheet" type="text/css">
+    <script src="~/lib/jsoneditor/dist/jsoneditor.min.js"></script>
+}
+
+@section scripts{
+    <script type="text/javascript">
+		$(function () {
+			$("#useNotTagged").change(function () {
+				if (this.checked) {
+					$('#editInput').prop('readonly', true);
+					$.jsonEditorViewMode(true);
+					$('#edit').hide()
+				}
+				else {
+					$('#editInput').prop('readonly', false);
+					$('#edit').show();
+				}
+				var url = '@Url.Action("GetKV","Home")';
+				$.post(url,
+					{ 'keyValueId': $.rowId, 'useNotTagged': this.checked },
+					function (data) {
+						if ($.isValueJson !== "True" && $.isValueJson !== "true") {
+							var input = $('#editInput');
+							if (data.value !== null && typeof data.value !== 'undefined')
+								input.val(data.value);
+						} else {
+							if (data.value !== null && typeof data.value !== 'undefined')
+								$.jsoneditor.set(eval('(' + data.value + ')'));
+							else
+								$.jsoneditor.set('{}');
+						}
+;
+					}
+				);
+			});
+			$.isValueJson = "";
+            $.keysToUpload = [];
+            $.keyValuesWithJsonTypes = @Html.Raw(ViewBag.KeyValuesWithJsonTypes);
+            $.repositoryNames = @Html.Raw(ViewBag.RepositoryNames);
+            $.keyValueNames = @Html.Raw(ViewBag.KeyValueNames);
+            $.emptyValueType = null;
+            $.showEmptyValues = false;
+            $.keyValues = '@Html.Raw(JsonConvert.SerializeObject(Model).Replace("'", "\\'").Replace("\"", "\\\""))';
+
+            $('body').on('click', '.expandButton', function () {
+                var id = $(this).attr('data-id');
+                var expand = $(this).text() == "expand...";
+
+                var keyValue = eval('(' + $.keyValues + ')').find(x => x.RowKey === id);
+                var endIndex = expand ? keyValue.RepositoryNames.length : 3;
+
+                $('#list-' + id).empty();
+
+                for (var i = 0; i < endIndex; i++) {
+                    var item = keyValue.RepositoryNames[i];
+
+                    $('#list-' + id).append('<li>' + item + '</li>');
+                }
+
+                $(this).text(expand ? 'collapse' : 'expand...');
+            });
+
+            $("#filter").autocomplete({
+				source: $.repositoryNames
+			});
+
+            $("#search").autocomplete({
+				source: $.keyValueNames
+            });
+
+            $('#showEmptyValues').click(function () {
+                $.showEmptyValues = $(this).is(':checked');
+                $.updateKeyValueList(null);
+            });
+
+            $('#emptyValue').click(function () {
+                if ($(this).is(':checked')) {
+                    $('#nullValue').prop('checked', false);
+                    $.emptyValueType = "empty";
+                } else {
+                    $.emptyValueType = null;
+                }
+            });
+
+            $('#nullValue').click(function () {
+                if ($(this).is(':checked')) {
+                    $('#emptyValue').prop('checked', false);
+                    $.emptyValueType = "null";
+                }
+                else {
+                    $.emptyValueType = null;
+                }
+            });
+
+			var sendToAllValue = false;
+						var container = document.getElementById("jsoneditor");
+						var options = {
+				mode: getCookie('username') ? 'tree' : 'view',
+				onError: function (err) {
+                    $.showMessage('error',
+						err.toString(),
+
+						[
+                            {
+                                text: 'Ok',
+								action: function () { }
+
+							}
+                        ]);
+					},
+
+                onChange: function () {
+						//$.updateKeyValues();
+					},
+                onEditable: function () {
+						return getCookie('username');
+					}
+				};
+
+            $.jsoneditor = new JSONEditor(container, options);
+
+            $.updateKeyValuesList = function (newData, eTag) {
+                $.jsoneditor.set(eval('(' + newData + ')'));
+				};
+
+            $('.codeTree').click(function () {
+					var elem = $(this);
+					if ($.jsoneditor.getMode() !== 'code') {
+                    $.jsoneditor.setMode('code');
+						elem.text('Tree');
+					} else {
+                    $.jsoneditor.setMode(getCookie('username') ? 'tree' : 'view');
+						elem.text('Code');
+					}
+				});
+
+            // start or cancel editing
+            $.jsonEditorViewMode = function (viewMode) {
+					if (viewMode) {
+                        $.unlockJson($.lockUpdateTimer);
+                        $.isInEditMode = false;
+                        $.jsoneditor.setMode('view');
+                        $('.codeTree').text('Code');
+						return;
+					}
+
+					var url = '@Url.Action("SetLockTime")';
+					setCookie('username', '@ViewContext.HttpContext.GetUserEmail()', $.timeToEditInMinutes);
+                    $.jsoneditor.setMode('tree');
+                    $('.codeTree').text('Code');
+                    $.isInEditMode = true;
+                    $.get(url, function () {
+                        $.lockUpdateTimer();
+					});
+				};
+
+            $('#edit').click(function () {
+                $.jsonEditorViewMode($(this).text() === 'Cancel');
+			});
+
+            $.updateKeyValueList = function (data) {
+                if (data == null) {
+                    data = $.keyValues;
+                } else {
+                    $.keyValues = data;
+                }
+
+                var data = eval('(' + data + ')');
+
+                if ($.showEmptyValues) {
+                    data = data.filter(x => x.Value == null);
+                }
+
+				var isProduction = @((bool)ViewData["isProduction"]?"true":"false");
+				var html = '<table class="table table-striped table-bordered"><tr><th>Key</th><th>Type</th><th>Repositories</th><th>Value</th></tr>';
+				for (var i = 0; i < data.length; i++) {
+					var elem = data[i];
+
+                    html += '<tr class="infoTr" rowId="' + elem.RowKey + '">' +
+                        '<td class="col-md-2" style="background-color:' + (!elem.IsUsedInRepository ? "yellow" : "") + '">' + elem.RowKey + '</td>' +
+                        '<td class="col-md-2">' + (elem.Types == null || typeof elem.Types == 'undefined' ? ' ' : elem.Types.join(', ')) + '</td>';
+
+                    html += '<td class="col-md-2">'; 
+
+                    if (elem.RepositoryNames != null && typeof elem.RepositoryNames != 'undefined') {
+                        html+='<ul class="list-unstyled list-container" id="list-' + elem.RowKey +'" </ul>';
+                        for (var j = 0; j < elem.RepositoryNames.length; j++) {
+                            if (j <= 2) {
+                                var item = elem.RepositoryNames[j];
+                                html += '<li>' + item + '</li>';
+                            }
+                        }
+                        html += '</ul>';
+                        if (elem.RepositoryNames.length > 3) {
+                            html += '<span class="expandButton" data-id="' + elem.RowKey + '" >expand...</span>';
+                        }
+                    }
+                    html += '</td>';
+						// '<td class="col-md-2">' + (elem.RepositoryNames == null || typeof elem.RepositoryNames == 'undefined' ? ' ' : elem.RepositoryNames.join(', ')) + '</td>' +
+					html += '<td class="col-md-7" style="position:relative;">' +
+						'<div class="col-md-10">' +
+						'<input type="text" id="' + elem.RowKey + '" eTag="' + elem.ETag + '" isJson="' + elem.IsJsonType + '" readonly="readonly" class="form-control" value="' + (elem.Value !== null && typeof elem.Value !== 'undefined' ? elem.Value : '') + '" />' +
+						'</div>';
+                    if (elem.HasFullAccess == null || elem.HasFullAccess) {
+                        html += '<a href="javascript:;" class="col-md-1 elemEdit editKV icon" title="Edit value "' + elem.RowKey + '" emptyValueType="' + (elem.EmptyValueType !== null && typeof elem.EmptyValueType !== 'undefined' ? elem.EmptyValueType : '') + '" rowId="' + elem.RowKey + '" data-command="' + elem.MustGenerateValue + '" data-hasFullAccess="' + elem.HasFullAccess + '" tag="' + elem.Tag + '" useNotTagged="' + elem.UseNotTaggedValue + '"></a>';
+					} else {
+						html += '<a href="javascript:;" class="col-md-1 elemEdit icon" style="background-color: #aaa9a9;"></a>';
+					}
+					if (!elem.IsUsedInRepository) {
+						html += '<a href="javascript:;" class="col-md-1 elemDelete remKV icon" title="Remove unused "' + elem.RowKey + '" rowId="' + elem.RowKey + '"></a>';
+					}
+					if (elem.IsDuplicated != null && typeof elem.IsDuplicated !== 'undefined' && elem.IsDuplicated && isProduction) {
+						html += '<div class="input-group-btn col-md-1 showWarning" style="height: 34px;width: 34px; position: absolute; left:-10px;"></div>';
+					}
+					html += '</td></tr>';
+				}
+				html += '</table>';
+				$('#keyValueTable').empty();
+				$('#keyValueTable').append($(html));
+
+				$.keyValuesWithJsonTypes = data.filter(x => x.types != null && (x.types.findIndex(val => val == "Json") > -1 || x.types.findIndex(val => val == "JsonArray") > -1));
+			}
+
+
+            $('.keyValue').on('click', '.editKV', function () {
+					var elem = $(this).parents('tr').find('input[type="text"]');
+					var elemValue = elem.attr('eTag') ? elem.val() : '';
+                $.rowId = $(this).attr('rowId');
+                $.eTag = $(this).attr('eTag');
+                $.tag = $(this).attr('tag');
+				$.useNotTagged = $(this).attr('useNotTagged');
+				$.notTagged = $('#useNotTagged');
+                $.hasFullAccess = $(this).attr('data-hasFullAccess');
+                var emptyValueType = $(this).attr('emptyValueType');
+                $.emptyValueType = emptyValueType != '' ? emptyValueType : null;
+
+                $('#emptyValue').prop('checked', false);
+                $('#nullValue').prop('checked', false);
+                if ($.emptyValueType !== null) {
+                    switch ($.emptyValueType) {
+                        case 'empty':
+                            $('#emptyValue').prop('checked', true);
+                            break;
+                        case 'null':
+                            $('#nullValue').prop('checked', true);
+                            break;
+                    }
+                }
+
+                var mustGenerateValue = $(this).attr('data-command');
+
+				$.isValueJson = elem.attr('isJson');
+
+				if ($.isValueJson !== "True" && $.isValueJson !== "true") {
+                    $.jsonEditorIsActive = false;
+                    $('#editInput').attr('eTag', elem.attr('eTag'));
+                    $('#editInput').val(elemValue !== null && typeof elemValue !== 'undefined' ? elemValue : '');
+                    $('#editInput').attr('rowId', $.rowId);
+                    $('#editInput').show();
+                    $('.jsonView').hide();
+					} else {
+                    $.jsonEditorIsActive = true;
+                    var keyValue = {};
+				    $.keyValuesWithJsonTypes = @Html.Raw(ViewBag.KeyValuesWithJsonTypes);
+					if ($.keyValuesWithJsonTypes)
+                        keyValue = $.keyValuesWithJsonTypes.find(x => (x.Key && x.Key == $.rowId) || (x.key && x.key == $.rowId));
+					var jsonValue = keyValue ? keyValue.Value ? keyValue.Value : keyValue.value ? keyValue.value : '{}' : '{}';
+                    $.jsoneditor.set(eval('(' + jsonValue + ')'));
+                    $('.jsonView').show();
+                    $('#editInput').hide();
+					}
+
+                //var rel = $.keyJsonRelations[kvId];
+				$('#editModal .modal-title').text('Edit Value of ' + $.rowId);
+
+				if ($.useNotTagged === "true" || $.useNotTagged === "useNotTagged") {
+					$('#editInput').prop('readonly', true);
+					$('#useNotTagged').prop('checked', true);
+					$.jsonEditorViewMode(true);
+					$('#edit').hide();
+				}
+				else {
+					$('#editInput').prop('readonly', false);
+					$('#useNotTagged').prop('checked', false);
+					$('#edit').show();
+				}
+
+				if ($.tag && $.tag !== 'null') {
+					$('#useNotTagged').show();
+					$('#useNotTagged-label').show();
+				}
+				else {
+					$('#useNotTagged').hide();
+					$('#useNotTagged-label').hide();
+				}
+
+                Request.doRequest({ url: '@Url.Action("List", "Override")', divResult: '#overrideValues', params: { key: $.rowId } });
+
+                var updateAllHtml = (mustGenerateValue === "True" || mustGenerateValue === "true" ? "Generate" : "Save") + " on <strong>ALL</strong> instances";
+                $('#update-all').html(updateAllHtml);
+
+                $('#editModal').modal();
+
+					var url = '@Url.Action("GetKvHistory")';
+					var hLst = $('#editHistory');
+					hLst.empty();
+                $.post(url,
+
+					{ 'keyValueId': $.rowId },
+                    function (data) {
+						var hLst = $('#editHistory');
+						hLst.empty();
+						if (data.history.length === 0) {
+							var elem = $('<li>Empty history list</li>');
+							hLst.append(elem);
+						} else {
+							for (var i = 0; i < data.history.length; i++) {
+								var h = data.history[i];
+								var elem = $('<li><span class="snEdDate">' + h.date + '</span><span class="snEdName">' + h.name + '</span><span class="snEdIp">' + h.ip + '</span><span class="snEdValue">' + h.value + '</span></li>');
+								hLst.append(elem);
+							}
+						}
+					}
+                );
+				});
+
+            $('.keyValue').on('click', '.overloadEdit', function () {
+					var rowId = $(this).parents('tr.infoTr').attr('rowId');
+					Request.doRequest({ url: '@Url.Action("OverridesList", "Override")', divResult: '#overridesTable', params: { key: rowId } });
+                $('#overloadModal').modal();
+				});
+
+            $.sendKeyValueToServer = function (forced, sendToAll) {
+                var url = '@Url.Action("UploadKeyValueChanges")';
+
+                var searchForm = $(".filter-search-form");
+                var filter = $('#filter', searchForm).val();
+                var search = $('#search', searchForm).val();
+
+                var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+                var vars = [];
+                for(var i = 0; i < hashes.length; i++)
+                {
+                    var hash = hashes[i].split('=');
+                    vars.push(hash[0]);
+                    vars[hash[0]] = hash[1];
+                }
+                if (vars["repositoryId"] != null)
+                    $.keyValueToSave['repositoryId'] = vars["repositoryId"];
+
+                $.keyValueToSave['forced'] = forced;
+                $.keyValueToSave['sendToAll'] = sendToAll;
+                $.keyValueToSave['search'] = search;
+                $.keyValueToSave['filter'] = filter;
+
+                if ($.emptyValueType != null || typeof $.emptyValueType == 'undefined')
+                    $.keyValueToSave['entity']['emptyValueType'] = $.emptyValueType;
+
+                $.post(url, $.keyValueToSave,
+					function (data) {
+                        if (data.status == @((int)UpdateSettingsStatus.Ok)) {
+                            if ($.jsonEditorIsActive) {
+                                $.jsonEditorViewMode(true);
+                                $.needReloadAfterLock = false;
+                                deleteCookie('username');
+                                $.jsonEditorIsActive = false;
+                            }
+
+                            $.updateKeyValueList(data.data);
+
+                            $.showMessage('success',
+                                'New values was updated successfully',
+                                [
+                                    {
+                                        text: 'Ok',
+                                        action: function () { }
+                                    }
+                                ]);
+                        } else if (data.status == @((int)UpdateSettingsStatus.JsonFormarIncorrrect)) {
+                            $.showMessage('error',
+                                'Can not update values. Final json is broken',
+                                [
+                                    {
+                                        text: 'Undo',
+                                        action: function () { $.updateKeyValueList(data.data); }
+                                    },
+                                    {
+                                        text: 'Leave',
+                                        action: function () { }
+                                    }
+                                ]);
+                        } else if (data.status == @((int)UpdateSettingsStatus.OutOfDate)) {
+                            $.showMessage('error',
+                                'Your version of values is out of date.',
+                                [
+
+                                    {
+                                        text: 'Update',
+                                        action: function () { $.updateKeyValueList(data.data); }
+                                    },
+                                    {
+                                        text: 'Force',
+                                        action: function () {
+                                            $.sendKeyValueToServer(true, sendToAllValue);
+                                        }
+                                    }
+                                ]);
+                        } else if (data.status === @((int)UpdateSettingsStatus.HasDuplicated)) {
+                            var duplicatedKeys = data.duplicatedKeys.join(', ');
+                            $('#duplicateAlertBody').html('');
+                            $('#duplicateAlertBody').html('<h4>This value already set in keys: ' + duplicatedKeys);
+                            $('#duplicateAlertModal').modal('show');
+                        } else if (data.status === @((int)UpdateSettingsStatus.NotFound)) {
+                            $.showMessage('error',
+                                'Key value not found',
+                                [
+                                    {
+                                        text: 'Undo',
+                                        action: function () { }
+                                    },
+                                    {
+                                        text: 'Leave',
+                                        action: function () { }
+                                    }
+                                ]);
+                        } else if (data.status === @((int)UpdateSettingsStatus.InvalidRequest)) {
+                            $.showMessage('error',
+                                'Key value access denied',
+                                [
+                                    {
+                                        text: 'Undo',
+                                        action: function () { }
+                                    }
+                                ]);
+                        }
+					});
+				};
+
+            $.removeKeyValue = function (kvId) {
+                $.post('@Url.Action("DeleteKeyValue")',
+
+					{ 'keyValueId': kvId },
+                    function (data) {
+						if (data.status == 0) {
+                            $.showMessage('success',
+								'The "' + kvId + '" key value has been deletedsuccessfully',
+
+								[
+
+									{
+								text: 'Ok',
+                                        action: function () { }
+							}
+                                ]);
+                            $.updateKeyValueList(data.data);
+						} else if (data.status == 1) {
+                            $.showMessage('error',
+								'The "' + kvId + '" has not been deleted. Internal error occurs.',
+
+								[
+
+									{
+								text: 'Ok',
+                                        action: function () { }
+							}
+                                ]);
+
+						} else if (data.status === 2) {
+                            $.showMessage('error',
+								'The "' + kvId + '" can not be deleted. Is is used in repository.',
+
+								[
+
+									{
+								text: 'Ok',
+                                        action: function () { }
+							}
+                                ]);
+						}
+                        $.updateKeyValueList(data.data);
+					}
+                );
+				}
+
+			$('#update-all').click(function () {
+					if (confirm('Do you whant to update keyValues on all instances?')) {
+						sendToAllValue = true;
+						var inp = $('#editInput');
+                        var val = inp.val();
+
+						val = $.escapeCheck(val);
+
+						if ($.jsonEditorIsActive) {
+							val = JSON.stringify($.jsoneditor.get());
+						}
+
+						$.keyValueToSave = {
+								'entity': {
+									'key': $.rowId,
+									'eTag': $.eTag,
+									'value': val,
+									'hasFullAccess': $.hasFullAccess,
+									'useNotTaggedValue': $('#useNotTagged').prop('checked')
+								}
+							};
+						$.sendKeyValueToServer(false, sendToAllValue);
+					}
+				});
+
+			$('#update').click(function () {
+				sendToAllValue = false;
+				var inp = $('#editInput');
+				var val = inp.val();
+
+				val = $.escapeCheck(val);
+
+				if ($.jsonEditorIsActive) {
+					val = JSON.stringify($.jsoneditor.get());
+				}
+
+				$.keyValueToSave = {
+						'entity': {
+							'key': $.rowId,
+							'eTag': $.eTag,
+							'value': val,
+							'hasFullAccess': $.hasFullAccess,
+							'useNotTaggedValue': $('#useNotTagged').prop('checked')
+						}
+					};
+				$.sendKeyValueToServer(false, sendToAllValue);
+			});
+
+			$.escapeCheck = function (val) {
+
+				var valEscaped = val.replace(/[\t\r\n\f\b]/g, '');
+				valEscaped = valEscaped.replace(/\\"/g, '"');
+				valEscaped = valEscaped.replace(/\\\\/g, '\\');
+				if (valEscaped[0] == '"' && valEscaped[valEscaped.length - 1] == '"') {
+					valEscaped = valEscaped.substring(1, valEscaped.length - 1);
+				}
+				var format = /(\\\\|\\"|[\t\r\n\f\b])/;
+				if (format.test(val)) {
+					if (confirm("Do you want remove escaping charachters?\n\nFrom: " + val + "\n\n To: " + valEscaped)) {
+						val = valEscaped
+					}
+				}
+				return val;
+			}
+
+            $('#createAnyway').click(function () {
+					var inp = $('#editInput');
+					var val = inp.val();
+					if ($.jsonEditorIsActive) {
+						var val = JSON.stringify($.jsoneditor.get());
+					}
+                $.keyValueToSave = {
+						'entity': {
+							'key': $.rowId,
+                            'eTag': $.eTag,
+                            'value': val,
+                            'isDuplicated': true,
+							'hasFullAccess': $.hasFullAccess,
+							'useNotTaggedValue': $('#useNotTagged').checked
+					    }
+					};
+				$.sendKeyValueToServer(true, sendToAllValue);
+				});
+
+
+            $('.keyValue').on('click', '.remKV', function () {
+					var id = $(this).attr('rowId');
+					if (confirm('The Key Value "' + id + '" will be removed. Continue?')) {
+                    $.removeKeyValue(id);
+					}
+				});
+
+            $(window).scroll(function () {
+					if ($(this).scrollTop() > 100) {
+                    $('.scrollup').fadeIn();
+                } else {
+                    $('.scrollup').fadeOut();
+                }
+            });
+
+            $('.scrollup').click(function () {
+                $("html, body").animate({
+                    scrollTop: 0
+                },
+                    600);
+                return false;
+            });
+
+            $.timeToEditInMinutes = @ViewData["timeToEditInMinutes"];
+            $.isInEditMode = false;
+            $.needReloadAfterLock = false;
+            $.lockUpdateTimer = function() {
+                var editorName = getCookie('username');
+                if (!editorName && $.isInEditMode) {
+                    window.location.reload(false);
+                    return;
+                }
+
+                $.isInEditMode = editorName != '';
+
+                var url = '@Url.Action("LockTime")';
+
+                $.get(url,
+                    function (data) {
+
+                        //LWDEV-2029
+                        var userId =
+                            '@ViewContext.HttpContext.GetUserEmail()';
+                        var editorName = getCookie('username');
+                        if (!editorName && userId == data.userEmail && data.diff < $.timeToEditInMinutes) {
+                            setCookie('username', userId, $.timeToEditInMinutes);
+                            editorName = userId;
+                        }
+
+                        if (editorName && userId != data.userEmail) {
+                            editorName = null;
+                            deleteCookie('username');
+                        }
+
+                        $.isInEditMode = (editorName && editorName == data.userEmail);
+
+                        @if (ViewContext.HttpContext.IsAdmin())
+                        {
+                            @:$('#forceUnlock').hide();
+                        }
+
+                        if (data.diff > $.timeToEditInMinutes) {
+                            $('#edit').removeClass('disabled');
+                            $('#edit').text('Edit');
+                            $('#timerInfo').text('');
+                            deleteCookie('username');
+
+                            // $.jsoneditor.setMode('tree');
+                            if ($.needReloadAfterLock) {
+                                window.location.reload(false);
+                            }
+                        } else {
+                            if ($.isInEditMode) {
+                                $('#edit').removeClass('disabled');
+                                $('#edit').text('Cancel');
+
+                            } else {
+                                $('#edit').addClass('disabled');
+                                $('#edit').text('Edit');
+
+                                @if (ViewContext.HttpContext.IsAdmin())
+                                {
+                                     @:$('#forceUnlock').show();
+                                }
+                            }
+
+                            var minutes = $.timeToEditInMinutes - Math.trunc(data.diff);
+                            $('#timerInfo').text('Locked by ' + data.userName + ' (IP:' + data.ipAddress + ') for ' + minutes + ' minute' + (minutes == 1 ? '' : 's'));
+                            $.needReloadAfterLock = true;
+                        }
+                    });
+            };
+
+            @if (ViewContext.HttpContext.IsAdmin())
+            {
+                @:$("a#forceUnlock").click(function() {
+                @:    $.forceUnlockJson($.lockUpdateTimer);
+                @: });
+            }
+
+            $('.jsonView').bind("DOMSubtreeModified", function () {
+                $.jsonViewChangesOnce = true;
+            });
+
+             setInterval($.lockUpdateTimer, 5000);
+             $.lockUpdateTimer();
+
+			$.keyValueSearch = function () {
+			    var form = $(".filter-search-form");
+			    var filter = $('#filter', form).val();
+				var search = $('#search', form).val();
+
+				if (!filter && !search) {
+                    $.showMessage('error',
+                        'Please fill filter/search input',
+                        [
+                            {
+                                text: 'Ok',
+                                action: function () { }
+                            }
+                        ]);
+                    return;
+                }
+
+                form.submit();
+            };
+
+            $('.search-btn').click($.keyValueSearch);
+        });
+    </script>
+}

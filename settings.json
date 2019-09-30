@@ -1,0 +1,29 @@
+{
+  "TestPaySignService": {
+    "TestDb": {
+      "TestLogsConnString": "${TestLogsConnStringValue}:[RabbitMq]",
+      "TestLogsConnString2": "${TestLogsConnStringValue2}:[AzureTableStorage]"
+    },
+    "TestDb2": {
+      "TestLogsConnString": "${TestLogsConnStringValue}:[AzureBlobStorage]"
+    },
+    "TestDb3": {
+      "TestLogsConnString": "TestLogsConnStringValue:[MongoDB]"
+    }
+  },
+  "TestCandlesHistoryServiceClient": {
+    "TestServiceUrl": "${TestCandlesHistoryServiceUriValue}[Redis]"
+  },
+  "TestDutchAuctionClient": {
+    "TestServiceUrl": "${TestDutchAuctionServiceUriValue}"
+  },
+  "TestMarketProfileServiceClient": {
+    "TestServiceUrl": "${TestMarketProfileServiceUriValue}"
+  },
+  "TestMetricsServiceClient": {
+    "TestServiceUrl": "http://0.0.0.0:0"
+  },
+  "TestQuanta": {
+    "TestApiUrl": "http://0.0.0.0:0"
+  }
+}

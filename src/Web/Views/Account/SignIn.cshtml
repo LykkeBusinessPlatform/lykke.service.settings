@@ -1,0 +1,81 @@
+﻿@using Web.Models
+@model SignInModel
+
+@section Header
+{
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="@Model.GoogleApiClientId">
+    <meta name="google-signin-scope" content="profile email">
+    <meta name="google-signin-fetch_basic_profile" content="false">
+}
+
+<div class="signInView">
+    <h2>Sign in</h2>
+    @if (true.Equals(ViewData["usersEmpty"]))
+    {
+        <h3 class="info">You don't have users to manage the settings</h3>
+    }
+    @using (Html.BeginForm())
+    {
+        <input type="hidden" id="returnUrl" value="@ViewData["returnUrl"]">
+        <div class="form-group">
+            <label asp-for="Email"></label>
+            <input asp-for="Email" type="text" class="form-control" value="" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Password"></label>
+            <input asp-for="Password" type="password" class="form-control" value="" />
+        </div>
+        <div id="googleSignIn" class="g-signin2 disableOnRequest" data-onsuccess="googleSignIn" data-theme="dark" data-prompt="select_account"></div>
+        <input type="submit" id="signInButton" class="btn btn-primary" value="Sign In" />
+        
+    }
+</div>
+
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $(function() {
+            $.validateEmail = function(email) {
+                var re =
+                    /^(([^<>()\[\]\\.,;:\s@@"]+(\.[^<>()\[\]\\.,;:\s@@"]+)*)|(".+"))@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                return re.test(email);
+            }
+
+            $('#signInButton').click(function() {
+                var valid = true;
+                if ($('#Email').val().trim() == '' || !$.validateEmail($('#Email').val())) {
+                    $('#Email').addClass('error');
+                    valid = false;
+                } else {
+                    $('#Email').removeClass('error');
+                }
+
+                if ($('#Password').val().trim() == '') {
+                    $('#Password').addClass('error');
+                    valid = false;
+                } else {
+                    $('#Password').removeClass('error');
+                }
+                return valid;
+            });
+
+        });
+
+        function googleSignIn(googleUser) {
+
+            var idToken = googleUser.getAuthResponse().id_token;
+            $.post('@Url.Action("Authenticate")', 
+                {
+                    googleSignInIdToken: idToken,
+                    returnUrl: $('#returnUrl').val()
+                }, function(data) {
+                    if (data) {
+                        location.href = data;
+                    }
+                });
+        }
+    </script>
+}

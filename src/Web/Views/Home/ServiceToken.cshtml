@@ -1,0 +1,175 @@
+﻿@using Newtonsoft.Json
+@using Web.Code
+@using Core.Extensions
+@model Web.Models.ServiceTokenModel
+
+@{
+    ViewBag.Title = "Service tokens";
+}
+
+<h2>Service token</h2>
+<div class="editItems">
+
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $(function() {
+            $.populateTokens = function(json) {
+                var list = eval('(' + json + ')');
+                var html =
+                    '<table class="table table-striped table-bordered"><tr><th>Token</th><th>Key 1</th><th>Key 2</th><th style="text-align:center">Actions</th></tr>';
+                for (var i = 0; i < list.length; i++) {
+                    var elem = list[i];
+                    html += '<tr eTag="' +
+                        escape(elem.ETag) +
+                        '" elemId="' +
+                        elem.RowKey +
+                        '"><td class="token"><span class="viewMode">' +
+                        elem.RowKey +
+                        '</span><input type="text" class="editMode form-control"/></td><td class="key1"><span oldValue="' +
+                        elem.SecurityKeyOne +
+                        '" >' +
+                        elem.SecurityKeyOne +
+                        '</span><a style="display:none" class="editMode generate"></a></td><td class="key2"><span oldValue="' +
+                        elem.SecurityKeyTwo +
+                        '" >' +
+                        elem.SecurityKeyTwo +
+                        '</span><a style="display:none" class="editMode generate"></a></td>' +
+                        '<td class="actions" style="text-align:center"><a href="javascript:;" class="elemEdit"></a><a href="javascript:;" class="elemDelete"></a><a href="javascript:;" style="display:none" class="elemSave"></a><a href="javascript:;" style="display:none" class="elemCancel"></a></td></tr>';
+                }
+                html +=
+                    '<tr elemId="*"><td class="token"><input class="form-control" placeholder="Token" type="text"/></td><td class="key1"><span>Auto Generate</span></td><td class="key2"><span>Auto Generate</span></td>' +
+                    '<td class="actions" style="text-align:center"><a href="javascript:;" class="elemSave"></a><a href="javascript:;" class="elemCancel"></a></td></tr>';
+
+                html += '</table>';
+                var parent = $('.editItems');
+                parent.empty();
+                parent.append($(html));
+
+
+                $('.elemEdit').click(function() {
+                    var parent = $(this).parents('tr');
+                    parent.find('.editMode').val(parent.find('td.token span').text());
+                    parent.find('td.accessList input').val(parent.find('td.accessList span').text());
+                    parent.find('td.ipList input').val(parent.find('td.ipList span').text());
+                    parent.find('.viewMode').hide();
+                    parent.find('.editMode').show();
+                    parent.find('a.editMode').css('display', 'inline-block');
+
+                    parent.find('.elemEdit').hide();
+                    parent.find('.elemDelete').hide();
+                    parent.find('.elemSave').show();
+                    parent.find('.elemCancel').show();
+                });
+
+                $('a.generate').click(function() {
+                    var url = '@Url.Action("GenerateNewServiceToken")';
+                    var span = $(this).parents('td').find('span');
+                    $.post(url,
+                        function(data) {
+                            span.text(data.code);
+                        });
+                });
+
+                $('.elemDelete').click(function() {
+                    var token = $(this).parents('tr').attr('elemId');
+                    var url = '@Url.Action("RemoveServiceToken")';
+                    if (confirm('The "' + token + '" token will be deleted.')) {
+                        $.post(url, { 'tokenId': token }, function(data) { $.populateTokens(data.json) });
+                    }
+                });
+
+                $('.elemSave').click(function() {
+                    var elemId = $(this).parents('tr').attr('elemId');
+                    if (!$.validateUser(elemId)) {
+                        return;
+                    }
+                    var url = '@Url.Action("SaveServiceToken")';
+                    $.tokenToSave = {
+                        'token': {
+                            'rowKey': $('tr[elemId="' + elemId + '"] td.token input').val(),
+                            'securityKeyOne': $('tr[elemId="' + elemId + '"] td.key1 span').text(),
+                            'securityKeyTwo': $('tr[elemId="' + elemId + '"] td.key2 span').text(),
+                            'eTag': $('tr[elemId="' + elemId + '"]').attr('eTag')
+
+                        }
+                    };
+                    $.post(url,
+                        $.tokenToSave,
+                        function(data) {
+                            if (data.result == @((int) UpdateSettingsStatus.OutOfDate)) {
+                                $.showMessage('error',
+                                    'Your version of values is out of date.',
+                                    [
+                                        {
+                                            text: 'Update',
+                                            action: function() { $.populateTokens(data.json) }
+                                        },
+                                        {
+                                            text: 'Force',
+                                            action: function() {
+                                                var url = '@Url.Action("ForceSaveServiceToken")';
+                                                $.post(url,
+                                                    $.tokenToSave,
+                                                    function(data) {
+                                                        $.populateTokens(data.json);
+                                                    });
+                                            }
+                                        }
+                                    ]);
+                            } else {
+                                $.populateTokens(data.json);
+                            }
+
+                        });
+                });
+
+                $(".elemCancel").click(function() {
+                    var parent = $(this).parents('tr');
+                    if (parent.attr('elemId') == '*') {
+                        var inputs = parent.find('input[type=text]');
+                        inputs.val('');
+                        inputs.removeClass('error');
+                    } else {
+                        parent.find('.editMode').val(parent.find('td.token span').text());
+                        parent.find('td.key1 span').text(parent.find('td.key1 span').attr('oldValue'));
+                        parent.find('td.key2 span').text(parent.find('td.key2 span').attr('oldValue'));
+
+
+                        parent.find('.viewMode').show();
+                        parent.find('.editMode').hide();
+
+                        parent.find('.elemEdit').show();
+                        parent.find('.elemDelete').show();
+                        parent.find('.elemSave').hide();
+                        parent.find('.elemCancel').hide();
+                    }
+                });
+
+            };
+            $.validateUser = function(userId) {
+                var row = $('.editItems table tr[elemId="' + userId + '"]');
+                if (row.length == 0) {
+                    return;
+                }
+
+                var valid = true;
+                if (row.find('td.token input').val().trim() == '') {
+                    row.find('td.token input').addClass('error');
+                    valid = false;
+                } else {
+                    row.find('td.token input').removeClass('error');
+                }
+
+
+                return valid;
+            };
+
+
+            $
+                .populateTokens('@Html.Raw(JsonConvert.SerializeObject(Model.Tokens).Replace("'", "\\'").Replace("\"", "\\\""))');
+        });
+    </script>
+}

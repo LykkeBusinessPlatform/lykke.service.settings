@@ -1,0 +1,1007 @@
+﻿@using Newtonsoft.Json
+@using Web.Code
+@using Web.Extensions
+@using Core.Extensions
+@model Web.Models.RepositoryModel
+
+@{
+    ViewBag.Title = "Repository";
+    var search = Context.Request.Query["search"].ToString();
+    var pagesWithCurrentPage = 3;
+    var pagesToShow = 5;
+    var pagesBeforeOrAfterCurrentPage = 2;
+    var prevDisabled = !Model.Repositories.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.Repositories.HasNextPage ? "disabled" : "";
+}
+
+<div class="controls">
+    <h2>Repositories</h2>
+
+    @if (!string.IsNullOrEmpty(search))
+    {
+        <a href="@Url.Action("Repository")" class="btn btn-default pull-right">Clear Search</a>
+    }
+
+    <form action="@Url.Action("Repository")" method="get" class="input-group col-md-3 pull-right search-form">
+        <input type="text" id="search" name="search" class="form-control" placeholder="search" value="@search" />
+        <span class="input-group-btn">
+            <a class="btn btn-default search-btn" href="javascript:;">Search</a>
+        </span>
+    </form>
+
+    <button type="button" class="col-md-1 btn btn-primary" data-toggle="modal" data-target="#editModal">Add</button>
+    <br /><br />
+</div>
+
+<div class="editItems">
+
+</div>
+
+<div class="pagination">
+
+
+</div>
+
+<div id="editModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Add New Repository</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="gitUrl">Git url (repository/file): </label>
+                    <input type="text" id="gitUrl" eTag="" class="form-control" placeholder="" value="" />
+                </div>
+
+                <div class="form-group">
+                    <label for="branch">Branch: </label>
+                    <input type="text" id="branch" eTag="" class="form-control" placeholder="" value="" />
+                </div>
+
+                <div class="form-group">
+                    <label for="tag">Tag: </label>
+                    <input type="text" id="tag" eTag="" class="form-control" placeholder="" value="" maxlength="20" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add">Save</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="manualEditModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Edit File Manually</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input class="" type="checkbox" id="useManualSettings" name="useManualSettings" />
+                    <label for="useManualSettings">Use manual settings</label>
+                    <span>&nbsp;&nbsp;&nbsp;</span>
+                    <button type="button" class="btn btn-primary clear">&nbsp;&nbsp;&nbsp;Clear&nbsp;&nbsp;&nbsp;</button>
+                </div>
+                <hr />
+                <div class="jsonView">
+                    <div class="controls">
+                        <a id="upload" href="javascript:;" class="btn  btn-default disabled">Update</a>
+                        <span>&nbsp;&nbsp;</span>
+                        <a id="edit" href="javascript:;" class="btn  btn-default disabled">Edit</a>
+                        <span>&nbsp;&nbsp;</span>
+                        @if (ViewContext.HttpContext.IsAdmin())
+                        {
+                            <a id="forceUnlock" href="javascript:;" class="btn btn-default disabled" style="display: none;">Unlock</a>
+                            <span>&nbsp;&nbsp;</span>
+                        }
+                        <a id="codeTree" href="javascript:;" class="btn codeTree  btn-default">Code</a>
+                        <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <span id="timerInfo"></span>
+                    </div>
+                    <h2>Lykke Settings File</h2>
+                    <textarea class="jsonEditorArea" id="jsonArea" disabled></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="revertModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Commits</h4>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs hasManual">
+                    <li class="active"><a data-toggle="tab" href="#home">Git Commits</a></li>
+                    <li><a data-toggle="tab" href="#menu1">Manual Edits</a></li>
+                </ul>
+                <br />
+                <div class="tab-content">
+                    <div id="home" class="commitsView table-responsive tab-pane fade in active">
+
+                    </div>
+                    <div id="menu1" class=" hasManual commitsViewManual table-responsive tab-pane fade">
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="commitViewModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">View Commit</h4>
+            </div>
+            <div class="modal-body">
+                <div class="jsonView">
+                    <h2>Lykke Settings File</h2>
+                    <textarea class="jsonEditorArea" id="jsonArea2" disabled></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="compareViewModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Compare Commits</h4>
+            </div>
+            <div class="modal-body">
+                <div class="jsonView">
+                    <div class="row">
+                        <div class="col-md-6"><h4>Before:</h4><span id="commit1">Commit: xxxxxxxxxxxxxxxxxxxxxxxxx1</span><br /><pre id="display1"></pre></div>
+                        <div class="col-md-6"><h4>After:</h4><span id="commit2">Commit: xxxxxxxxxxxxxxxxxxxxxxxxx2</span><br /><pre id="display2"></pre></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="connectionUrlHistoryModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog--scroll">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Connection Url History</h4>
+            </div>
+            <div class="modal-body modal-body--scroll" id="connectionUrlHistoryBody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Header
+    {
+    <script src="~/lib/jsdiff/diff.min.js"></script>
+}
+
+@section Scripts
+    {
+    <script type="text/javascript">
+        $(function () {
+            $.repositoryNames = @Html.Raw(ViewBag.RepositoryNames);
+            $('#search').autocomplete({
+                source: $.repositoryNames
+            });
+
+            $('#edit').click(function () {
+                if ($(this).text() == 'Cancel') {
+                    $.unlockJson($.lockUpdateTimer);
+                    $.isInEditMode = false;
+                    $.manageJsonEditorButtons(false);
+                    $(this).text('Edit');
+                    $('#jsonArea').prop('disabled', true);
+                    return;
+                }
+
+                var url = '@Url.Action("SetLockTime")';
+                setCookie('username',
+                    '@ViewContext.HttpContext.GetUserEmail()',
+                    $.timeToEditInMinutes);
+                $('#jsonArea').prop('disabled', false);
+                $.isInEditMode = true;
+                $.get(url,
+                    function () {
+
+                        $.lockUpdateTimer();
+                    });
+            });
+
+            $.renderPages = function (pageIndex, totalPages) {
+                var prevDisabled = !(pageIndex > 1) ? "disabled" : "";
+                var nextDisabled = !(pageIndex < totalPages) ? "disabled" : "";
+
+                var html = '';
+                if (totalPages > 1)
+                {
+                    html += '<a class="btn btn-default pageBtn ' + prevDisabled + '" data-page="' + 1 + '"> First </a>' +
+                        '<a class="btn btn-default pageBtn ' + prevDisabled + '" data-page="' + (pageIndex - 1) + '"> Previous </a>';
+
+                    if (pageIndex > @pagesWithCurrentPage && totalPages > @pagesToShow)
+                    {
+                        html += '...';
+                    }
+
+                    for (var i = 1; i <= totalPages; i++)
+                    {
+                        if (i == pageIndex
+                            || (i < pageIndex && i >= pageIndex - @pagesBeforeOrAfterCurrentPage)
+                            || (i < pageIndex + @pagesWithCurrentPage && i > pageIndex)
+                            || (i > totalPages - @pagesWithCurrentPage && pageIndex > totalPages - @pagesWithCurrentPage)
+                            || (i <= @pagesToShow && pageIndex + @pagesBeforeOrAfterCurrentPage <= @pagesToShow)
+                            || (i > totalPages - @pagesToShow && pageIndex - @pagesBeforeOrAfterCurrentPage >= i))
+                        {
+                            html += '<a class="' + (i == pageIndex ? "btn btn-primary" : "btn btn-default") + ' pageBtn" data-page="' + i + '">' + i + '</a>';
+                        }
+                    }
+
+                    if (pageIndex + @pagesWithCurrentPage <= totalPages)
+                    {
+                        html += '...';
+                    }
+
+                    html += '<a class="btn btn-default pageBtn ' + nextDisabled + '" data-page="' + (pageIndex + 1) + '"> Next </a>' +
+                            '<a class="btn btn-default pageBtn ' + nextDisabled + '" data-page="' + totalPages + '">Last</a>';
+                }
+
+                var parent = $('.pagination');
+                parent.empty();
+                parent.append($(html));
+            }
+
+            $('body').on('click', '.pageBtn', function (e) {
+                e.preventDefault();
+
+                var page = $(this).attr('data-page');
+
+                var url = '@Url.Action("RepositoryJson")';
+                
+                url += page ? '/' + page : '';
+                url += '@search' ? '/@search' : '';
+
+                $.get(url, function (data) {
+                    if (data.status === @((int)UpdateSettingsStatus.Ok)) {
+                        $.populateRepositories(data.repositories, data.pageIndex, data.totalPages);
+                        $('#search').autocomplete({
+                            source: data.repositoryNames
+                        });
+                    } else if (data.status === @((int)UpdateSettingsStatus.InternalError)) {
+                        $.showMessage('error', data.message, []);
+                    }
+                });
+            });
+
+            $.populateRepositories = function (json, pageIndex, totalPages) {
+                var list = eval('(' + json + ')');
+                var html =
+                    '<table class="table table-stripped table-bordered"><tr><th>Modified</th><th>Tag</th><th>Commit</th><th>Name</th><th>URL (git)</th><th>Branch</th><th>Connection URL</th><th style="text-align:center;">Actions</th></tr>';
+                for (var i = 0; i < list.length; i++) {
+                    var elem = list[i];
+                    html += '<tr ' + (elem.UseManualSettings ? 'class="highlight"' : '') + ' elemId="' + elem.RowKey + '" useManualSettings="' + elem.UseManualSettings + '" > ' +
+                        '<td class="col-md-2"><span class="viewMode">' + elem.LastModified + ' - ' + elem.UserName + '</span></td>' +
+                        '<td class="col-md-1"><span class="viewMode">' + (elem.Tag ? elem.Tag : '') + '</span></td>' +
+                        '<td class="col-md-1"><span class="viewMode">' + elem.RowKey.substring(0, 8) + '</span></td>' +
+						'<td class="col-md-1"><span class="viewMode nameSpan">' + elem.Name + '</span><input type="text" class="editMode nameInput" value="' + elem.Name + '"/></td>' +
+                        '<td class="col-md-2"><a class="viewMode" style="width:100%;border:none" href="'
+                        + ((elem.GitUrl.includes("/settings.")
+                            ? elem.GitUrl
+                            : (elem.GitUrl.includes("github.com")
+                                ? (elem.GitUrl.includes("/tree/")
+                                    ? elem.GitUrl.replace('/tree/', '/blob/') + '/settings'
+                                    : elem.GitUrl + '/blob/' + elem.Branch + '/settings')
+                                : elem.GitUrl + '/' + elem.Branch + '/settings'))
+                            + (new Date(elem.Timestamp) > new Date(2018, 06, 30).getTime() ? '.yaml' : '.txt')).replace('.git', '')
+                        + '" target="_blank">' + elem.GitUrl + '</a></td>' +
+                        '<td class="col-md-1 branch"><span class="viewMode branchSpan">' + elem.Branch + '</span><input type="text" class="editMode branchInput" value="' + elem.Branch + '"/></td>' +
+						'<td class="col-md-3 connectionUrl"><a class="viewMode" style="width:100%;border:none" href="@Model.ServiceUrlForViewMode' + elem.ConnectionUrl + '" target="_blank">' + elem.Name + '/' + elem.FileName.replace('.txt', '.yaml') + '</a></td>' +
+                        '<td class="actions col-md-1" style="text-align:center; vertical-align:middle;">' +
+                            '<a href="javascript:;" class="elemHistory" title="Connection Url History"></a>' +
+                            '<a href="javascript:;" class="elemCopy" title="Copy Settings Url"></a>' +
+                            '<a href="javascript:;" class="elemUpdate" title="Update"></a>' +
+                            '<a href="@Url.Action("KeyValue", "Home")?repositoryId=' + elem.RowKey + '" class="elemKeyValues" title="KeyValues"></a>' +
+                            '<a href="javascript:;" class="elemEdit" title="Manual Edit"></a>' +
+							'<a href="javascript:;" class="elemDelete" title="Delete"></a>' +
+							'<a href="javascript:;" class="elemRevert" title="Revert"></a>' +
+                        '</td></tr>';
+                }
+
+                html += '</table>';
+                var parent = $('.editItems');
+                parent.empty();
+                parent.append($(html));
+
+                $.renderPages(pageIndex, totalPages);
+
+                $('.elemHistory').click(function() {
+                    var repositoryId = $(this).parents('tr').attr('elemId');
+                    var url = '@Url.Action("ConnectionUrlHistoryJson", new{repositoryId = "_repId_"})';
+                    url = url.replace('_repId_', repositoryId);
+
+                    $.get(url,
+                        function(data) {
+                            if (data.result == @((int) UpdateSettingsStatus.Ok)) {
+                                var list = data.json;
+                                var html =
+                                    '<table class="table table-stripped table-bordered"><th class="text-center">Id</th><th class="text-center">Repository Id</th><th class="text-center">Ip</th><th class="text-center">User Agent</th><th class="text-center">DateTime</th>';
+                                for (var i = 0; i < list.length; i++) {
+                                    var elem = list[i];
+                                    html += '<tr> ' +
+                                        '<td>' + elem.rowKey + '</td>' +
+                                        '<td>' + elem.repositoryId + '</td>' +
+                                        '<td>' + elem.ip + '</td>' +
+                                        '<td>' + elem.userAgent + '</td>' +
+                                        '<td>' + elem.timestamp + '</td></tr>';
+                                }
+
+                                html += '</table>';
+                                var parentDiv = $('#connectionUrlHistoryBody');
+                                parentDiv.empty();
+                                parentDiv.append($(html));
+                                $("#connectionUrlHistoryModal").modal("show");
+                            }
+                        });
+                });
+
+                $('.elemCopy').click(function () {
+                    var value = $(this).parent().siblings('td.connectionUrl').children('a').attr('href');
+                    copyToClipboard(value);
+                });
+
+                $('.nameSpan').click(function () {
+                    var nameInput = $(this).siblings('input');
+                    $(this).hide();
+                    $(nameInput).val($(this).text());
+                    $(nameInput).attr('data-oldVal', $(this).text());
+                    var strLength = $(nameInput).val().length * 2;
+                    $(nameInput).show().focus();
+                    $(nameInput)[0].setSelectionRange(strLength, strLength);
+                });
+
+                $('.nameInput').blur(function () {
+                    var nameSpan = $(this).siblings('span');
+                    $(this).hide();
+                    $(nameSpan).show();
+
+                    if ($(this).attr('data-oldVal') !== $(this).val()) {
+                        var url = '@Url.Action("ChangeRepositoryName")';
+
+                        var repositoryId = $(this).parents('tr').attr('elemId');
+
+                        $.repositoryNewName = {
+                            'repository': {
+                                'rowKey': repositoryId,
+                                'name': $(this).val()
+                            }
+                        }
+
+                        $.post(url, $.repositoryNewName, function (data) {
+                            if (data.result == @((int) UpdateSettingsStatus.Ok)) {
+                                $.showMessage('success', 'Repository name updated', []);
+                                $.populateRepositories(data.json, data.pageIndex, data.totalPages);
+                            } else if (data.result === @((int)UpdateSettingsStatus.JsonFormarIncorrrect)){
+                                $.showMessage('error', 'Please enter different name to update', []);
+                            } else if (data.result === @((int)UpdateSettingsStatus.NotFound)){
+								$.showMessage('error', 'Repository not found. Please, reload the page and try again.', []);
+                            }
+                        });
+                    }
+                });
+
+                $('.branchSpan').click(function () {
+                    $(this).hide();
+                    var branchInput = $(this).siblings('input');
+                    $(branchInput).val($(this).text());
+                    // multiply by 2 to ensure the cursor always ends up at the end;
+                    // opera sometimes sees a carriage return as 2 characters.
+                    var strLength = $(branchInput).val().length * 2;
+                    $(branchInput).show().focus();
+                    // setSelectionRange
+                    $(branchInput)[0].setSelectionRange(strLength, strLength);
+                });
+
+                $('.branchInput').blur(function (e) {
+
+                    var branchSpan = $(this).siblings('span');
+
+                    // get elemUpdate button
+					var updateDiv = $(this).parent('td').siblings('td.actions').children('a.elemUpdate');
+                    // if elemUpdate is focused we need to store new value for branch to display while confirmation dialog
+					if ($(updateDiv).data('focused')) {
+						$(branchSpan).attr('data-old', $(branchSpan).text());
+						$(branchSpan).text($(this).val());
+					}
+					else {
+                        $(this).hide();
+                        $(branchSpan).show();
+					}
+
+                    // make elemUpdate focused data false again in case if user not clicks on elemUpdate after blur
+					$(updateDiv).data("focused", false);
+                });
+
+				$('.elemUpdate').mousedown(function () {
+                    // make elemUpdate data focused to store branchSpan value
+					$(this).data('focused', true);
+				});
+
+				$('.elemUpdate').click(function () {
+					var input = $(this).parent().siblings('td.branch').children('input');
+					$(input).hide();
+
+                    var repositoryId = $(this).parents('tr').attr('elemId');
+					var branchSpan = $(this).parent().siblings('td.branch').children('span');
+					$(branchSpan).show();
+
+                    if (confirm('The "' + repositoryId + '" will be updated.')) {
+                        var url = '@Url.Action("SaveRepository")';
+                        $.repositoryEdit = {
+                            'repository': {
+                                'rowKey': repositoryId,
+                                'branch': $(this).parent().siblings('td.branch').children('input').val()
+                            }
+                        }
+
+                        $.post(url, $.repositoryEdit, function (data) {
+                            if (data.result == @((int) UpdateSettingsStatus.Ok)) {
+                                $.compare(data.data.last, data.data.current, data.data.oldid, data.data.newid);
+                                $('#compareViewModal').modal('show');
+                                $.populateRepositories(data.json, data.data.pageIndex, data.data.totalPages);
+                            } else if (data.result === @((int)UpdateSettingsStatus.JsonFormarIncorrrect)) {
+                                $.showMessage('error', 'Json format was incorrect', []);
+                            } else if (data.result === @((int)UpdateSettingsStatus.NotFound)) {
+								$.showMessage('error', 'Repository not found. Please, reload the page and try again.', []);
+                            } else if (data.result === @((int)UpdateSettingsStatus.InternalError)) {
+                                $.showMessage('error', 'Internal error', []);
+                            } else if (data.result === @((int)UpdateSettingsStatus.InvalidInput)) {
+                                $.showMessage('error', 'Incorrect Git URL', []);
+                            } else if (data.result === @((int)UpdateSettingsStatus.HasDuplicated)) {
+                                $.showMessage('success', 'There is no need to update', []);
+                            } else {
+                                $.showMessage('error', data.message, []);
+                            }
+                        });
+                    } else {
+                        $(branchSpan).text($(branchSpan).attr('data-old'));
+                    }
+                });
+
+                $.manageJsonEditorButtons = function (useManualSettings) {
+                    if (useManualSettings) {
+                        $('.controls a#upload').removeClass('disabled');
+                        $('.controls a#edit').removeClass('disabled');
+                        $('.controls a#forceUnlock').removeClass('disabled');
+                    } else {
+                        $('.controls a#edit').addClass('disabled');
+                        $('.controls a#forceUnlock').addClass('disabled');
+                    }
+                }
+
+                $('.elemEdit').click(function () {
+                    $.repositoryId = $(this).parents('tr').attr('elemId');
+                    var useManualSettings = $(this).parents('tr').attr('useManualSettings');
+                    $.manageJsonEditorButtons(useManualSettings == 'true');
+
+					$('#useManualSettings').attr('checked', useManualSettings !== "false")
+                    var url = '@Url.Action("RepositoryFileJson")';
+					$.post(url, { repositoryId: $.repositoryId }, function (data) {
+                        if (data.result == @((int)UpdateSettingsStatus.Ok)) {
+                            $("#jsonArea").val(data.json);
+							$('#manualEditModal').modal('show');
+                        } else if (data.result == @((int)UpdateSettingsStatus.NotFound)){
+							$.showMessage('error', 'Repository not found. Please, reload the page and try again.', []);
+                        } else if (data.result == @((int)UpdateSettingsStatus.Ok) && data.Json === null){
+                            $.showMessage('error', 'Data not found', []);
+                        }
+                    });
+				});
+
+				$('.elemRevert').click(function () {
+
+                    $.repositoryId = $(this).parents('tr').attr('elemId');
+                    var useManualSettings = $(this).parents('tr').attr('useManualSettings');
+
+                    $('#useManualSettings').attr('checked', useManualSettings !== "false")
+
+                    var url = '@Url.Action("GetRevertRepositoryList")';
+                    $.post(url, { repositoryId: $.repositoryId }, function (data) {
+                        if (data.result == @((int)UpdateSettingsStatus.Ok)){
+							$.generateRevertTable(data.json);
+                            $('#revertModal').modal('show');
+                        } else if (data.result == @((int)UpdateSettingsStatus.NotFound)){
+							$.showMessage('error', 'Repository not found. Please, reload the page and try again.', []);
+                        } else if (data.result == @((int)UpdateSettingsStatus.Ok) && data.Json === null){
+                            $.showMessage('error', 'Data not found', []);
+                        }
+                    });
+                });
+
+                $('.elemDelete').click(function () {
+                    var repositoryId = $(this).parents('tr').attr('elemId');
+                    if (confirm('The "' + repositoryId + '" will be deleted.')) {
+                        var url = '@Url.Action("DeleteRepository")';
+
+                        $.post(url, { repositoryId: repositoryId }, function(data) {
+                            if (data.result == @((int) UpdateSettingsStatus.Ok)) {
+                                $.showMessage('success', 'Repository "' + repositoryId + '" has been deleted.', []);
+                                $.populateRepositories(data.json, data.pageIndex, data.totalPages);
+                            } else if (data.result === @((int)UpdateSettingsStatus.NotFound)){
+								$.showMessage('error', 'Repository not found. Please, reload the page and try again.', []);
+                            } else if (data.result === @((int)UpdateSettingsStatus.InternalError)){
+                                $.showMessage('error', 'Internal error', []);
+                            }
+                        });
+                    }
+                });
+			}
+
+            $('#add').click(function () {
+                $('#add').prop('disabled', true);
+                var url = '@Url.Action("SaveRepository")';
+                $.repositorySave = {
+                    'repository': {
+                        'gitUrl': $('#gitUrl').val(),
+                        'branch': $('#branch').val(),
+                        'tag': $('#tag').val()
+                    }
+                }
+
+                $.post(url, $.repositorySave, function (data) {
+                    $('#add').prop('disabled', false);
+                    if (data.result == @((int) UpdateSettingsStatus.Ok)) {
+                        $.showMessage('success', 'Repository Added', []);
+                        $.populateRepositories(data.json, data.data.pageIndex, data.data.totalPages);
+                        $('#editModal').modal('hide');
+                    } else if (data.result === @((int)UpdateSettingsStatus.JsonFormarIncorrrect)){
+                        $.showMessage('error', 'Json format was incorrect', []);
+                    } else if (data.result === @((int)UpdateSettingsStatus.NotFound)){
+						$.showMessage('error', 'Repository not found. Please, reload the page and try again.', []);
+                    } else if (data.result === @((int)UpdateSettingsStatus.InternalError)){
+                        $.showMessage('error', 'Internal error', []);
+                    } else if (data.result === @((int)UpdateSettingsStatus.AlreadyExists)){
+                        $.showMessage('error', 'Repository already exists', []);
+                    } else if (data.result === @((int)UpdateSettingsStatus.InvalidInput)){
+                        $.showMessage('error', data.message, []);
+                    } else {
+                        $.showMessage('error', data.message, []);
+                    }
+                });
+            });
+
+            function copyToClipboard(text) {
+                var $temp = $("<input>");
+                $("body").append($temp);
+                $temp.val(text).select();
+                document.execCommand("copy");
+                $temp.remove();
+                $.showMessage('success', 'Link copied to clipboard', []);
+            }
+
+            $.timeToEditInMinutes = @ViewData["timeToEditInMinutes"];
+            $.isInEditMode = false;
+            $.needReloadAfterLock = false;
+            $.lockUpdateTimer = function() {
+                var editorName = getCookie('username');
+                var useManualSettings = $('#useManualSettings').is(':checked');
+                // $('#timerInfo').text(editorName);
+                if (!editorName && $.isInEditMode) {
+                    window.location.reload(false);
+                    return;
+                }
+
+                //$.isInEditMode = editorName != '';
+
+                var url = '@Url.Action("LockTime")';
+
+                $.get(url,
+                    function (data) {
+
+                        //LWDEV-2029
+                        var userId =
+                            '@ViewContext.HttpContext.GetUserEmail()';
+                        var editorName = getCookie('username');
+                        if (!editorName && userId == data.userEmail && data.diff < $.timeToEditInMinutes) {
+                            setCookie('username',
+                                userId,
+                                $.timeToEditInMinutes);
+                            editorName = userId;
+                        }
+
+                        if (editorName && userId != data.userEmail) {
+                            editorName = null;
+                            deleteCookie('username');
+                        }
+
+
+                        var isCurrentUser = (editorName && editorName == data.userEmail);
+
+                        @if (ViewContext.HttpContext.IsAdmin())
+                                 {
+                                 @:$('#forceUnlock').hide();
+                                 }
+
+                        if (data.diff > $.timeToEditInMinutes) {
+                            if (useManualSettings) {
+                                $('#edit').removeClass('disabled');
+                                $('#edit').text('Edit');
+                                $('#timerInfo').text('');
+                                deleteCookie('username');
+                            }
+
+                            if ($.needReloadAfterLock) {
+                                window.location.reload(false);
+                            }
+                        } else {
+                            if (isCurrentUser && $.isInEditMode && useManualSettings) {
+                                $('#edit').removeClass('disabled');
+                                $('#edit').text('Cancel');
+
+                            } else if (isCurrentUser && useManualSettings) {
+                                $('#edit').removeClass('disabled');
+                            } else {
+                                $('#edit').addClass('disabled');
+                                $('#edit').text('Edit');
+
+                                @if (ViewContext.HttpContext.IsAdmin())
+                                 {
+                                 @:$('#forceUnlock').show();
+                                 }
+                            }
+
+                            var minutes = $.timeToEditInMinutes - Math.trunc(data.diff);
+                            $('#timerInfo').text('Locked by ' +
+                                data.userName +
+                                ' (IP:' +
+                                data.ipAddress +
+                                ') for ' +
+                                minutes +
+                                ' minute' +
+                                (minutes == 1 ? '' : 's'));
+                            $.needReloadAfterLock = true;
+                        }
+                    });
+			};
+			$('.clear').click(function () {
+				var url = '@Url.Action("RepositoryFileJsonClear")';
+				if (confirm("Do you agree to reset all changes ?")) {
+
+					$.post(url, { repositoryId: $.repositoryId }, function (data) {
+                        if (data.result == @((int)UpdateSettingsStatus.Ok)) {
+                            $('#jsonArea').val(data.json);
+							$.showMessage('success', 'Menual edit was reseted', []);
+							$('#manualEditModal').modal('hide');
+						} else if (data.result == @((int)UpdateSettingsStatus.NotFound)) {
+							$.showMessage('error', 'Repository not found. Please, reload the page and try again.', []);
+						} else if (data.result == @((int)UpdateSettingsStatus.Ok) && data.Json === null) {
+							$.showMessage('error', 'Data not found', []);
+						}
+					});
+				}
+			});
+
+            @if (ViewContext.HttpContext.IsAdmin())
+            {
+                @:$("a#forceUnlock").click(function() {
+                @:    $.forceUnlockJson($.lockUpdateTimer);
+/**/
+                @: });
+            }
+
+            $.saveJsonToServer = function() {
+
+                var url = '@Url.Action("UploadJsonChanges")';
+                var useManualSettings = $('#useManualSettings').is(':checked');
+
+                $.post(url,
+                    {
+                        'json': {
+                            'repositoryId': $.repositoryId,
+                            'json': $('#jsonArea').val(),
+                            'userName': getCookie('username'),
+                            'useManualSettings': useManualSettings
+                        }
+                    },
+                    function(data) {
+                        if (data.status == 0) {
+                            $.showMessage('success',
+                                'Json was updated successfully',
+                                [
+                                    {
+                                        text: 'Ok',
+                                        action: function() {}
+                                    }
+                                ]);
+                            $.isInEditMode = false;
+                            $.needReloadAfterLock = false;
+                            deleteCookie('username');
+                            $('#manualEditModal').modal('hide');
+
+                            $.populateRepositories(data.repositories, data.pageIndex, data.totalPages);
+                        } else if (data.status == 2) {
+                            $.showMessage('error',
+                                'Your json is out of date.',
+                                [
+                                    {
+                                        text: 'Update',
+                                        action: function() {
+                                            $.updateKeyValueList(data.data);
+                                        }
+                                    }
+                                ]);
+                        }
+                    }
+                );
+			};
+
+            $('#useManualSettings').click(function () {
+                $('.controls a#upload').removeClass('disabled');
+                var useManualSettings = $(this).is(':checked');
+                $.manageJsonEditorButtons(useManualSettings);
+            });
+
+            $('.controls a#upload').click(function () {
+                $.saveJsonToServer();
+			});
+
+            $('.jsonView').bind("DOMSubtreeModified", function () {
+
+                $.jsonViewChangesOnce = true;
+			});
+
+			$.generateRevertTable = function (json) {
+				var list = eval('(' + json + ')');
+				var html =
+					'<table class="table table-stripped table-bordered"><tr><th>User</th><th>Commit</th><th>Date</th><th>Branch</th><th>Actions</th></tr>';
+				var hasManual = false;
+				var notManualCounter = 0;
+				for (var i = 0; i < list.length; i++) {
+					var elem = list[i];
+
+					if (elem.IsManual)
+					{
+						hasManual = true;
+						continue;
+					}
+					notManualCounter += 1;
+					html += '<tr ' + ' revertId="' + elem.RowKey + '" > ' +
+						'<td class="col-md-2"><span class="viewMode">' + elem.User + '</span></td>' +
+						'<td class="col-md-1"><span class="viewMode">' + elem.RowKey.substring(0, 8) + '</span></td>' +
+						'<td class="col-md-2"><span class="viewMode">' + elem.Timestamp + '</span></td>' +
+						'<td class="col-md-1"><span class="viewMode">' + elem.Branch + '</span></td>' +
+						'<td class="col-md-2" class="viewMode" >' +
+							'<a href="javascript:;" class="btn btn-md btn-default viewCommit "  >View</a>' + '<span>&nbsp;&nbsp;</span>' +
+							(notManualCounter == 1 ? '' : '<a href="javascript:;" class="btn  btn-md btn-default revert">Revert to this</a>') +
+						'</td>' +
+						'</tr>';
+				}
+
+				html += '</table>';
+
+				var parent = $('.commitsView');
+				parent.empty();
+				parent.append($(html));
+
+				if (hasManual) {
+					$('.hasManual').removeClass('hidden')
+
+					var htmlManual =
+						'<table class="table table-stripped table-bordered"><tr><th>User</th><th>Commit</th><th>Date</th><th>Branch</th><th>Actions</th></tr>';
+					var manualCounter = 0;
+					for (var i = 0; i < list.length; i++) {
+						var elem = list[i];
+
+						if (!elem.IsManual) {
+
+							continue;
+						}
+						manualCounter += 1;
+						htmlManual += '<tr ' + ' revertId="' + elem.RowKey + '" > ' +
+							'<td class="col-md-2"><span class="viewMode">' + elem.User + '</span></td>' +
+							'<td class="col-md-1"><span class="viewMode">' + elem.RowKey.substring(0, 8) + '</span></td>' +
+							'<td class="col-md-2"><span class="viewMode">' + elem.Timestamp + '</span></td>' +
+							'<td class="col-md-1"><span class="viewMode">' + elem.Branch + '</span></td>' +
+							'<td class="col-md-2" class="viewMode" >' +
+							'<a href="javascript:;" class="btn btn-md btn-default viewCommit "  >View</a>' + '<span>&nbsp;&nbsp;</span>' +
+							(manualCounter == 1 ? '' : '<a href="javascript:;" class="btn  btn-md btn-default revert">Revert to this</a>') +
+							'</tr>';
+					}
+
+					htmlManual += '</table>';
+
+					var manualParent = $('.commitsViewManual');
+					manualParent.empty();
+					manualParent.append($(htmlManual));
+				}
+				else {
+					$('.hasManual').addClass('hidden')
+				}
+
+
+				$('.revert').click(function () {
+				var repositoryId = $(this).parents('tr').attr('revertId');
+
+				if (confirm('The "' + repositoryId + '" will be reverted.')) {
+					var url = '@Url.Action("RevertRepository")';
+
+					$.post(url, { repositoryId: repositoryId }, function (data) {
+						if (data.result == @((int) UpdateSettingsStatus.Ok)) {
+							$('#revertModal').modal('hide');
+							$.showMessage('success', 'File reverted', []);
+                            $.populateRepositories(data.json, data.pageIndex, data.totalPages);
+						} else if (data.result === @((int)UpdateSettingsStatus.NotFound)) {
+							$.showMessage('error', 'Repository not found. Please, reload the page and try again.', []);
+						}
+                    });
+					}
+				});
+
+				$('.viewCommit').click(function () {
+				var repositoryId = $(this).parents('tr').attr('revertId');
+
+				var url = '@Url.Action("RepositoryFileJsonView")';
+					$.post(url, { repositoryId: repositoryId }, function (data) {
+						if (data.result == @((int)UpdateSettingsStatus.Ok)) {
+							$("#jsonArea2").val(data.json);
+							$('#commitViewModal').modal('show');
+                        } else if (data.result == @((int)UpdateSettingsStatus.NotFound)){
+							$.showMessage('error', 'Repository not found. Please, reload the page and try again.', []);
+                        } else if (data.result == @((int)UpdateSettingsStatus.Ok) && data.Json === null){
+                            $.showMessage('error', 'Data not found', []);
+                        }
+                    });
+				});
+			};
+
+			$.compare = function (json1, json2, comm1, comm2) {
+				var commit1 = $("#commit1"),
+					commit2 = $("#commit2"),
+					color = '',
+					span = null;
+
+				$("#display1").empty();
+				$("#display2").empty();
+				commit1.empty();
+				commit2.empty();
+
+				commit1.append("Commit: " + comm1);
+				commit2.append("Commit: " + comm2);
+
+				var diff1 = JsDiff.diffWords(json2, json1),
+					display1 = document.getElementById('display1')
+					fragment1 = document.createDocumentFragment();
+
+				diff1.forEach(function (part) {
+					// green for additions, red for deletions
+					// grey for common parts
+					color = part.added ? 'red' :
+						part.removed ? 'green' : 'grey';
+					span = document.createElement('span');
+					strong = document.createElement('strong');
+					span.style.color = color;
+
+					if (part.added) {
+						span.appendChild(strong);
+						strong.appendChild(document
+							.createTextNode(part.value));
+					}
+					else {
+						span.appendChild(document
+							.createTextNode(part.value));
+					}
+
+					if (!part.removed) {
+						fragment1.appendChild(span);
+					}
+				});
+
+				display1.appendChild(fragment1);
+
+				var diff2 = JsDiff.diffWords(json1, json2),
+					display2 = document.getElementById('display2'),
+					fragment2 = document.createDocumentFragment();
+				//display.empty();
+				diff2.forEach(function (part) {
+					// green for additions, red for deletions
+					// grey for common parts
+					color = part.added ? 'green' :
+						part.removed ? 'red' : 'grey';
+					span = document.createElement('span');
+					strong = document.createElement('strong');
+					span.style.color = color;
+
+					if (part.added) {
+						span.appendChild(strong);
+						strong.appendChild(document
+							.createTextNode(part.value));
+					}
+					else {
+						span.appendChild(document
+							.createTextNode(part.value));
+					}
+
+					if (!part.removed) {
+						fragment2.appendChild(span);
+					}
+				});
+
+				display2.appendChild(fragment2);
+			};
+
+			$('#display1').on("scroll", function () {
+				var h = $(this).scrollLeft()
+				$("#display2").scrollLeft(h)
+				var t = $(this).scrollTop()
+				$("#display2").scrollTop(t)
+			});
+			$('#display2').on("scroll", function () {
+				var h = $(this).scrollLeft()
+				$("#display1").scrollLeft(h)
+				var t = $(this).scrollTop()
+				$("#display1").scrollTop(t)
+			});
+
+             setInterval($.lockUpdateTimer, 5000);
+             $.lockUpdateTimer();
+
+            $.populateRepositories('@Html.Raw(JsonConvert.SerializeObject(Model.Repositories).Replace("'", "\\'").Replace("\"", "\\\""))', @Model.Repositories.PageIndex, @Model.Repositories.TotalPages);
+
+            $.repositoriesSearch = function () {
+                var form = $('.search-form');
+                var search = $('#search', form).val();
+
+                if (!search) {
+                    $.showMessage('error',
+                        'Please fill in the search input',
+                        [
+                            {
+                                text: 'Ok',
+                                action: function () { }
+                            }
+                        ]);
+                    return;
+                }
+
+                form.submit();
+            }
+
+            $('.search-btn').click($.repositoriesSearch);
+		});
+    </script>
+}

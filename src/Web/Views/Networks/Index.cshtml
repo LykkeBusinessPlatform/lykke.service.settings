@@ -1,0 +1,16 @@
+﻿@model Web.Models.NetworksModel
+
+@{
+    ViewBag.Title = "Networks";
+}
+
+<h2>Networks</h2>
+
+<div class="editItems">
+    
+</div>
+@section Scripts {
+<script>
+    Request.doRequest({ url: '@Url.Action("List")', divResult: '.editItems' })
+</script>
+}

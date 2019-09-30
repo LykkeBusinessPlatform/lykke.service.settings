@@ -1,0 +1,10 @@
+﻿@{
+    ViewBag.Title = "Access Denied";
+}
+
+<div class="accessDeniedView">
+    <h2>AccessDenied</h2>
+    <div>You don't have an access to visit the <b>@ViewContext.HttpContext.Request.Query["ReturnUrl"]</b> page.</div>
+</div>
+
+

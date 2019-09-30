@@ -1,0 +1,177 @@
+﻿@using Newtonsoft.Json
+@using Web.Code
+@using Core.Extensions
+@model Web.Models.AccessTokenModel
+
+@{
+    ViewBag.Title = "Access tokens";
+}
+
+<h2>Access Tokens</h2>
+<div class="editItems">
+
+</div>
+
+@section Scripts
+{ 
+    <script type="text/javascript">
+        $(function () {
+            $.generateGuid = function() {
+                function s4() {
+                    return Math.floor((1 + Math.random()) * 0x10000)
+                        .toString(16)
+                        .substring(1);
+                }
+                return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+            }
+
+            $.populateTokens = function(json) {
+                var list = eval('(' + json + ')');
+                var html =
+                    '<table class="table table-striped table-bordered"><tr><th>Token</th><th>Access List</th><th>IP List</th><th style="text-align:center">Actions</th></tr>'
+                    + '<tr elemId="*"><td class="token"><input class="form-control" placeholder="Token" type="text" value="' + $.generateGuid()
+                    + '_"/></td><td class="accessList"><input class="form-control" placeholder="Access List"  type="text"/></td><td class="ipList"><input class="form-control" placeholder="IP List" type="text"/></td>'
+                    + '<td class="actions" style="text-align:center"><a href="javascript:;" class="elemSave"></a><a href="javascript:;" class="elemCancel"></a></td></tr>';
+                for (var i = 0; i < list.length; i++) {
+                    var elem = list[i];
+                    html += '<tr eTag="' + escape(elem.ETag) + '" elemId="' + elem.RowKey + '"><td class="token"><a class="viewMode" style="width:100%;border:none" href="@Model.ServiceUrlForViewMode/'
+                        + elem.RowKey + '">' + elem.RowKey + '</a><input type="text" class="editMode form-control" /></td > <td class="accessList"><span class="viewMode">'
+                        + elem.AccessList + '</span><input type="text" class="editMode form-control"/></td><td class="ipList"><span class="viewMode">'
+                        + (!elem.IpList ? '' : elem.IpList) + '</span><input type="text" class="editMode form-control"/></td>'
+                        + '<td class="actions" style="text-align:center"><a href="javascript:;" class="elemEdit"></a><a href="javascript:;" class="elemDelete"></a><a href="javascript:;" style="display:none" class="elemSave"></a><a href="javascript:;" style="display:none" class="elemCancel"></a></td></tr>';
+                }
+
+                html += '</table>';
+                var parent = $('.editItems');
+                parent.empty();
+                parent.append($(html));
+
+
+                $('.elemEdit').click(function() {
+                    var parent = $(this).parents('tr');
+                    parent.find('.editMode').val(parent.find('td.token a').text());
+                    parent.find('td.accessList input').val(parent.find('td.accessList span').text());
+                    parent.find('td.ipList input').val(parent.find('td.ipList span').text());
+                    parent.find('.viewMode').hide();
+                    parent.find('.editMode').show();
+
+                    parent.find('.elemEdit').hide();
+                    parent.find('.elemDelete').hide();
+                    parent.find('.elemSave').show();
+                    parent.find('.elemCancel').show();
+                });
+
+
+                $('.elemDelete').click(function() {
+                    var token = $(this).parents('tr').attr('elemId');
+                    var url = '@Url.Action("RemoveAccessToken")';
+                    if (confirm('The "' + token + '" token will be deleted.')) {
+                        $.post(url, { 'tokenId': token }, function(data) { $.populateTokens(data.json) });
+                    }
+                });
+
+                $('.elemSave').click(function() {
+                    var elemId = $(this).parents('tr').attr('elemId');
+                    if (!$.validateUser(elemId)) {
+                        return;
+                    }
+                    var url = '@Url.Action("SaveAccessToken")';
+                    $.tokenToSave = {
+                        'token': {
+                            'rowKey': $('tr[elemId="' + elemId + '"] td.token input').val(),
+                            'accessList': $('tr[elemId="' + elemId + '"] td.accessList input').val(),
+                            'ipList': $('tr[elemId="' + elemId + '"] td.ipList input').val(),
+                            'eTag': $('tr[elemId="' + elemId + '"]').attr('eTag')
+
+                        }
+                    };
+                    $.post(url,
+                        $.tokenToSave,
+                        function(data) {
+                            if (data.result == @((int) UpdateSettingsStatus.OutOfDate)) {
+                                $.showMessage('error',
+                                    'Your version of values is out of date.',
+                                    [
+                                        {
+                                            text: 'Update',
+                                            action: function() { $.populateTokens(data.json) }
+                                        },
+                                        {
+                                            text: 'Force',
+                                            action: function() {
+                                                var url = '@Url.Action("ForceSaveAccessToken")';
+                                                $.post(url,
+                                                    $.tokenToSave,
+                                                    function(data) {
+                                                        $.populateTokens(data.json);
+                                                    });
+                                            }
+                                        }
+                                    ]);
+                            } else {
+                                $.populateTokens(data.json);
+                            }
+
+                        });
+                });
+
+                $(".elemCancel").click(function() {
+                    var parent = $(this).parents('tr');
+                    if (parent.attr('elemId') == '*') {
+                        var inputs = parent.find('input[type=text]');
+                        inputs.val('');
+                        inputs.removeClass('error');
+                    } else {
+                        parent.find('.editMode').val(parent.find('td.token a').text());
+                        parent.find('td.fName input').val(parent.find('td.accessList span').text());
+                        parent.find('td.lName input').val(parent.find('td.ipList span').text());
+
+
+                        parent.find('.viewMode').show();
+                        parent.find('.editMode').hide();
+
+                        parent.find('.elemEdit').show();
+                        parent.find('.elemDelete').show();
+                        parent.find('.elemSave').hide();
+                        parent.find('.elemCancel').hide();
+                    }
+                });
+
+            };
+            $.validateUser = function(userId) {
+                var row = $('.editItems table tr[elemId="' + userId + '"]');
+                if (row.length == 0) {
+                    return;
+                }
+
+                var valid = true;
+                if (row.find('td.token input').val().trim() == '') {
+                    row.find('td.token input').addClass('error');
+                    valid = false;
+                } else {
+                    row.find('td.token input').removeClass('error');
+                }
+
+                if (row.find('td.accessList input').val().trim() == '') {
+                    row.find('td.accessList input').addClass('error');
+                    valid = false;
+                } else {
+                    row.find('td.accessList input').removeClass('error');
+                }
+
+                //if (row.find('td.ipList input').val().trim() == '') {
+                //    row.find('td.ipList input').addClass('error');
+                //    valid = false;
+                //} else {
+                //    row.find('td.ipList input').removeClass('error');
+                //}
+
+                return valid;
+            };
+
+
+            $
+                .populateTokens('@Html.Raw(JsonConvert.SerializeObject(Model.Tokens).Replace("'", "\\'").Replace("\"", "\\\""))');
+        });
+    </script>
+}

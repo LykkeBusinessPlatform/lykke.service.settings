@@ -1,0 +1,179 @@
+﻿@using Newtonsoft.Json
+@model Web.Models.ManageUsersModel
+
+@{
+    ViewBag.Title = "Manage users";
+}
+
+<ul class="nav nav-tabs">
+    <li class="active"><a href="@Url.Action("ManageUsers")">Manage Users</a></li>
+    <li><a href="@Url.Action("ManageRoles")">Manage Roles</a></li>
+</ul>
+
+<div class="editItems">
+
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $(function() {
+            $.populateUsers = function(json) {
+                var list = eval('(' + json + ')');
+                var html =
+                    '<table class="table table-striped table-bordered"><tr><th>Email</th><th>First Name</th><th>Last name</th><th>Roles</th><th style="text-align:center">Admin</th><th style="text-align:center">Active</th><th style="text-align:center">Actions</th></tr>';
+                for (var i = 0; i < list.length; i++) {
+                    var elem = list[i];
+                    html += '<tr elemId="' + elem.Email + '">' +
+                        '<td class="email"><span class="viewMode">' + elem.Email + '</span><input type="text" class="editMode form-control"/></td>' +
+                        '<td class="fName"><span class="viewMode">' + elem.FirstName + '</span><input type="text" class="editMode form-control"/></td>' +
+                        '<td class="lName"><span class="viewMode">' + elem.LastName + '</span><input type="text" class="editMode form-control"/></td>' +
+                        '<td class="roles col-md-3"><span class="viewMode">' + (elem.Roles ? elem.Roles.join(', ') : '') + '</span><input type="text" class="editMode form-control"/>' +
+                        '<td style="text-align:center"><input orig="' + elem.Admin + '" type="checkbox" disabled="disabled" class="admin"' + (elem.Admin ? ' checked="checked"' : '') + '/></td>' +
+                        '<td style="text-align:center"><input type="checkbox" orig="' + elem.Active + '" disabled="disabled" class="active"' + (elem.Active ? ' checked="checked"' : '') + '/></td>' +
+                        '<td class="actions" style="text-align:center"><a href="javascript:;" class="elemEdit"></a><a href="javascript:;" class="elemDelete"></a><a href="javascript:;" style="display:none" class="elemSave"></a><a href="javascript:;" style="display:none" class="elemCancel"></a><a href="javascript:;" class="elemReset"></a></td></tr>';
+                }
+                html +=
+                    '<tr elemId="*"><td class="email"><input class="form-control" placeholder="Email" type="text"/></td><td class="fName"><input class="form-control" placeholder="First Name"  type="text"/></td><td class="lName"><input class="form-control" placeholder="Last Name" type="text"/></td><td class="roles"><input class="form-control" placeholder="Roles" type="text"/></td><td style="text-align:center"><input type="checkbox" class="admin"/></td><td style="text-align:center"><input type="checkbox" class="active"/></td>' +
+                    '<td class="actions" style="text-align:center"><a href="javascript:;" class="elemSave"></a><a href="javascript:;" class="elemCancel"></a></td></tr>';
+
+                html += '</table>';
+                var parent = $('.editItems');
+                parent.empty();
+                parent.append($(html));
+
+                
+
+                $('.elemEdit').click(function() {
+                    var parent = $(this).parents('tr');
+                    parent.find('.editMode').val(parent.find('td.email span').text());
+                    parent.find('td.fName input').val(parent.find('td.fName span').text());
+                    parent.find('td.lName input').val(parent.find('td.lName span').text());
+                    parent.find('td.roles input').val(parent.find('td.roles span').text());
+                    parent.find('.viewMode').hide();
+                    parent.find('.editMode').show();
+                    parent.find('input[type="checkbox"]').removeAttr('disabled');
+                    parent.find('.elemEdit').hide();
+                    parent.find('.elemDelete').hide();
+                    parent.find('.elemReset').hide();
+                    parent.find('.elemSave').show();
+                    parent.find('.elemCancel').show();
+                });
+
+                $('.elemReset').click(function() {
+                    var elemId = $(this).parents('tr').attr('elemId');
+                    var url = '@Url.Action("ResetUserPassword")';
+                    if (confirm('The password for"' + elemId + '" user will be resetted to default.')) {
+                        $.post(url, { 'userEmail': elemId });
+                    }
+                });
+
+                $('.elemDelete').click(function() {
+                    var elemId = $(this).parents('tr').attr('elemId');
+                    var url = '@Url.Action("RemoveUser")';
+                    if (confirm('The "' + elemId + '" user will be deleted.')) {
+                        $.post(url, { 'userEmail': elemId }, function(data) { $.populateUsers(data.json) });
+                    }
+                });
+
+                $('.elemSave').click(function() {
+                    var elemId = $(this).parents('tr').attr('elemId');
+                    if (!$.validateUser(elemId)) {
+                        return;
+                    }
+                    var url = '@Url.Action("SaveUser")';
+                    $.post(url,
+                        {
+                            'user': {
+                                'email': $('tr[elemId="' + elemId + '"] td.email input').val(),
+                                'firstName': $('tr[elemId="' + elemId + '"] td.fName input').val(),
+                                'lastName': $('tr[elemId="' + elemId + '"] td.lName input').val(),
+                                'roles' : $('tr[elemid="' + elemId + '"] td.roles input').val().replace(/ /g, '').split(','),
+                                'active': $('tr[elemId="' + elemId + '"] input.active').is(':checked'),
+                                'admin': $('tr[elemId="' + elemId + '"] input.admin').is(':checked')
+                            }
+                        },
+                        function(data) { $.populateUsers(data.json) });
+                });
+
+                $(".elemCancel").click(function() {
+                    var parent = $(this).parents('tr');
+                    if (parent.attr('elemId') == '*') {
+                        var inputs = parent.find('input[type=text]');
+                        inputs.val('');
+                        inputs.removeClass('error');
+                        var checkBoxes = parent.find('input[type=checkbox]');
+                        checkBoxes.removeAttr('checked');
+                    } else {
+                        parent.find('.editMode').val(parent.find('td.email span').text());
+                        parent.find('td.fName input').val(parent.find('td.fName span').text());
+                        parent.find('td.lName input').val(parent.find('td.lName span').text());
+                        if (parent.find('input.admin').attr('orig') == 'true') {
+                            parent.find('input.admin').attr('checked', 'checked');
+                        } else {
+                            parent.find('input.admin').removeAttr('checked');
+                        }
+
+                        if (parent.find('input.active').attr('orig') == 'true') {
+                            parent.find('input.active').attr('checked', 'checked');
+                        } else {
+                            parent.find('input.active').removeAttr('checked');
+                        }
+
+
+                        parent.find('.viewMode').show();
+                        parent.find('.editMode').hide();
+                        parent.find('input[type="checkbox"]').attr('disabled', 'disabled');
+                        parent.find('.elemEdit').show();
+                        parent.find('.elemDelete').show();
+                        parent.find('.elemReset').show();
+                        parent.find('.elemSave').hide();
+                        parent.find('.elemCancel').hide();
+                    }
+                });
+
+            };
+            $.validateUser = function(userId) {
+                var row = $('.editItems table tr[elemId="' + userId + '"]');
+                if (row.length == 0) {
+                    return;
+                }
+
+                var valid = true;
+                if (row.find('td.email input').val()
+                    .trim() ==
+                    '' ||
+                    !$.validateEmail(row.find('td.email input').val())) {
+                    row.find('td.email input').addClass('error');
+                    valid = false;
+                } else {
+                    row.find('td.email input').removeClass('error');
+                }
+
+                if (row.find('td.fName input').val().trim() == '') {
+                    row.find('td.fName input').addClass('error');
+                    valid = false;
+                } else {
+                    row.find('td.fName input').removeClass('error');
+                }
+
+                if (row.find('td.lName input').val().trim() == '') {
+                    row.find('td.lName input').addClass('error');
+                    valid = false;
+                } else {
+                    row.find('td.lName input').removeClass('error');
+                }
+
+                return valid;
+            };
+
+            $.validateEmail = function(email) {
+                var re =
+                    /^(([^<>()\[\]\\.,;:\s@@"]+(\.[^<>()\[\]\\.,;:\s@@"]+)*)|(".+"))@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                return re.test(email);
+            }
+
+            $.populateUsers('@Html.Raw(JsonConvert.SerializeObject(Model.Users).Replace("'", "\\'"))');
+        });
+    </script>
+}

@@ -1,0 +1,90 @@
+﻿@model Web.Models.OverridesModel
+
+<table class="table table-striped table-bordered">
+    <tr>
+        <th>Network</th>
+        <th>Value</th>
+        <th style="text-align: center; width: 100px;">Actions</th>
+    </tr>
+    @foreach (var overrideValue in Model.KeyValue.Override)
+    {
+        <tr>
+            <td>
+                @(Model.Networks.FirstOrDefault(item => item.Id == overrideValue.NetworkId)?.Name ?? overrideValue.NetworkId)
+            </td>
+            <td>
+                <div id="view-@overrideValue.NetworkId">
+                    @overrideValue.Value
+                </div>
+                <div id="edit-@overrideValue.NetworkId" class="hidden">
+                    <input type="text" class="form-control" id="@overrideValue.NetworkId" value="@overrideValue.Value" />
+                </div>
+            </td>
+            <td class="actions" style="text-align: center">
+                <div id="view-actions-@overrideValue.NetworkId">
+                    <a href="javascript:;" class="elemEdit" onclick="editOverride('@overrideValue.NetworkId')"></a>
+                    <a href="javascript:;" class="elemCancel" onclick="deleteOverride('@overrideValue.NetworkId')"></a>
+                </div>
+                <div id="edit-actions-@overrideValue.NetworkId" class="hidden">
+                    <a href="javascript:;" class="elemSave" onclick="saveOverride('@overrideValue.NetworkId')"></a>
+                    <a href="javascript:;" class="elemDelete" onclick="cancelEdit('@overrideValue.NetworkId')"></a>
+                </div>
+            </td>
+        </tr>
+    }
+    @if (Model.AvailableNetworks.Any())
+    {
+        <tr>
+            <td>
+                @Html.DropDownList("network", Model.AvailableNetworks, new { id = "network_id", @class = "form-control" })
+            </td>
+            <td>
+                <input type="text" class="form-control" id="override_value" />
+            </td>
+            <td class="actions" style="text-align: center">
+                <a href="javascript:;" class="elemSave" id="add_override" onclick="addOverride()"></a>
+                <a href="javascript:;" class="elemDelete" id="clear_network" onclick="clean()"></a>
+            </td>
+        </tr>
+    }
+</table>
+
+<script>
+    var currentIpValue = '';
+
+    function addOverride() {
+        Request.doRequest({ url: '@Url.Action("AddOverride")', divResult: '#overrideValues', showLoading: false, params: {key: '@Model.KeyValue.RowKey', networkId: $('#network_id').val(), value: $('#override_value').val() } });
+    }
+
+    function saveOverride(id) {
+        Request.doRequest({ url: '@Url.Action("UpdateOverride")', divResult: '#overrideValues', showLoading: false, params: {key: '@Model.KeyValue.RowKey', networkId: id, value: $('#'+id).val() } });
+    }
+
+    function editOverride(id) {
+        $('#view-' + id).addClass('hidden');
+        $('#view-actions-' + id).addClass('hidden');
+        currentIpValue = $('#' + id).val();
+        $('#edit-' + id).removeClass('hidden');
+        $('#edit-actions-' + id).removeClass('hidden');
+    }
+
+    function cancelEdit(id) {
+        $('#edit-' + id).addClass('hidden');
+        $('#edit-actions-' + id).addClass('hidden');
+        $('#' + id).val(currentIpValue);
+        $('#view-' + id).removeClass('hidden');
+        $('#view-actions-' + id).removeClass('hidden');
+        $('.error').removeClass('error');
+    }
+
+    function deleteOverride(id) {
+        if (confirm('Do you want to delete this override value?')) {
+            Request.doRequest({ url: '@Url.Action("DeleteOverride")', divResult: '#overrideValues', showLoading: false, params: {key: '@Model.KeyValue.RowKey', networkId: id } });
+        }
+    }
+
+    function clean() {
+        $('#override_value').val('');
+        $('.error').removeClass('error');
+    }
+</script>
