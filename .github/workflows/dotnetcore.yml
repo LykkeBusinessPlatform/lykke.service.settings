@@ -21,7 +21,7 @@ jobs:
     - name: Test
       run: dotnet test --configuration Release
     - name: publish
-      run: dotnet publish ./src/Lykke.Service.QuorumMonitoring/Lykke.Service.QuorumMonitoring.csproj --output ../../publish --configuration Release
+      run: dotnet publish ./src/Web/Web.csproj --output ../../publish --configuration Release
     - name: Publish to Registry
       uses: LykkeBusinessPlatform/Publish-Docker-Github-Action@master
       with:
