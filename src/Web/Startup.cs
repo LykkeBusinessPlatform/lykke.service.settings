@@ -3,14 +3,12 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using AzureStorage.Tables;
 using Common.Log;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SettingsReader.ReloadingManager;
-using Lykke.SlackNotification.AzureQueue;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -23,8 +21,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Web.Modules;
 using Web.Models;
 using Shared.Settings;
-using Services;
-using Core.Services;
 using Lykke.Common.Log;
 
 namespace web
@@ -172,8 +168,6 @@ namespace web
             {
                 if (Log != null)
                     HealthNotifier.Notify("Starting");
-
-                await ApplicationContainer.Resolve<IStartupManager>().StartAsync();
             }
             catch (Exception ex)
             {

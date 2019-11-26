@@ -95,7 +95,7 @@ namespace AzureRepositories.Blob
                 var lastModified = blockBlob.Properties.LastModified;
                 return lastModified.HasValue ? lastModified.Value.ToString("g") : String.Empty;
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 return String.Empty;
             }

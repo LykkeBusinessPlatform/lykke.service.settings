@@ -30,7 +30,7 @@ namespace Web.Controllers
     public class BaseController : Controller
     {
         private ILog _log;
-        private IUserRepository _userRepository;
+        protected IUserRepository _userRepository;
         private IJsonDataRepository _jsonDataRepository;
         private ITokensRepository _tokensRepository;
         private IServiceTokenRepository _serviceTokensRepository;
@@ -295,7 +295,7 @@ namespace Web.Controllers
                    !TestSettingString(sb, nameof(_appSettings.DefaultPassword), _appSettings.DefaultPassword) &&
                    !TestSettingString(sb, nameof(_appSettings.DefaultUserEmail), _appSettings.DefaultUserEmail) &&
                    !TestSettingString(sb, nameof(_appSettings.DefaultUserFirstName), _appSettings.DefaultUserFirstName) &&
-                   !TestSettingString(sb, nameof(_appSettings.DefaultUserLasttName), _appSettings.DefaultUserLasttName) &&
+                   !TestSettingString(sb, nameof(_appSettings.DefaultUserLastName), _appSettings.DefaultUserLastName) &&
                    !TestSettingString(sb, nameof(_appSettings.ApiClientId), _appSettings.ApiClientId) &&
                    TestSettingRx(sb, nameof(_appSettings.AvailableEmailsRegex), _appSettings.AvailableEmailsRegex);
         }

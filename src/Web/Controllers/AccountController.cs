@@ -69,14 +69,16 @@ namespace Web.Controllers
                 // TODO: don't forget to remove this line
                 _log.Info("Sign In");
 
-                if ((await _userRepository.GetUsers()).Count == 0)
+                var users = await _userRepository.GetUsers();
+
+                if (users.Count == 0)
                 {
                     var usr = new UserEntity
                     {
                         PasswordHash = _appSettings.DefaultPassword.GetHash(),
                         RowKey = _appSettings.DefaultUserEmail,
                         FirstName = _appSettings.DefaultUserFirstName,
-                        LastName = _appSettings.DefaultUserLasttName,
+                        LastName = _appSettings.DefaultUserLastName,
                         Active = true,
                         Admin = true
                     };
@@ -116,7 +118,7 @@ namespace Web.Controllers
                 //            Active = true,
                 //            Admin = true,
                 //            FirstName = _appSettings.DefaultUserFirstName,
-                //            LastName = _appSettings.DefaultUserLasttName,
+                //            LastName = _appSettings.DefaultUserLastName,
                 //            Salt = String.Empty,
                 //            PasswordHash = $"{_appSettings.DefaultPassword}{String.Empty}".GetHash(),
                 //            PartitionKey = "U",

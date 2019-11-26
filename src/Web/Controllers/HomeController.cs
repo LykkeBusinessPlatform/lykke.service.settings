@@ -28,8 +28,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using Services;
-using Shared.Commands;
-using Shared.RabbitPublishers;
 using Shared.Settings;
 using Web.Code;
 using Web.Extensions;
@@ -56,13 +54,8 @@ namespace Web.Controllers
         private readonly INetworkRepository _networkRepository;
         private readonly IConnectionUrlHistoryRepository _connectionUrlHistoryRepository;
         private readonly IRepositoriesUpdateHistoryRepository _repositoriesUpdateHistoryRepository;
-        private readonly ISettingsPublisher _settingsPublisher;
-        private readonly IUserRepository _userRepository;
-        private readonly IRoleRepository _roleRepository;
-        private readonly IApplicationSettingsRepostiory _applicationSettingsRepostiory;
         private readonly ISecretKeyValuesRepository _secretKeyValuesRepository;
         private readonly IRepositoriesService _repositoriesService;
-        private readonly IMemoryCache _memoryCache;
 
         private static readonly object Lock = new object();
 
@@ -97,12 +90,8 @@ namespace Web.Controllers
             IConnectionUrlHistoryRepository connectionUrlHistoryRepository,
             INetworkRepository networkRepository,
             IRepositoriesUpdateHistoryRepository repositoriesUpdateHistoryRepository,
-            ISettingsPublisher settingsPublisher,
-            IRoleRepository roleRepository,
-            IApplicationSettingsRepostiory applicationSettingsRepostiory,
             ISecretKeyValuesRepository secretKeyValuesRepository,
-            IRepositoriesService repositoriesService,
-            IMemoryCache memoryCache)
+            IRepositoriesService repositoriesService)
             : base(userActionHistoryRepository)
         {
             _log = logFactory.CreateLog(this);
@@ -121,13 +110,9 @@ namespace Web.Controllers
             _connectionUrlHistoryRepository = connectionUrlHistoryRepository;
             _networkRepository = networkRepository;
             _repositoriesUpdateHistoryRepository = repositoriesUpdateHistoryRepository;
-            _settingsPublisher = settingsPublisher;
             _userRepository = userRepository;
-            _roleRepository = roleRepository;
-            _applicationSettingsRepostiory = applicationSettingsRepostiory;
             _secretKeyValuesRepository = secretKeyValuesRepository;
             _repositoriesService = repositoriesService;
-            _memoryCache = memoryCache;
 
             lock (Lock)
             {
@@ -425,12 +410,18 @@ namespace Web.Controllers
         {
             try
             {
-                var repositoryUpdateHistoryEntities = await _repositoriesUpdateHistoryRepository.GetAsyncByInitialCommit(repositoryId);
-                var entitiesToOrder = repositoryUpdateHistoryEntities.Where(x => x.IsManual == false);
+                var repositoryUpdateHistoryEntities = (await _repositoriesUpdateHistoryRepository.GetAsyncByInitialCommit(repositoryId))
+                    .ToArray();
+
+                var entitiesToOrder = repositoryUpdateHistoryEntities.Where(x => x.IsManual == false).ToArray();
+
                 if (!entitiesToOrder.Any())
                     entitiesToOrder = repositoryUpdateHistoryEntities;
 
-                var lastUpdate = entitiesToOrder.OrderByDescending(x => ((RepositoryUpdateHistory)x).Timestamp).FirstOrDefault();
+                var lastUpdate = entitiesToOrder
+                    .OrderByDescending(x => ((RepositoryUpdateHistory)x).Timestamp)
+                    .FirstOrDefault();
+
                 if (lastUpdate == null)
                     return Content("Repository not found");
 
@@ -446,8 +437,11 @@ namespace Web.Controllers
                     RepositoryId = repositoryEntity.RowKey,
                     UserAgent = Request.Headers["User-Agent"].FirstOrDefault()
                 };
+
+#pragma warning disable 4014
                 // this should not be awaited
                 _connectionUrlHistoryRepository.SaveConnectionUrlHistory(connectionUrlHistory);
+#pragma warning restore 4014
 
                 var correctFileName = repositoryEntity.UseManualSettings ? MANUAL_FILE_PREFIX + repositoryEntity.FileName : repositoryEntity.FileName;
 
@@ -756,9 +750,7 @@ namespace Web.Controllers
             try
             {
                 ViewData["timeToEditInMinutes"] = _appSettings.LockTimeInMinutes;
-                ViewBag.RabbitConn = _appSettings.SettingsUpdaterSettings.ConnectToRabbit.ToLower() == "true"
-                     || (_appSettings.SettingsUpdaterSettings.ConnectToRabbit.ToLower() == "enabled")
-                     || (_appSettings.SettingsUpdaterSettings.ConnectToRabbit.ToLower() == "yes");
+                ViewBag.RabbitConn = false;
                 ViewData["isProduction"] = IS_PRODUCTION;
 
                 List<KeyValueModel> keyValueModels = null;
@@ -892,24 +884,6 @@ namespace Web.Controllers
                         status = UpdateSettingsStatus.NotFound
                     });
 
-                var command = string.Empty;
-
-                if (keyValue.Types != null)
-                {
-                    var types = keyValue.Types;
-
-                    // iterate through keyValueEntity types, check if allowedMetadatasToGenerate dictionary keys contains the specific type and assign command to "command" variable
-                    foreach (var item in types)
-                    {
-                        var type = item.Trim();
-                        if (Commands.AllowedMetadatasToGenerate.ContainsKey(type))
-                        {
-                            command = Commands.AllowedMetadatasToGenerate[type];
-                            break;
-                        }
-                    }
-                }
-
                 var duplicatedKeys = keyValues
                     .Where(x => x.RowKey != entity.RowKey && !string.IsNullOrEmpty(x.Value) && x.Value == entity.Value && string.IsNullOrEmpty(x.Tag))
                     .ToList();
@@ -958,15 +932,6 @@ namespace Web.Controllers
                     UserInfo.UserEmail,
                     UserInfo.Ip,
                     IS_PRODUCTION);
-
-                //sendind data to RabbitMQ if application is not on production
-                if (sendToAll && !IS_PRODUCTION)
-                {
-                    if (string.IsNullOrEmpty(command))
-                        await _settingsPublisher.PublishAsync(keyValueEntity, Commands.SetValueCommand);
-                    else
-                        await _settingsPublisher.PublishAsync(keyValueEntity, command);
-                }
 
                 var updatedKeyValues = await GetKeyValuesAsync(i => FilterKeyValue(i, filter, search), repositoryId);
 

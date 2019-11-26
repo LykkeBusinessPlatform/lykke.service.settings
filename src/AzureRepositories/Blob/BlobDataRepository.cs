@@ -43,7 +43,7 @@ namespace AzureRepositories.Blob
                 var result = await _blobStorage.GetAsync(_container, fileName);
                 return new Tuple<string, string>(result.AsString(), result.ETag);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new Tuple<string, string>(string.Empty, string.Empty);
             }
@@ -84,7 +84,7 @@ namespace AzureRepositories.Blob
             {
                 await _blobStorage.DelBlobAsync(_container, file);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }

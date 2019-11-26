@@ -1,6 +1,7 @@
-﻿@using Web.Extensions
+﻿RabbitConn@using Web.Extensions
 @using Newtonsoft.Json
 @using Core.Extensions
+@using Web.Extensions
 @model dynamic
 
 @{
@@ -160,16 +161,7 @@
                 </div>
             </div>
             <div class="modal-footer" id="keyValueUpdateButtons">
-
-                @if (ViewBag.RabbitConn)
-                {
-                    <button type="button" class="btn btn-primary save" data-dismiss="modal" id="update-all">Save on <strong>ALL</strong> instances</button>
-                    <button type="button" class="btn btn-primary save" data-dismiss="modal" id="update">Save on <strong>CURRENT</strong>  instance</button>
-                }
-                else
-                {
-                    <button type="button" class="btn btn-primary save" data-dismiss="modal" id="update">Save</button>
-                }
+                <button type="button" class="btn btn-primary save" data-dismiss="modal" id="update">Save</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -400,7 +392,7 @@
                         '<td class="col-md-2" style="background-color:' + (!elem.IsUsedInRepository ? "yellow" : "") + '">' + elem.RowKey + '</td>' +
                         '<td class="col-md-2">' + (elem.Types == null || typeof elem.Types == 'undefined' ? ' ' : elem.Types.join(', ')) + '</td>';
 
-                    html += '<td class="col-md-2">'; 
+                    html += '<td class="col-md-2">';
 
                     if (elem.RepositoryNames != null && typeof elem.RepositoryNames != 'undefined') {
                         html+='<ul class="list-unstyled list-container" id="list-' + elem.RowKey +'" </ul>';
