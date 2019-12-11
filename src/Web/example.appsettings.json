@@ -2,6 +2,7 @@
   "UserConnectionString": "<Azure Storage connection string to keep user info>",
   "ConnectionString": "<Azure Storage connection string to keep settings data>",
   "LockTimeInMinutes": "<how many time admin can lock key for edit some value in KeyVault>",
+  "UserLoginTime": "<how many keep session, in minutes>",
   "DefaultPassword": "<Password for new user>",
   "DefaultUserEmail": "<login for default user>",
   "DefaultUserFirstName": "<name for default user>",
@@ -15,4 +16,3 @@
     "BitbucketPassword": "Optional. Password for Bitbacket user"
   }
 }
-    }
