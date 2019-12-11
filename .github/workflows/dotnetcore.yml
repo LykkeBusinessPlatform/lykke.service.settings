@@ -25,7 +25,7 @@ jobs:
     - name: Publish to Registry
       uses: LykkeBusinessPlatform/Publish-Docker-Github-Action@master
       with:
-        name: lykkebiz/service-settingsv2
+        name: lykkebusiness/service-settingsv2
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         workdir: ./publish
