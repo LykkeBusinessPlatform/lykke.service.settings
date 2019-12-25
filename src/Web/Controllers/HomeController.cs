@@ -65,8 +65,6 @@ namespace Web.Controllers
         private const string FILE_FORMAT = ".txt";
         private const string GITHUB_URL = "github.com";
         private const int PAGE_SIZE = 10;
-        private const string _jsonType = "Json";
-        private const string _jsonArrayType = "JsonArray";
         #endregion
 
         public HomeController(
@@ -764,7 +762,7 @@ namespace Web.Controllers
                         IEnumerable<IKeyValueEntity> keyValues = await GetKeyValuesAsync(i => FilterKeyValue(i, filter, search), repositoryId);
                         ViewBag.KeyValuesWithJsonTypes = JsonConvert.SerializeObject(
                             from r in keyValues
-                            where r.Types != null && (r.Types.Contains(_jsonType) || r.Types.Contains(_jsonArrayType))
+                            where r.Types != null && (r.Types.Contains(KeyValueTypes.Json) || r.Types.Contains(KeyValueTypes.JsonArray))
                             select new { Key = r.RowKey, r.Value });
                         ViewData["keyValueNames"] = JsonConvert.SerializeObject(keyValues.Select(key => key.RowKey).Distinct());
 
@@ -936,7 +934,7 @@ namespace Web.Controllers
                 var jsonTypedKeyValues = new List<IKeyValueEntity>();
                 foreach (var valueEntity in updatedKeyValues)
                 {
-                    if ((valueEntity.Types?.All(t => t != _jsonType && t != _jsonArrayType) ?? true))
+                    if ((valueEntity.Types?.All(t => t != KeyValueTypes.Json && t != KeyValueTypes.JsonArray) ?? true))
                         continue;
 
                     jsonTypedKeyValues.Add(valueEntity);

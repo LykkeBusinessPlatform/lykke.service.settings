@@ -7,16 +7,13 @@ namespace Web.Models
 {
     public class KeyValueModel
     {
-        private const string _jsonType = "Json";
-        private const string _jsonArrayType = "JsonArray";
-
         private readonly List<string> _mustBeGeneratedTypes = new List<string>
         {
-            "AzureTableStorage",
-            "MongoDB",
-            "RabbitMq",
-            "Redis",
-            "SqlDB"
+            KeyValueTypes.AzureTableStorage,
+            KeyValueTypes.MongoDB,
+            KeyValueTypes.RabbitMq,
+            KeyValueTypes.Redis,
+            KeyValueTypes.SqlDB,
         };
 
         public string RowKey => Key;
@@ -53,7 +50,7 @@ namespace Web.Models
             Tag = entry.Tag;
             EmptyValueType = entry.EmptyValueType;
             HasFullAccess = entry.HasFullAccess;
-            IsJsonType = entry?.Types != null && (entry.Types.Contains(_jsonType) || entry.Types.Contains(_jsonArrayType));
+            IsJsonType = entry?.Types != null && (entry.Types.Contains(KeyValueTypes.Json) || entry.Types.Contains(KeyValueTypes.JsonArray));
             MustGenerateValue = entry?.Types != null && entry.Types.Any(t => _mustBeGeneratedTypes.Contains(t));
         }
 

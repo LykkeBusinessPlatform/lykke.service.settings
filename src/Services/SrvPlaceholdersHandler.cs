@@ -25,10 +25,9 @@ namespace Services
 
         private const string YamlPlaceholder = "settings-key";
         private const string YamlTypes = "types";
-        private const string _forcedQuotesType = "String";
 
         private static readonly List<KeyValue> KeyValues = new List<KeyValue>();
-        private static readonly string[] _noQuotesTypes = { "Json", "JsonArray" };
+        private static readonly string[] _noQuotesTypes = { KeyValueTypes.Json, KeyValueTypes.JsonArray };
 
         private static bool _removeLastBacket = false;
         private static KeyValue TempKeyValue = new KeyValue();
@@ -168,7 +167,7 @@ namespace Services
                     else
                     {
                         propertyRemoved = false;
-                        bool isForcedQuotesType = types != null && types.Contains(_forcedQuotesType);
+                        bool isForcedQuotesType = types != null && types.Contains(KeyValueTypes.String);
                         bool isJsonType = types != null && types.Any(t => _noQuotesTypes.Contains(t));
                         bool noQuutesValue = bool.TryParse(valueEncoded, out bool _)
                             || int.TryParse(valueEncoded, out int _)

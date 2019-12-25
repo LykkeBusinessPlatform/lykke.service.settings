@@ -11,8 +11,6 @@ namespace Web.Controllers
     [Route("api/[controller]")]
     public class ApiSettingsController : Controller
     {
-        private const string _azureTableStorageMetadata = "AzureTableStorage";
-
         private readonly IKeyValuesRepository _keyValuesRepository;
         private readonly ILog _log;
 
@@ -23,11 +21,29 @@ namespace Web.Controllers
         }
 
         [HttpGet("AzureTableList")]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetAzureTableConnStringsAsync()
         {
             try
             {
-                var keyValues = await _keyValuesRepository.GetAsync(x =>  x.Types != null && x.Types.Contains(_azureTableStorageMetadata));
+                var keyValues = await _keyValuesRepository.GetAsync(x =>  x.Types != null && x.Types.Contains(KeyValueTypes.AzureTableStorage));
+
+                var tableConnStrList = keyValues.Select(x => x.Value).Distinct();
+
+                return new JsonResult(tableConnStrList);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex);
+                return null;
+            }
+        }
+
+        [HttpGet("SqlTableList")]
+        public async Task<IActionResult> GetSqlConnStringAsync()
+        {
+            try
+            {
+                var keyValues = await _keyValuesRepository.GetAsync(x => x.Types != null && x.Types.Contains(KeyValueTypes.SqlDB));
 
                 var tableConnStrList = keyValues.Select(x => x.Value).Distinct();
 
