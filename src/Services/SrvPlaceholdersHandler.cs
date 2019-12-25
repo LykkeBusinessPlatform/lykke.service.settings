@@ -25,6 +25,7 @@ namespace Services
 
         private const string YamlPlaceholder = "settings-key";
         private const string YamlTypes = "types";
+        private const string YamlDefaultValue = "default-value";
 
         private static readonly List<KeyValue> KeyValues = new List<KeyValue>();
         private static readonly string[] _noQuotesTypes = { KeyValueTypes.Json, KeyValueTypes.JsonArray };
@@ -402,7 +403,7 @@ namespace Services
                 }
                 else
                 {
-                    if (item.Key.ToString() == "settings-key")
+                    if (item.Key.ToString() == YamlPlaceholder)
                     {
                         JsonData.Length -= 3;
                         _removeLastBacket = true;
@@ -413,11 +414,16 @@ namespace Services
                         else
                             TempKeyValue.RowKey = item.Value.ToString();
                     }
-                    else if (item.Key.ToString() == "types")
+                    else if (item.Key.ToString() == YamlTypes)
                     {
                         List<object> innerList = (List<object>)item.Value;
                         if (innerList != null && innerList.Count > 0)
                             TempKeyValue.Types = innerList.Select(x => x.ToString()).ToArray();
+                    }
+                    else if (item.Key.ToString() == YamlDefaultValue)
+                    {
+                        if (item.Value != null && !string.IsNullOrEmpty(item.Value.ToString()))
+                            TempKeyValue.Value = item.Value.ToString();
                     }
                     else
                     {
@@ -437,7 +443,9 @@ namespace Services
                     }
                 }
 
-                if ((dict.Keys.Count == 1 && dict.Keys.Contains(YamlPlaceholder)) || (dict.Keys.Count == 2 && item.Key.ToString() == YamlTypes))
+                if (dict.Keys.Count == 1 && dict.Keys.Contains(YamlPlaceholder)
+                    || dict.Keys.Count == 2 && item.Key.ToString() == YamlDefaultValue
+                    || (dict.Keys.Count == 2 || dict.Keys.Count == 3) && item.Key.ToString() == YamlTypes)
                 {
                     KeyValues.Add(TempKeyValue);
                     TempKeyValue = new KeyValue();

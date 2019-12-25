@@ -305,7 +305,8 @@ namespace Services.RepositoryServices
                     keyValueEntity = new KeyValueEntity
                     {
                         RowKey = keyValue.RowKey,
-                        RepositoryNames = new[] { keyRepoName }
+                        RepositoryNames = new[] { keyRepoName },
+                        Value = keyValue.Value,
                     };
                 }
                 else if (keyValueEntity.RepositoryNames == null)
@@ -617,6 +618,7 @@ namespace Services.RepositoryServices
                         && lastPlaceholders[i].RowKey == (string.IsNullOrEmpty(repository.Tag) ? item.RowKey : item.RowKey.SubstringFromString(item.Tag + "-")))
                     {
                         lastPlaceholders.Remove(lastPlaceholders[i]);
+                        --i;
                         break;
                     }
                 }
@@ -632,8 +634,8 @@ namespace Services.RepositoryServices
                         : repository.Tag + "-" + lastItem.RowKey);
                     if (keyValueToUpdate != null)
                     {
-                        var tempRepoNames = keyValueToUpdate.RepositoryNames.ToList();
-                        tempRepoNames.Remove(keyRepoName);
+                        var tempRepoNames = keyValueToUpdate.RepositoryNames?.ToList();
+                        tempRepoNames?.Remove(keyRepoName);
                         keyValueToUpdate.RepositoryNames = tempRepoNames != null && tempRepoNames.Count > 0 ? tempRepoNames.ToArray() : null;
                         keyValuesToUpdate.Add(keyValueToUpdate);
                     }
