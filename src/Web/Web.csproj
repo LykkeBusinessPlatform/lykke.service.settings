@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="bootstrap" Version="3.3.7" />
+    <PackageReference Include="bootstrap" Version="3.4.1" />
     <PackageReference Include="Google.Apis" Version="1.32.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.32.0" />
     <PackageReference Include="Lykke.AzureQueueIntegration" Version="2.3.0" />
