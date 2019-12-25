@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>
     <OutputType>Exe</OutputType>
@@ -26,21 +26,18 @@
     <PackageReference Include="bootstrap" Version="3.3.7" />
     <PackageReference Include="Google.Apis" Version="1.32.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.32.0" />
-    <PackageReference Include="Lykke.AzureQueueIntegration" Version="2.2.0" />
-    <PackageReference Include="Lykke.Common" Version="7.0.4" />
-    <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.10.1" />
-    <PackageReference Include="Lykke.Logs" Version="5.2.0" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.0" />
+    <PackageReference Include="Lykke.AzureQueueIntegration" Version="2.3.0" />
+    <PackageReference Include="Lykke.Common.ApiLibrary" Version="2.4.2" />
+    <PackageReference Include="Lykke.Logs" Version="7.3.3" />
     <PackageReference Include="Lykke.SlackNotifications" Version="2.0.0" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.5" />
-    <PackageReference Include="Lykke.SettingsReader" Version="4.0.1" />
-    <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.6.4" />
+    <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.12.0" />
 
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.8" />
     <PackageReference Include="BuildBundlerMinifier" Version="2.7.385" />
-    <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.10.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.10" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="4.0.1" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
     <PackageReference Include="System.ComponentModel.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />

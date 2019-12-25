@@ -616,6 +616,7 @@ namespace Services.RepositoryServices
                         && lastPlaceholders[i].RowKey == (string.IsNullOrEmpty(repository.Tag) ? item.RowKey : item.RowKey.SubstringFromString(item.Tag + "-")))
                     {
                         lastPlaceholders.Remove(lastPlaceholders[i]);
+                        break;
                     }
                 }
             }
