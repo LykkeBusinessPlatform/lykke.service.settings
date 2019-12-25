@@ -53,7 +53,11 @@ namespace AzureRepositories.Repository
                 ruh.User = entity.User;
                 ruh.Branch = entity.Branch;
                 ruh.IsManual = entity.IsManual;
+                ruh.CreatedAt = DateTime.UtcNow;
             }
+
+            if (ruh.CreatedAt == null)
+                ruh.CreatedAt = ruh.Timestamp;
             ruh.PartitionKey = RepositoryUpdateHistory.GeneratePartitionKey();
             ruh.RowKey = entity.RowKey;
             await _tableStorage.InsertOrMergeAsync(ruh);

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
@@ -27,7 +26,6 @@ namespace web
 {
     public class Startup
     {
-        private static LogToConsole _consoleLogger;
         public IConfigurationRoot Configuration { get; }
         public IHostingEnvironment Environment { get; }
         public IContainer ApplicationContainer { get; set; }
@@ -152,8 +150,8 @@ namespace web
                 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
                 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-                appLifetime.ApplicationStarted.Register(() => StartApplication().Wait());
-                appLifetime.ApplicationStopped.Register(() => CleanUp().Wait());
+                appLifetime.ApplicationStarted.Register(StartApplication);
+                appLifetime.ApplicationStopped.Register(CleanUp);
             }
             catch (Exception ex)
             {
@@ -162,7 +160,7 @@ namespace web
             }
         }
 
-        private async Task StartApplication()
+        private void StartApplication()
         {
             try
             {
@@ -171,14 +169,13 @@ namespace web
             }
             catch (Exception ex)
             {
-                if (Log != null)
-                    Log?.Critical(ex);
+                Log?.Critical(ex);
 
                 throw;
             }
         }
 
-        private async Task CleanUp()
+        private void CleanUp()
         {
             try
             {

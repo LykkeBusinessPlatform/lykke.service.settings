@@ -29,17 +29,18 @@ namespace Web.Controllers
 {
     public class BaseController : Controller
     {
+        private readonly IUserActionHistoryRepository _userActionHistoryRepository;
+
         private ILog _log;
-        protected IUserRepository _userRepository;
         private IJsonDataRepository _jsonDataRepository;
         private ITokensRepository _tokensRepository;
         private IServiceTokenRepository _serviceTokensRepository;
         private IKeyValuesRepository _keyValuesRepository;
         private ILockRepository _lockRepository;
         private IAccessDataRepository _accessDataRepository;
-
-        private readonly IUserActionHistoryRepository _userActionHistoryRepository;
         private AppSettings _appSettings;
+
+        protected IUserRepository _userRepository;
 
         public readonly bool IS_PRODUCTION = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")?.ToLower() == "production";
 

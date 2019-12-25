@@ -1,4 +1,5 @@
-﻿using Core.Repository;
+﻿using System;
+using Core.Repository;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.Repository
@@ -13,5 +14,6 @@ namespace AzureRepositories.Repository
         public string User { get; set; }
         public string Branch { get; set; }
         public bool IsManual { get; set; }
+        public DateTimeOffset? CreatedAt { get; set; }
     }
 }

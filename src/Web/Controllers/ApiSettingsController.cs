@@ -1,16 +1,10 @@
-﻿using Common.Log;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Common.Log;
 using Core.KeyValue;
-using Core.User;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Web.Controllers
 {
@@ -21,20 +15,16 @@ namespace Web.Controllers
 
         private readonly IKeyValuesRepository _keyValuesRepository;
         private readonly ILog _log;
-        
-        public ApiSettingsController(ILogFactory logFactory, IKeyValuesRepository keyValuesRepository ) : base()
+
+        public ApiSettingsController(ILogFactory logFactory, IKeyValuesRepository keyValuesRepository )
         {
             _log = logFactory.CreateLog(this);
             _keyValuesRepository = keyValuesRepository;
         }
 
-        
         [HttpGet("AzureTableList")]
-
-        //[HttpGet]
-        //[SwaggerOperation("ApiSettings")]
         public async Task<IActionResult> Get()
-        {   
+        {
             try
             {
                 var keyValues = await _keyValuesRepository.GetAsync(x =>  x.Types != null && x.Types.Contains(_azureTableStorageMetadata));

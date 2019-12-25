@@ -11,7 +11,6 @@ using AzureRepositories.ServiceToken;
 using AzureRepositories.Token;
 using Common;
 using Common.Log;
-using Core.ApplicationSettings;
 using Core.Blob;
 using Core.Extensions;
 using Core.KeyValue;
@@ -24,7 +23,6 @@ using Core.User;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using Services;
@@ -133,11 +131,11 @@ namespace Web.Controllers
 
         [Route("/Home/UploadJson")]
         [HttpPost]
-        public async Task<ActionResult> UploadJsonChanges(JsonModel json)
+        public async Task<ActionResult> UploadJsonChanges(JsonModel jsonModel)
         {
             try
             {
-                var repository = await _repositoriesRepository.GetAsync(json.RepositoryId);
+                var repository = await _repositoriesRepository.GetAsync(jsonModel.RepositoryId);
                 if (repository == null)
                 {
                     return new JsonResult(new
@@ -148,11 +146,11 @@ namespace Web.Controllers
 
                 var fileData = await GetFileDataForManualEdit(repository.FileName);
 
-                if (fileData != json.Json)
+                if (fileData != jsonModel.Json)
                 {
                     // if updating file, we must not create new name for it
                     var blobFileName = MANUAL_FILE_PREFIX + repository.FileName;
-                    await _repositoryDataRepository.UpdateBlobAsync(json.Json, UserInfo.UserName, UserInfo.Ip, blobFileName);
+                    await _repositoryDataRepository.UpdateBlobAsync(jsonModel.Json, UserInfo.UserName, UserInfo.Ip, blobFileName);
                     await _lockRepository.ResetJsonPageLockAsync();
 
                     // update key values
@@ -189,14 +187,14 @@ namespace Web.Controllers
                 }
 
                 // update repository
-                repository.UseManualSettings = json.UseManualSettings;
+                repository.UseManualSettings = jsonModel.UseManualSettings;
                 await _repositoriesRepository.SaveRepositoryAsync(repository);
 
                 //get initial commit if exists
-                var repositoryHistory = await _repositoriesUpdateHistoryRepository.GetAsync(json.RepositoryId);
+                var repositoryHistory = await _repositoriesUpdateHistoryRepository.GetAsync(jsonModel.RepositoryId);
 
                 //Adding data to history repository
-                await _repositoriesService.AddToHistoryRepository(repository, json.Json, repositoryHistory.InitialCommit, true, UserInfo.UserName, UserInfo.Ip);
+                await _repositoriesService.AddToHistoryRepository(repository, jsonModel.Json, repositoryHistory.InitialCommit, true, UserInfo.UserName, UserInfo.Ip);
 
                 var repositoriesModel = await _repositoriesService.GetPaginatedRepositories();
                 var repositories = repositoriesModel.Data as PaginatedList<IRepository>;
@@ -212,7 +210,7 @@ namespace Web.Controllers
             }
             catch (Exception ex)
             {
-                _log.Error(ex, context: json);
+                _log.Error(ex, context: jsonModel);
                 return new JsonResult(new { status = UpdateSettingsStatus.InternalError });
             }
         }
@@ -419,7 +417,7 @@ namespace Web.Controllers
                     entitiesToOrder = repositoryUpdateHistoryEntities;
 
                 var lastUpdate = entitiesToOrder
-                    .OrderByDescending(x => ((RepositoryUpdateHistory)x).Timestamp)
+                    .OrderByDescending(x => x.CreatedAt ?? ((RepositoryUpdateHistory)x).Timestamp)
                     .FirstOrDefault();
 
                 if (lastUpdate == null)
@@ -586,7 +584,7 @@ namespace Web.Controllers
 
                 if (repositories != null)
                 {
-                    repositories = repositories.OrderByDescending(x => ((RepositoryUpdateHistory)x).Timestamp);
+                    repositories = repositories.OrderByDescending(x => x.CreatedAt ?? ((RepositoryUpdateHistory)x).Timestamp);
                     return new JsonResult(new
                     {
                         Result = UpdateSettingsStatus.Ok,
@@ -620,7 +618,7 @@ namespace Web.Controllers
                     var repositoryUpdateHistoryEntity = await _repositoriesUpdateHistoryRepository.GetAsyncByInitialCommit(repositoryUpdateHistory.InitialCommit);
                     var lastUpdate = repositoryUpdateHistoryEntity
                         .Where(x => x.IsManual == false)
-                        .OrderByDescending(x => ((RepositoryUpdateHistory)x).Timestamp)
+                        .OrderByDescending(x => x.CreatedAt ?? ((RepositoryUpdateHistory)x).Timestamp)
                         .FirstOrDefault();
 
                     // get repository data and commit file data
@@ -1468,7 +1466,6 @@ namespace Web.Controllers
         #region SelfCheck functions
 
         private static bool _isSeflTestRan;
-        private static bool _isSeflTestError;
 
         protected override void AddSuccess(StringBuilder sb, string selfTestingSuccessfulCompleted)
         {
@@ -1478,7 +1475,6 @@ namespace Web.Controllers
         protected override void AddError(StringBuilder sb, string selfTestingError)
         {
             sb.AppendLine($"Error: {selfTestingError}");
-            _isSeflTestError = true;
         }
 
         protected override void AddText(StringBuilder sb, string selfTestingText)

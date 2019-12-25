@@ -121,7 +121,8 @@ namespace Services.RepositoryServices
                 InitialCommit = firtstCommit ? repository.RowKey : lastUpdate.InitialCommit,
                 User = userName,
                 Branch = repository.Branch,
-                IsManual = isManual
+                IsManual = isManual,
+                CreatedAt = DateTime.UtcNow,
             };
             await _repositoriesUpdateHistoryRepository.SaveRepositoryUpdateHistory(repositoryUpdateHistory);
 
