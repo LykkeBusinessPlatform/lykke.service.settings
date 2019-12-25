@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using Core.KeyValue;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Mvc;
+using Web.Extensions;
 
 namespace Web.Controllers
 {
@@ -54,6 +57,58 @@ namespace Web.Controllers
                 _log.Error(ex);
                 return null;
             }
+        }
+
+        [HttpGet("SearchKeyValues")]
+        public async Task<IActionResult> SearchKeyValuesAsync(string search)
+        {
+            try
+            {
+                List<IKeyValueEntity> keyValues = new List<IKeyValueEntity>();
+                IEnumerable<IKeyValueEntity> regularKeyValues = await _keyValuesRepository.GetKeyValuesAsync(i => FilterKeyValue(i, null, search));
+
+                keyValues.AddRange(regularKeyValues);
+
+                foreach (var keyValue in keyValues)
+                {
+                    if (!keyValue.UseNotTaggedValue.HasValue || !keyValue.UseNotTaggedValue.Value)
+                        continue;
+
+                    var originalKeyValue = keyValues.FirstOrDefault(k => k.RowKey == keyValue.RowKey.SubstringFromString(keyValue.Tag + "-"));
+                    if (originalKeyValue != null)
+                        keyValue.Value = originalKeyValue.Value;
+                }
+
+                return new JsonResult(keyValues);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex);
+                return new JsonResult(new List<IKeyValueEntity>());
+            }
+        }
+
+        private bool FilterKeyValue(IKeyValueEntity entity, string filter, string search)
+        {
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                if (entity.RepositoryNames == null)
+                    return false;
+
+                if (!entity.RepositoryNames.Select(repo => repo.ToLower()).Contains(filter))
+                    return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                if (entity.RowKey.ToLower().Contains(search)
+                    || !string.IsNullOrWhiteSpace(entity.Value) && entity.Value.ToLower().Contains(search)
+                    || entity.Override != null && string.Join("", entity.Override.Select(x => x.Value?.ToLower() ?? string.Empty)).Contains(search))
+                    return true;
+                return false;
+            }
+
+            return true;
         }
     }
 }
