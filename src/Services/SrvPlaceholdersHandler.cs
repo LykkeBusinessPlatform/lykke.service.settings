@@ -27,6 +27,7 @@ namespace Services
         private const string YamlTypes = "types";
         private const string YamlDefaultValue = "default-value";
 
+        private static readonly string[] _yamlKeys = { YamlPlaceholder, YamlTypes, YamlDefaultValue };
         private static readonly List<KeyValue> KeyValues = new List<KeyValue>();
         private static readonly string[] _noQuotesTypes = { KeyValueTypes.Json, KeyValueTypes.JsonArray };
 
@@ -442,14 +443,12 @@ namespace Services
                         JsonData.Append(dict.Keys.Count > 1 && item.Key != dict.Keys.Last() ? "," : "}");
                     }
                 }
+            }
 
-                if (dict.Keys.Count == 1 && dict.Keys.Contains(YamlPlaceholder)
-                    || dict.Keys.Count == 2 && item.Key.ToString() == YamlDefaultValue
-                    || (dict.Keys.Count == 2 || dict.Keys.Count == 3) && item.Key.ToString() == YamlTypes)
-                {
-                    KeyValues.Add(TempKeyValue);
-                    TempKeyValue = new KeyValue();
-                }
+            if (_yamlKeys.Contains(dict.Last().Key.ToString()))
+            {
+                KeyValues.Add(TempKeyValue);
+                TempKeyValue = new KeyValue();
             }
 
             if (_removeLastBacket)

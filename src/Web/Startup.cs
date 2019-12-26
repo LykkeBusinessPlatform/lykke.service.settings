@@ -21,6 +21,7 @@ using Web.Modules;
 using Web.Models;
 using Shared.Settings;
 using Lykke.Common.Log;
+using Web.Middleware;
 
 namespace web
 {
@@ -73,6 +74,7 @@ namespace web
                 services.AddSwaggerGen(options =>
                 {
                     options.DefaultLykkeConfiguration("v1", "SettingsServiceV2 API");
+                    options.OperationFilter<ApiKeyHeaderOperationFilter>();
                 });
 
                 var builder = new ContainerBuilder();

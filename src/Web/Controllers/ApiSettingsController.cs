@@ -62,8 +62,13 @@ namespace Web.Controllers
         [HttpGet("SearchKeyValues")]
         public async Task<IActionResult> SearchKeyValuesAsync(string search)
         {
+            if (string.IsNullOrWhiteSpace(search))
+                throw new ArgumentNullException();
+
             try
             {
+                search = search.ToLower();
+
                 List<IKeyValueEntity> keyValues = new List<IKeyValueEntity>();
                 IEnumerable<IKeyValueEntity> regularKeyValues = await _keyValuesRepository.GetKeyValuesAsync(i => FilterKeyValue(i, null, search));
 
