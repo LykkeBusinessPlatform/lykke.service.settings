@@ -17,11 +17,11 @@ jobs:
       with:
         dotnet-version: 2.2.108
     - name: Build
-      run: dotnet build --configuration Release
+      run: dotnet build --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/}
     - name: Test
       run: dotnet test --configuration Release
     - name: publish
-      run: dotnet publish ./src/Web/Web.csproj --output ../../publish --configuration Release
+      run: dotnet publish ./src/Web/Web.csproj --output ../../publish --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/}
     - name: Publish to Registry
       uses: LykkeBusinessPlatform/Publish-Docker-Github-Action@master
       with:
