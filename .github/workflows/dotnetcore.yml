@@ -21,7 +21,7 @@ jobs:
     - name: Test
       run: dotnet test --configuration Release
     - name: publish
-      run: dotnet publish ./src/Web/Web.csproj --output ./publish --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/}
+      run: dotnet publish ./src/Web/Web.csproj --output ../../publish --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/}
     - name: Publish to Registry
       uses: LykkeBusinessPlatform/Publish-Docker-Github-Action@master
       with:
