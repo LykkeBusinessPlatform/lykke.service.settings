@@ -422,9 +422,24 @@ namespace Web.Controllers
                     return Content("Repository not found");
 
                 // get repository data
+
                 var repositoryEntity = await _repositoriesRepository.GetAsync(lastUpdate.RowKey);
                 if (repositoryEntity == null)
-                    return Content("Repository not found");
+                {
+                    foreach (var history in entitiesToOrder)
+                    {
+                        repositoryEntity = await _repositoriesRepository.GetAsync(history.RowKey);
+                        if (repositoryEntity != null)
+                        {
+                            ((RepositoryUpdateHistory)history).CreatedAt = DateTime.UtcNow;
+                            await _repositoriesUpdateHistoryRepository.SaveRepositoryUpdateHistory(history);
+                            break;
+                        }
+                    }
+
+                    if(repositoryEntity == null)
+                        return Content("Repository not found");
+                }
 
                 var connectionUrlHistory = new ConnectionUrlHistory
                 {
