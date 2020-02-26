@@ -10,5 +10,6 @@
         public const string Redis = "Redis";
         public const string SqlDB = "SqlDB";
         public const string String = "String";
+        public const string Optional = "Optional";
     }
 }

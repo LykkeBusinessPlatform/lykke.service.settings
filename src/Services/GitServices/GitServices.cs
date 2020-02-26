@@ -84,52 +84,37 @@ namespace Services.GitServices
             string bitbutcketEmail,
             string bitbucketPassword)
         {
-            // checking source control type
-            if (type == SourceControlTypes.Github)
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+
+            switch (type)
             {
-                HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-                request.UserAgent = "Test";
-                request.Accept = "application/vnd.github.v3.raw";
-                try
-                {
-                    using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
-                    {
-                        StreamReader reader = new StreamReader(response.GetResponseStream());
-                        var json = reader.ReadToEnd();
-                        return new ServiceResult { Success = true, Data = json };
-                    }
-                }
-                catch(Exception ex)
-                {
-                    log.Error(ex, context: url);
-                    return new ServiceResult { Success = false, Message = ex.Message };
-                }
+                case SourceControlTypes.Github:
+                    request.UserAgent = "Test";
+                    request.Accept = "application/vnd.github.v3.raw";
+                    break;
+                case SourceControlTypes.Bitbucket:
+                    // we need to be authenticated on bitbucket to get access on repository. so, appending encoded username and password to request headers
+                    string encoded = Convert.ToBase64String(Encoding.GetEncoding("ISO-8859-1").GetBytes(bitbutcketEmail + ":" + bitbucketPassword));
+                    request.Headers.Add("Authorization", "Basic " + encoded);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
-            else
+
+            try
             {
-                // we need to be authenticated on bitbucket to get access on repository. so, appending encoded username and password to request headers
-                var uri = new Uri(url);
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
-                String encoded = Convert.ToBase64String(Encoding.GetEncoding("ISO-8859-1").GetBytes(bitbutcketEmail + ":" + bitbucketPassword));
-                request.Headers.Add("Authorization", "Basic " + encoded);
-
-                try
+                using (var response = request.GetResponse())
+                using (var stream = response.GetResponseStream())
+                using (var reader = new StreamReader(stream))
                 {
-                    string result;
-                    using (var response = request.GetResponse())
-                    using (var stream = response.GetResponseStream())
-                    using (var reader = new StreamReader(stream))
-                    {
-                        result = reader.ReadToEnd();
-                    }
-
+                    string result = reader.ReadToEnd();
                     return new ServiceResult { Success = true, Data = result };
                 }
-                catch(Exception ex)
-                {
-                    log.Error(ex, context: url);
-                    return new ServiceResult { Success = false, Message = ex.Message };
-                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex, context: url);
+                return new ServiceResult { Success = false, Message = ex.Message };
             }
         }
 

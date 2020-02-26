@@ -138,7 +138,7 @@ namespace Services
                     if (bool.TryParse(valueEncoded, out var boolVal))
                         valueEncoded = boolVal.ToString().ToLower();
                     var types = keyValues[key].Types;
-                    if (string.IsNullOrEmpty(valueEncoded) && types != null && types.Contains("Optional"))
+                    if (string.IsNullOrEmpty(valueEncoded) && types != null && types.Contains(KeyValueTypes.Optional))
                     {
                         var emptyValueType = keyValues[key].EmptyValueType;
 
@@ -159,7 +159,7 @@ namespace Services
                             propertyRemoved = true;
                         }
                     }
-                    else if (string.IsNullOrEmpty(valueEncoded) && (types == null || (types != null && !types.Contains("Optional"))))
+                    else if (string.IsNullOrEmpty(valueEncoded) && (types == null || (types != null && !types.Contains(KeyValueTypes.Optional))))
                     {
                         hasError = true;
                         propertyRemoved = false;
