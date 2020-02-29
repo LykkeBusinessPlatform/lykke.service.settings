@@ -63,27 +63,6 @@ namespace Services.RepositoryServices
             _log = logFactory.CreateLog(this);
         }
 
-        public async Task<RepositoriesServiceModel> SaveRepository(IRepository repository, string userName, string userIp, string userEmail, bool isProduction)
-        {
-            //check if we are creating or updating repository and blob settings file
-            var actionType = string.IsNullOrWhiteSpace(repository.RowKey) ? ACTION_CREATE : ACTION_UPDATE;
-
-            if (actionType == ACTION_CREATE)
-                return await CreateRepositoryAsync(
-                    repository,
-                    userName,
-                    userIp,
-                    userEmail,
-                    isProduction);
-
-            return await UpdateRepositoryAsync(
-                repository,
-                userName,
-                userIp,
-                userEmail,
-                isProduction);
-        }
-
         public async Task<string> GetFileData(string file)
         {
             try
@@ -331,7 +310,7 @@ namespace Services.RepositoryServices
             return keyValues;
         }
 
-        private async Task<RepositoriesServiceModel> CreateRepositoryAsync(
+        public async Task<RepositoriesServiceModel> CreateRepositoryAsync(
             IRepository repository,
             string userName,
             string userIp,
@@ -471,12 +450,13 @@ namespace Services.RepositoryServices
             };
         }
 
-        private async Task<RepositoriesServiceModel> UpdateRepositoryAsync(
+        public async Task<RepositoriesServiceModel> UpdateRepositoryAsync(
             IRepository repository,
             string userName,
             string userIp,
             string userEmail,
-            bool isProduction)
+            bool isProduction,
+            string search = null)
         {
             var repositoryEntity = await _repositoriesRepository.GetAsync(repository.RowKey);
             if (repositoryEntity == null)
@@ -598,7 +578,7 @@ namespace Services.RepositoryServices
             await _repositoryDataRepository.UpdateBlobAsync(settingsJson, userName, userIp, fileFullName);
 
             await _repositoriesRepository.SaveRepositoryAsync(repositoryEntity);
-            var repositoriesModel = await GetPaginatedRepositories();
+            var repositoriesModel = await GetPaginatedRepositories(search);
             var repositories = repositoriesModel.Data as PaginatedList<IRepository>;
 
             //await _keyValuesRepository.UpdateKeyValueAsync(keyValues);

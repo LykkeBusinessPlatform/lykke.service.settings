@@ -159,7 +159,19 @@ namespace Web.Controllers
         {
             try
             {
-                var result = await _repositoriesService.SaveRepository(repository, UserInfo.UserName, UserInfo.Ip, UserInfo.UserEmail, IS_PRODUCTION);
+                var result = string.IsNullOrWhiteSpace(repository.RowKey)
+                    ? await _repositoriesService.CreateRepositoryAsync(
+                        repository,
+                        UserInfo.UserName,
+                        UserInfo.Ip,
+                        UserInfo.UserEmail,
+                        IS_PRODUCTION)
+                    : await _repositoriesService.UpdateRepositoryAsync(
+                        repository,
+                        UserInfo.UserName,
+                        UserInfo.Ip,
+                        UserInfo.UserEmail,
+                        IS_PRODUCTION);
 
                 return result;
             }

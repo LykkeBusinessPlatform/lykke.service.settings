@@ -127,8 +127,7 @@ namespace Web.Controllers
             }).GetAwaiter().GetResult();
         }
 
-        [Route("/Home/UploadJson")]
-        [HttpPost]
+        [HttpPost("/Home/UploadJson")]
         public async Task<ActionResult> UploadJsonChanges(JsonModel jsonModel)
         {
             try
@@ -213,8 +212,7 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/Repository")]
-        [HttpGet]
+        [HttpGet("/Home/Repository")]
         public async Task<IActionResult> Repository(string search, int? page = 1)
         {
             string hostUrl = Request.Host.ToString();
@@ -250,8 +248,7 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/RepositoryJson/{page:int?}/{search?}")]
-        [HttpGet]
+        [HttpGet("/Home/RepositoryJson/{page:int?}/{search?}")]
         public async Task<IActionResult> RepositoryJson(int? page = 1, string search="")
         {
             try
@@ -282,8 +279,7 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/RepositoryFileJson")]
-        [HttpPost]
+        [HttpPost("/Home/RepositoryFileJson")]
         public async Task<IActionResult> RepositoryFileJson(string repositoryId)
         {
             try
@@ -308,8 +304,7 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/RepositoryFileJsonClear")]
-        [HttpPost]
+        [HttpPost("/Home/RepositoryFileJsonClear")]
         public async Task<IActionResult> RepositoryFileJsonClear(string repositoryId)
         {
             try
@@ -343,8 +338,7 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/RepositoryFileJsonView")]
-        [HttpPost]
+        [HttpPost("/Home/RepositoryFileJsonView")]
         public async Task<IActionResult> RepositoryFileJsonView(string repositoryId)
         {
             try
@@ -377,7 +371,46 @@ namespace Web.Controllers
         {
             try
             {
-                var result = await _repositoriesService.SaveRepository(repository, UserInfo.UserName, UserInfo.Ip, UserInfo.UserEmail, IS_PRODUCTION);
+                var result = string.IsNullOrWhiteSpace(repository.RowKey)
+                    ? await _repositoriesService.CreateRepositoryAsync(
+                        repository,
+                        UserInfo.UserName,
+                        UserInfo.Ip,
+                        UserInfo.UserEmail,
+                        IS_PRODUCTION)
+                    : await _repositoriesService.UpdateRepositoryAsync(
+                        repository,
+                        UserInfo.UserName,
+                        UserInfo.Ip,
+                        UserInfo.UserEmail,
+                        IS_PRODUCTION);
+
+                return new JsonResult(result);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, context: repository);
+                return new JsonResult(new
+                {
+                    Result = UpdateSettingsStatus.InternalError
+                });
+            }
+        }
+
+        [HttpPost("Home/UpdateRepository")]
+        public async Task<IActionResult> UpdateRepository(
+            RepositoryEntity repository,
+            string search = null)
+        {
+            try
+            {
+                var result = await _repositoriesService.UpdateRepositoryAsync(
+                    repository,
+                    UserInfo.UserName,
+                    UserInfo.Ip,
+                    UserInfo.UserEmail,
+                    IS_PRODUCTION,
+                    search);
 
                 return new JsonResult(result);
             }
@@ -392,16 +425,14 @@ namespace Web.Controllers
         }
 
         [AllowAnonymous]
-        [Route("/Home/RepositoryFile/{repositoryId}/{repositoryName}")]
-        [HttpGet]
+        [HttpGet("/Home/RepositoryFile/{repositoryId}/{repositoryName}")]
         public async Task<IActionResult> RepositoryFile(string repositoryId, string repositoryName)
         {
             return await RepositoryFile(repositoryId, "", repositoryName);
         }
 
         [AllowAnonymous]
-        [Route("/Home/RepositoryFile/{repositoryId}/{tag}/{repositoryName}")]
-        [HttpGet]
+        [HttpGet("/Home/RepositoryFile/{repositoryId}/{tag}/{repositoryName}")]
         public async Task<IActionResult> RepositoryFile(string repositoryId, string tag, string repositoryName)
         {
             try
@@ -495,8 +526,7 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/ConnectionUrlHistory/{page:int?}")]
-        [HttpGet]
+        [HttpGet("/Home/ConnectionUrlHistory/{page:int?}")]
         public async Task<IActionResult> ConnectionUrlHistory(int? page = 1)
         {
             try
@@ -520,8 +550,7 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/ConnectionUrlHistoryJson/{repositoryId?}")]
-        [HttpGet]
+        [HttpGet("/Home/ConnectionUrlHistoryJson/{repositoryId?}")]
         public async Task<IActionResult> ConnectionUrlHistoryJson(string repositoryId = "")
         {
             try
@@ -545,8 +574,7 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/ChangeRepositoryName")]
-        [HttpPost]
+        [HttpPost("/Home/ChangeRepositoryName")]
         public async Task<IActionResult> ChangeRepositoryName(RepositoryEntity repository)
         {
             try
@@ -748,9 +776,8 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/KeyValue")]
-        [HttpGet]
-        public async Task<IActionResult> KeyValue(
+        [HttpGet("/Home/KeyValue")]
+        public async Task<IActionResult> GetKeyValue(
             string filter = null,
             string search = null,
             string repositoryId = null)
@@ -798,14 +825,20 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/DeleteKeyValue")]
-        [HttpPost]
-        public async Task<ActionResult> DeleteKeyValue(string keyValueId)
+        [HttpPost("/Home/DeleteKeyValue")]
+        public async Task<ActionResult> DeleteKeyValue(
+            string keyValueId,
+            string filter = null,
+            string search = null,
+            string repositoryId = null)
         {
+            filter = filter?.ToLower();
+            search = search?.ToLower();
+
             try
             {
-                var keyValues = await GetKeyValuesAsync();
-                var keyValue = keyValues.First(oe => oe.RowKey.Equals(keyValueId));
+                var keyValues = await GetKeyValuesAsync(i => FilterKeyValue(i, filter, search), repositoryId);
+                var keyValue = keyValues.FirstOrDefault(oe => oe.RowKey.Equals(keyValueId));
                 if (keyValue == null)
                 {
                     return new JsonResult(new
@@ -867,8 +900,7 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/UploadKeyValue")]
-        [HttpPost]
+        [HttpPost("/Home/UploadKeyValue")]
         public async Task<ActionResult> UploadKeyValueChanges(
             KeyValueModel entity,
             bool? forced = null,
@@ -976,8 +1008,7 @@ namespace Web.Controllers
         }
 
         [IgnoreLogAction]
-        [Route("/Home/LockTime")]
-        [HttpGet]
+        [HttpGet("/Home/LockTime")]
         public async Task<IActionResult> LockTime()
         {
             try
@@ -1008,8 +1039,7 @@ namespace Web.Controllers
         }
 
         [IgnoreLogAction]
-        [Route("/Home/GetKvHistory")]
-        [HttpPost]
+        [HttpPost("/Home/GetKvHistory")]
         public async Task<IActionResult> GetKvHistory(string keyValueId)
         {
             try
@@ -1035,8 +1065,7 @@ namespace Web.Controllers
         }
 
         [IgnoreLogAction]
-        [Route("/Home/GetKV")]
-        [HttpPost]
+        [HttpPost("/Home/GetKV")]
         public async Task<IActionResult> GetKV(string keyValueId, bool useNotTagged)
         {
             try
@@ -1069,8 +1098,7 @@ namespace Web.Controllers
             }
         }
 
-        [Route("/Home/SetLockTime")]
-        [HttpGet]
+        [HttpGet("/Home/SetLockTime")]
         public async Task<IActionResult> SetLockTime()
         {
             try

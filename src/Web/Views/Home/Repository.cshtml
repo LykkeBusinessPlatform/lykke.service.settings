@@ -471,12 +471,14 @@
 					$(branchSpan).show();
 
                     if (confirm('The "' + repositoryId + '" will be updated.')) {
-                        var url = '@Url.Action("SaveRepository")';
+                        var url = '@Url.Action("UpdateRepository")';
+                        var form = $('.search-form');
                         $.repositoryEdit = {
                             'repository': {
                                 'rowKey': repositoryId,
                                 'branch': $(this).parent().siblings('td.branch').children('input').val()
-                            }
+                            },
+                            "search": $('#search', form).val()
                         }
 
                         $.post(url, $.repositoryEdit, function (data) {

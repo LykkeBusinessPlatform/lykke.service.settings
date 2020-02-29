@@ -649,9 +649,22 @@
 				};
 
             $.removeKeyValue = function (kvId) {
-                $.post('@Url.Action("DeleteKeyValue")',
+                var actionParams = { 'keyValueId': kvId };
+                var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+                var vars = [];
+                for (var i = 0; i < hashes.length; i++) {
+                    var hash = hashes[i].split('=');
+                    vars.push(hash[0]);
+                    vars[hash[0]] = hash[1];
+                }
+                if (vars["repositoryId"] != null)
+                    actionParams['repositoryId'] = vars["repositoryId"];
+                var searchForm = $(".filter-search-form");
+                actionParams['filter'] = $('#filter', searchForm).val();
+                actionParams['search'] = $('#search', searchForm).val();
 
-					{ 'keyValueId': kvId },
+                $.post('@Url.Action("DeleteKeyValue")',
+                    actionParams,
                     function (data) {
 						if (data.status == 0) {
                             $.showMessage('success',
