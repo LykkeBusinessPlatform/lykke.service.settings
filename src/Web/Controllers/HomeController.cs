@@ -777,7 +777,7 @@ namespace Web.Controllers
         }
 
         [HttpGet("/Home/KeyValue")]
-        public async Task<IActionResult> GetKeyValue(
+        public async Task<IActionResult> KeyValue(
             string filter = null,
             string search = null,
             string repositoryId = null)
