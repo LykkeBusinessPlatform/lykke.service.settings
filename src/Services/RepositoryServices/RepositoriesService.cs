@@ -7,13 +7,14 @@ using AzureRepositories.KeyValue;
 using AzureRepositories.Repository;
 using Common;
 using Common.Log;
+using Core;
 using Core.Blob;
 using Core.Extensions;
 using Core.KeyValue;
 using Core.Repository;
+using Core.Services;
 using Lykke.Common.Log;
 using Newtonsoft.Json;
-using Services.GitServices;
 using Shared.Settings;
 
 namespace Services.RepositoryServices
@@ -27,18 +28,14 @@ namespace Services.RepositoryServices
         private readonly IRepositoryDataRepository _repositoryDataRepository;
         private readonly IRepositoriesUpdateHistoryRepository _repositoriesUpdateHistoryRepository;
         private readonly ISecretKeyValuesRepository _secretKeyValuesRepository;
+        private readonly IGitService _gitService;
         private readonly AppSettings _appSettings;
         private readonly ILog _log;
 
         #region Constants
-        private const string MANUAL_FILE_PREFIX = "manual-";
         private const string HISTORY_FILE_PREFIX = "history-";
         private const string FILENAME = "settings_";
-        private const string FILE_FORMAT_ON_GIT = ".yaml";
         private const string FILE_FORMAT = ".txt";
-        private const string GITHUB_URL = "github.com";
-        private const string ACTION_CREATE = "create";
-        private const string ACTION_UPDATE = "update";
         private const string _repositoryFileInfoControllerAction = "/Home/RepositoryFile/";
         private const int PAGE_SIZE = 10;
         #endregion
@@ -50,6 +47,7 @@ namespace Services.RepositoryServices
             IRepositoryDataRepository repositoryDataRepository,
             IRepositoriesUpdateHistoryRepository repositoriesUpdateHistoryRepository,
             ISecretKeyValuesRepository secretKeyValuesRepository,
+            IGitService gitService,
             AppSettings appSettings,
             ILogFactory logFactory)
         {
@@ -59,6 +57,7 @@ namespace Services.RepositoryServices
             _repositoryDataRepository = repositoryDataRepository;
             _repositoriesUpdateHistoryRepository = repositoriesUpdateHistoryRepository;
             _secretKeyValuesRepository = secretKeyValuesRepository;
+            _gitService = gitService;
             _appSettings = appSettings;
             _log = logFactory.CreateLog(this);
         }
@@ -327,16 +326,19 @@ namespace Services.RepositoryServices
             repository.GitUrl = repository.GitUrl?.Trim();
 
             //check if type if github or bitbucket. since we have only github and bitbucket I am checking url for github.com
-            var type = repository.GitUrl.Contains(GITHUB_URL) ? SourceControlTypes.Github : SourceControlTypes.Bitbucket;
+            var type = _gitService.ResolveSourceControlTypeFromUrl(repository.GitUrl);
 
             //get gitUrl for raw json format
-            var settingsGitUrl = GitServices.GitServices.GenerateRepositorySettingsGitUrl(repository.GitUrl, type, repository.Branch);
+            var settingsGitUrl = _gitService.GenerateRepositorySettingsGitUrl(repository.GitUrl, type, repository.Branch);
 
             var repositoryExistedItems = await _repositoriesRepository.GetAllAsync();
             IRepository noTagRepo = null;
             foreach (var item in repositoryExistedItems)
             {
-                if (GitServices.GitServices.GenerateRepositorySettingsGitUrl(item.GitUrl, type, item.Branch) != settingsGitUrl)
+                if (type != _gitService.ResolveSourceControlTypeFromUrl(item.GitUrl))
+                    continue;
+
+                if (_gitService.GenerateRepositorySettingsGitUrl(item.GitUrl, type, item.Branch) != settingsGitUrl)
                     continue;
 
                 if (string.IsNullOrWhiteSpace(item.Tag))
@@ -363,13 +365,13 @@ namespace Services.RepositoryServices
                     };
             }
 
-            var name = GitServices.GitServices.GetGitRepositoryName(repository.GitUrl, type);
+            var name = _gitService.GetGitRepositoryName(repository.GitUrl, type);
 
             string fileFullName = FILENAME;
 
-            fileFullName += (type == SourceControlTypes.Github) ? "git_" : "bb_";
+            fileFullName += type != SourceControlTypes.Bitbucket ? "git_" : "bb_";
             fileFullName += name + "_" + repository.Branch;
-            fileFullName += (repository.Tag == null) ? FILE_FORMAT : "_" + repository.Tag + FILE_FORMAT;
+            fileFullName += repository.Tag == null ? FILE_FORMAT : "_" + repository.Tag + FILE_FORMAT;
 
             IRepository repositoryEntity = new RepositoryEntity
             {
@@ -387,12 +389,10 @@ namespace Services.RepositoryServices
                 + (!string.IsNullOrWhiteSpace(repositoryEntity.Tag) ? repositoryEntity.Tag + "/" : string.Empty) + name;
 
             //get json from generated gitUrl
-            var settingsResult = GitServices.GitServices.DownloadSettingsFileFromGit(
+            var settingsResult = _gitService.DownloadSettingsFileFromGit(
                 _log,
                 settingsGitUrl,
-                type,
-                _appSettings.BitBucketSettings?.BitbucketEmail,
-                _appSettings.BitBucketSettings?.BitbucketPassword);
+                type);
 
             if (!settingsResult.Success)
             {
@@ -466,16 +466,16 @@ namespace Services.RepositoryServices
             repository.Tag = repositoryEntity.Tag;
 
             //check if type if github or bitbucket. since we have only github and bitbucket I am checking url for github.com
-            var type = repository.GitUrl.Contains(GITHUB_URL) ? SourceControlTypes.Github : SourceControlTypes.Bitbucket;
+            var type = _gitService.ResolveSourceControlTypeFromUrl(repository.GitUrl);
 
             //get gitUrl for raw json format
-            var settingsGitUrl = GitServices.GitServices.GenerateRepositorySettingsGitUrl(repository.GitUrl, type, repository.Branch);
+            var settingsGitUrl = _gitService.GenerateRepositorySettingsGitUrl(repository.GitUrl, type, repository.Branch);
 
-            var name = GitServices.GitServices.GetGitRepositoryName(repository.GitUrl, type);
+            var name = _gitService.GetGitRepositoryName(repository.GitUrl, type);
 
             string fileFullName = FILENAME;
 
-            fileFullName += type == SourceControlTypes.Github ? "git_" : "bb_";
+            fileFullName += type == SourceControlTypes.GithubPublic ? "git_" : "bb_";
             fileFullName += name + "_" + repository.Branch;
             fileFullName += repository.Tag == null ? FILE_FORMAT : $"_{repository.Tag}{FILE_FORMAT}";
 
@@ -496,12 +496,10 @@ namespace Services.RepositoryServices
                 + (!string.IsNullOrWhiteSpace(repositoryEntity.Tag) ? repositoryEntity.Tag + "/" : string.Empty) + name;
 
             //get json from generated gitUrl
-            var settingsResult = GitServices.GitServices.DownloadSettingsFileFromGit(
+            var settingsResult = _gitService.DownloadSettingsFileFromGit(
                 _log,
                 settingsGitUrl,
-                type,
-                _appSettings.BitBucketSettings?.BitbucketEmail,
-                _appSettings.BitBucketSettings?.BitbucketPassword);
+                type);
 
             if (!settingsResult.Success)
                 return new RepositoriesServiceModel
@@ -525,7 +523,9 @@ namespace Services.RepositoryServices
 
             // update key values
             var placeholders = (settings.Data as DataFromYaml)?.Placeholders;
-            var keyRepoName = !string.IsNullOrEmpty(repositoryEntity?.Tag) ? repositoryEntity?.Tag + "-" + repositoryEntity?.OriginalName : repositoryEntity?.OriginalName;
+            var keyRepoName = !string.IsNullOrEmpty(repositoryEntity?.Tag)
+                ? repositoryEntity?.Tag + "-" + repositoryEntity?.OriginalName
+                : repositoryEntity?.OriginalName;
             var keyValues = await InitKeyValuesAsync(
                 repositoryEntity,
                 placeholders,

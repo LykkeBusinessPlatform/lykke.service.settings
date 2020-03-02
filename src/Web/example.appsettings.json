@@ -14,5 +14,6 @@
   "BitBucketSettings": {
     "BitbucketEmail": "<Optional. User with read access to Bitbacket private repository to upload settings.yaml files>",
     "BitbucketPassword": "Optional. Password for Bitbacket user"
-  }
+  },
+  "GitHubToken": "<Optional. Personal access token with full control for private repositories - for private repositories on enterprise github>"
 }

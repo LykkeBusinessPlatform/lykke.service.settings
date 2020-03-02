@@ -1,8 +1,10 @@
 ﻿using Autofac;
-using Lykke.SettingsReader;
-using Shared.Settings;
 using Core.Repository;
+using Core.Services;
+using Lykke.SettingsReader;
+using Services.GitServices;
 using Services.RepositoryServices;
+using Shared.Settings;
 
 namespace Web.Modules
 {
@@ -13,7 +15,6 @@ namespace Web.Modules
         public AppModule(IReloadingManager<AppSettings> settings)
         {
             _settings = settings;
-            var allowedVariables = new string[] { "true", "enabled", "yes" };
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -24,6 +25,10 @@ namespace Web.Modules
 
             builder.RegisterType<RepositoriesService>()
                 .As<IRepositoriesService>()
+                .SingleInstance();
+
+            builder.RegisterType<GitService>()
+                .As<IGitService>()
                 .SingleInstance();
         }
     }

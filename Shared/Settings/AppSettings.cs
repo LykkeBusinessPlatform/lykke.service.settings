@@ -18,8 +18,9 @@ namespace Shared.Settings
         public string SlackNotificationsConnString { get; set; }
         public string SlackNotificationsQueueName { get; set; }
         public BitbucketSettings BitBucketSettings { get; set; }
+        public string GitHubToken { get; set; }
     }
-    
+
     public class BitbucketSettings
     {
         public string BitbucketEmail { get; set; }
