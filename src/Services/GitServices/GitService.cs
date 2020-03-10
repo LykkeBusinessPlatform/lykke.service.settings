@@ -13,7 +13,6 @@ namespace Services.GitServices
     public class GitService : IGitService
     {
         private const string GITHUB_URL = "github.com";
-        private const string GITHUB_FILES_STORAGE_PATH_PART = "blob";
         private const string BITBUCKET_URL = "bitbucket.org";
         private const string FILE_FORMAT_ON_GIT = ".yaml";
         private const string FILENAME = "settings";
@@ -32,10 +31,8 @@ namespace Services.GitServices
                 return SourceControlTypes.GithubPublic;
             if (url.Contains(BITBUCKET_URL))
                 return SourceControlTypes.Bitbucket;
-            if (url.Contains(GITHUB_FILES_STORAGE_PATH_PART))
-                return SourceControlTypes.GithubPrivate;
 
-            return SourceControlTypes.Bitbucket;
+            return SourceControlTypes.GithubPrivate;
         }
 
         public string GenerateRepositorySettingsGitUrl(string gitUrl, SourceControlTypes type, string branch = "")
