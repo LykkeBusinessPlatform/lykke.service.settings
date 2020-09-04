@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using AzureRepositories.KeyValue;
 using AzureRepositories.Lock;
@@ -36,7 +35,6 @@ namespace Web.Controllers
     [Authorize]
     public class HomeController : BaseController
     {
-        private readonly ILog _log;
         private readonly IJsonDataRepository _jsonDataRepository;
         private readonly ITokensRepository _tokensRepository;
         private readonly IAccountTokenHistoryRepository _tokenHistoryRepository;
@@ -50,6 +48,7 @@ namespace Web.Controllers
         private readonly IRepositoriesRepository _repositoriesRepository;
         private readonly IRepositoryDataRepository _repositoryDataRepository;
         private readonly INetworkRepository _networkRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IConnectionUrlHistoryRepository _connectionUrlHistoryRepository;
         private readonly IRepositoriesUpdateHistoryRepository _repositoriesUpdateHistoryRepository;
         private readonly ISecretKeyValuesRepository _secretKeyValuesRepository;
@@ -88,9 +87,8 @@ namespace Web.Controllers
             IRepositoriesUpdateHistoryRepository repositoriesUpdateHistoryRepository,
             ISecretKeyValuesRepository secretKeyValuesRepository,
             IRepositoriesService repositoriesService)
-            : base(userActionHistoryRepository)
+            : base(userActionHistoryRepository, logFactory)
         {
-            _log = logFactory.CreateLog(this);
             _jsonDataRepository = jsonDataRepository;
             _tokensRepository = tokensRepository;
             _serviceTokensRepository = serviceTokensRepository;
@@ -109,22 +107,6 @@ namespace Web.Controllers
             _userRepository = userRepository;
             _secretKeyValuesRepository = secretKeyValuesRepository;
             _repositoriesService = repositoriesService;
-
-            lock (Lock)
-            {
-                if (_isSeflTestRan) return;
-                _isSeflTestRan = true;
-            }
-
-            //TODO: do we need to run it everytime?
-            Task.Run(async () =>
-            {
-                Console.Write(await SelfTest(
-                    _appSettings, userRepository, _jsonDataRepository, _tokensRepository,
-                    _serviceTokensRepository,
-                    _keyValuesRepository, _lockRepository, _accessDataRepository, _log
-                ));
-            }).GetAwaiter().GetResult();
         }
 
         [HttpPost("/Home/UploadJson")]
@@ -1499,38 +1481,6 @@ namespace Web.Controllers
                     return true;
             }
             return false;
-        }
-
-        #endregion
-
-
-        #region SelfCheck functions
-
-        private static bool _isSeflTestRan;
-
-        protected override void AddSuccess(StringBuilder sb, string selfTestingSuccessfulCompleted)
-        {
-            sb.AppendLine($"Success: {selfTestingSuccessfulCompleted}");
-        }
-
-        protected override void AddError(StringBuilder sb, string selfTestingError)
-        {
-            sb.AppendLine($"Error: {selfTestingError}");
-        }
-
-        protected override void AddText(StringBuilder sb, string selfTestingText)
-        {
-            sb.AppendLine(selfTestingText);
-        }
-
-        protected override void AddHeader(StringBuilder sb, string checkSettingsHeader)
-        {
-            sb.AppendLine($"--==={checkSettingsHeader}===--");
-        }
-
-        protected override void AddCaption(StringBuilder sb, string checkSettingsCaption)
-        {
-            sb.AppendLine($"--{checkSettingsCaption}--");
         }
 
         #endregion

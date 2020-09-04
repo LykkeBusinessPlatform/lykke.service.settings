@@ -5,11 +5,10 @@ using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
-using Lykke.Logs;
-using Lykke.SettingsReader;
 using Lykke.SettingsReader.ReloadingManager;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
+using Lykke.Common.Log;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -17,11 +16,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Web.Modules;
-using Web.Models;
 using Shared.Settings;
-using Lykke.Common.Log;
 using Web.Middleware;
+using Web.Models;
+using Web.Modules;
 
 namespace web
 {
@@ -81,13 +79,6 @@ namespace web
 
                 var settings = ConstantReloadingManager.From(appSettings);
 
-                services.AddLykkeLogging(
-                    settings.ConnectionString(x => x.ConnectionString),
-                    "SettingsServiceLog",
-                    appSettings.SlackNotificationsConnString,
-                    appSettings.SlackNotificationsQueueName
-                );
-
                 builder.RegisterModule(new AppModule(settings));
                 builder.RegisterModule(new DbModule(settings));
                 //builder.RegisterModule(new RabbitModule(settings, Log, _consoleLogger));
@@ -136,10 +127,7 @@ namespace web
                         template: "{controller=Home}/{action=Index}/{id?}");
                 });
 
-                app.UseSwagger(c =>
-                {
-                    c.PreSerializeFilters.Add((swagger, httpReq) => swagger.Host = httpReq.Host.Value);
-                });
+                app.UseSwagger();
 
                 app.UseSwaggerUI(x =>
                 {

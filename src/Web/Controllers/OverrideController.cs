@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
-using Common.Log;
 using Core.KeyValue;
 using Core.Networks;
 using Core.User;
@@ -18,7 +17,6 @@ namespace Web.Controllers
     [Route("override")]
     public class OverrideController : BaseController
     {
-        private readonly ILog _log;
         private readonly INetworkRepository _networkRepository;
         private readonly IKeyValuesRepository _keyValuesRepository;
         private readonly IKeyValueHistoryRepository _keyValueHistoryRepository;
@@ -28,9 +26,9 @@ namespace Web.Controllers
             INetworkRepository networkRepository,
             IKeyValuesRepository keyValuesRepository,
             IKeyValueHistoryRepository keyValueHistoryRepository,
-            IUserActionHistoryRepository userActionHistoryRepository) : base(userActionHistoryRepository)
+            IUserActionHistoryRepository userActionHistoryRepository)
+            : base(userActionHistoryRepository, logFactory)
         {
-            _log = logFactory.CreateLog(this);
             _networkRepository = networkRepository;
             _keyValuesRepository = keyValuesRepository;
             _keyValueHistoryRepository = keyValueHistoryRepository;

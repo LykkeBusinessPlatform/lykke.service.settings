@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureRepositories.KeyValue;
-using Common.Log;
 using Core.Blob;
 using Core.Extensions;
 using Core.KeyValue;
@@ -19,7 +18,6 @@ namespace Web.Controllers
     [Route("api/[controller]")]
     public class ApiOverrideController : BaseController
     {
-        private readonly ILog _log;
         private readonly IKeyValuesRepository _keyValuesRepository;
         private readonly IKeyValueHistoryRepository _keyValueHistoryRepository;
         private readonly IRepositoryDataRepository _repositoryDataRepository;
@@ -30,9 +28,8 @@ namespace Web.Controllers
             IKeyValuesRepository keyValuesRepository,
             IRepositoryDataRepository repositoryDataRepository,
             IKeyValueHistoryRepository keyValueHistoryRepository)
-            : base(userActionHistoryRepository)
+            : base(userActionHistoryRepository, logFactory)
         {
-            _log = logFactory.CreateLog(this);
             _keyValuesRepository = keyValuesRepository;
             _keyValueHistoryRepository = keyValueHistoryRepository;
             _repositoryDataRepository = repositoryDataRepository;

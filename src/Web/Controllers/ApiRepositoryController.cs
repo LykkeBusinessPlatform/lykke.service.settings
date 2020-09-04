@@ -1,37 +1,27 @@
-﻿using AzureRepositories.KeyValue;
-using AzureRepositories.Repository;
-using Common;
-using Core.Blob;
-using Core.KeyValue;
-using Core.Repository;
-using Core.User;
-using Microsoft.AspNetCore.Mvc;
-using Services;
-using Services.GitServices;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Core.Networks;
-using Core.ServiceToken;
+using AzureRepositories.Repository;
+using Core.Blob;
 using Core.Extensions;
-using Web.Models;
-using Shared.Settings;
-using Common.Log;
+using Core.KeyValue;
+using Core.Networks;
+using Core.Repository;
+using Core.ServiceToken;
+using Core.User;
 using Lykke.Common.Log;
+using Microsoft.AspNetCore.Mvc;
+using Services;
 
 namespace Web.Controllers
 {
     [Route("api/[controller]")]
     public class ApiRepositoryController : BaseController
     {
-        private readonly AppSettings _appSettings;
-        private readonly ILog _log;
         private readonly IRepositoriesRepository _repositoriesRepository;
         private readonly IRepositoryDataRepository _repositoryDataRepository;
         private readonly IKeyValuesRepository _keyValuesRepository;
-        private readonly IKeyValueHistoryRepository _keyValueHistoryRepository;
-        private readonly IRepositoriesUpdateHistoryRepository _repositoriesUpdateHistoryRepository;
         public readonly IConnectionUrlHistoryRepository _connectionUrlHistoryRepository;
         private readonly INetworkRepository _networkRepository;
         private readonly IServiceTokenRepository _serviceTokensRepository;
@@ -41,19 +31,21 @@ namespace Web.Controllers
         const string MANUAL_FILE_PREFIX = "manual-";
         #endregion
 
-        public ApiRepositoryController(ILogFactory logFactory, IUserActionHistoryRepository userActionHistoryRepository,
-            IRepositoriesRepository repositoriesRepository, IRepositoryDataRepository repositoryDataRepository, IKeyValuesRepository keyValuesRepository,
-            IKeyValueHistoryRepository keyValueHistoryRepository, IRepositoriesUpdateHistoryRepository repositoriesUpdateHistoryRepository,
-            IConnectionUrlHistoryRepository connectionUrlHistoryRepository, INetworkRepository networkRepository, IServiceTokenRepository serviceTokensRepository,
-            AppSettings appSettings, IRepositoriesService repositoriesService) : base(userActionHistoryRepository)
+        public ApiRepositoryController(
+            ILogFactory logFactory,
+            IUserActionHistoryRepository userActionHistoryRepository,
+            IRepositoriesRepository repositoriesRepository,
+            IRepositoryDataRepository repositoryDataRepository,
+            IKeyValuesRepository keyValuesRepository,
+            IConnectionUrlHistoryRepository connectionUrlHistoryRepository,
+            INetworkRepository networkRepository,
+            IServiceTokenRepository serviceTokensRepository,
+            IRepositoriesService repositoriesService)
+            : base(userActionHistoryRepository, logFactory)
         {
-            _appSettings = appSettings;
-            _log = logFactory.CreateLog(this);
             _repositoriesRepository = repositoriesRepository;
             _repositoryDataRepository = repositoryDataRepository; 
             _keyValuesRepository = keyValuesRepository;
-            _keyValueHistoryRepository = keyValueHistoryRepository;
-            _repositoriesUpdateHistoryRepository = repositoriesUpdateHistoryRepository;
             _connectionUrlHistoryRepository = connectionUrlHistoryRepository;
             _networkRepository = networkRepository;
             _serviceTokensRepository = serviceTokensRepository;

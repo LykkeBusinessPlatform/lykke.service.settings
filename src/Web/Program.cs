@@ -56,7 +56,6 @@ namespace web
                         })
                         .UseContentRoot(Directory.GetCurrentDirectory())
                         .UseUrls("https://*:443/")
-                        .UseIISIntegration()
                         .UseStartup<Startup>()
                         .Build();
 

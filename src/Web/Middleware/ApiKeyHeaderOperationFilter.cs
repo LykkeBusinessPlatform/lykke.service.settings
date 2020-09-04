@@ -1,26 +1,31 @@
 ﻿using System.Collections.Generic;
-using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Web.Middleware
 {
     public class ApiKeyHeaderOperationFilter : IOperationFilter
     {
-        public void Apply(Operation operation, OperationFilterContext context)
+        public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
             if (!context.ApiDescription.RelativePath.Contains("api/"))
                 return;
 
             if (operation.Parameters == null)
-                operation.Parameters = new List<IParameter>();
+                operation.Parameters = new List<OpenApiParameter>();
 
-            operation.Parameters.Add(new NonBodyParameter
+            operation.Parameters.Add(new OpenApiParameter
             {
                 Name = "Authorization",
-                In = "header",
+                In = ParameterLocation.Header,
                 Description = "API key",
                 Required = true,
-                Type = "string"
+                Schema = new OpenApiSchema
+                {
+                    Type = "String",
+                    Default = new OpenApiString("API key")
+                }
             });
         }
     }

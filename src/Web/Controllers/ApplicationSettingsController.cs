@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using Common;
-using Common.Log;
 using Core.ApplicationSettings;
 using Core.User;
 using Lykke.Common.Log;
@@ -11,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Core.Extensions;
-using Web.Extensions;
 using Web.Models;
 
 namespace Web.Controllers
@@ -19,14 +14,14 @@ namespace Web.Controllers
     [Authorize]
     public class ApplicationSettingsController : BaseController
     {
-        private readonly ILog _log;
         private readonly IApplicationSettingsRepostiory _applicationSettingsRepostiory;
 
-        public ApplicationSettingsController(ILogFactory logFactory, IApplicationSettingsRepostiory applicationSettingsRepostiory,
+        public ApplicationSettingsController(
+            ILogFactory logFactory,
+            IApplicationSettingsRepostiory applicationSettingsRepostiory,
             IUserActionHistoryRepository userActionHistoryRepository)
-            : base(userActionHistoryRepository)
+            : base(userActionHistoryRepository, logFactory)
         {
-            _log = logFactory.CreateLog(this);
             _applicationSettingsRepostiory = applicationSettingsRepostiory;
         }
 

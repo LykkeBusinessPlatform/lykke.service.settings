@@ -6,7 +6,6 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AzureRepositories.User;
-using Common.Log;
 using Core.Extensions;
 using Core.KeyValue;
 using Core.User;
@@ -28,7 +27,6 @@ namespace Web.Controllers
     [IgnoreLogAction]
     public class AccountController : BaseController
     {
-        private readonly ILog _log;
         private readonly AppSettings _appSettings;
         private readonly IUserRepository _userRepository;
         private readonly IRoleRepository _roleRepository;
@@ -46,17 +44,16 @@ namespace Web.Controllers
             IRoleRepository roleRepository,
             IUserSignInHistoryRepository userHistoryRepository,
             IUserActionHistoryRepository userActionHistoryRepository,
-            IKeyValuesRepository keyValuesRepository
-            ) : base(userActionHistoryRepository)
+            IKeyValuesRepository keyValuesRepository)
+            : base(userActionHistoryRepository, logFactory)
         {
-            _log = logFactory.CreateLog(this);
             _appSettings = appSettings;
             _userRepository = userRepository;
             _roleRepository = roleRepository;
             _userHistoryRepository = userHistoryRepository;
             _keyValuesRepository = keyValuesRepository;
 
-            ApiClientId = _appSettings.ApiClientId;
+            ApiClientId = _appSettings.GoogleApiClientId;
             AvailableEmailsRegex = _appSettings.AvailableEmailsRegex;
         }
 
@@ -77,8 +74,8 @@ namespace Web.Controllers
                     {
                         PasswordHash = _appSettings.DefaultPassword.GetHash(),
                         RowKey = _appSettings.DefaultUserEmail,
-                        FirstName = _appSettings.DefaultUserFirstName,
-                        LastName = _appSettings.DefaultUserLastName,
+                        FirstName = "Admin",
+                        LastName = "Initial",
                         Active = true,
                         Admin = true
                     };

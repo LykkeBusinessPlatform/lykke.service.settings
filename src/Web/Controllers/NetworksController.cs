@@ -1,20 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Common;
-using Common.Log;
 using Core.KeyValue;
 using Core.Networks;
 using Core.User;
-using Lykke.Common.Extensions;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Web.Models;
 
 namespace Web.Controllers
 {
@@ -22,7 +13,6 @@ namespace Web.Controllers
     [Route("networks")]
     public class NetworksController : BaseController
     {
-        private readonly ILog _log;
         private readonly INetworkRepository _networkRepository;
         private readonly IKeyValuesRepository _keyValuesRepository;
 
@@ -31,9 +21,8 @@ namespace Web.Controllers
             INetworkRepository networkRepository,
             IKeyValuesRepository keyValuesRepository,
             IUserActionHistoryRepository userActionHistoryRepository
-            ) : base(userActionHistoryRepository)
+            ) : base(userActionHistoryRepository, logFactory)
         {
-            _log = logFactory.CreateLog(this);
             _networkRepository = networkRepository;
             _keyValuesRepository = keyValuesRepository;
         }

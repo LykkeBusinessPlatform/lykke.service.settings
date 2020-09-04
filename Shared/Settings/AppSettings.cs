@@ -11,12 +11,10 @@ namespace Shared.Settings
         public int LockTimeInMinutes { get; set; }
         public string DefaultPassword { get; set; }
         public string DefaultUserEmail { get; set; }
-        public string DefaultUserFirstName { get; set; }
-        public string DefaultUserLastName { get; set; }
-        public string ApiClientId { get; set; }
+        public string GoogleApiClientId { get; set; }
         public string AvailableEmailsRegex { get; set; }
-        public string SlackNotificationsConnString { get; set; }
-        public string SlackNotificationsQueueName { get; set; }
+        //public string SlackNotificationsConnString { get; set; }
+        //public string SlackNotificationsQueueName { get; set; }
         public BitbucketSettings BitBucketSettings { get; set; }
         public string GitHubToken { get; set; }
     }
