@@ -7,11 +7,11 @@ namespace Web.Models
     {
         [Required]
         [DisplayName("E-mail")]
-        public string Email;
+        public string Email { get; set; }
 
         [Required]
         [DisplayName("Password")]
-        public string Password;
+        public string Password { get; set; }
 
         public string GoogleApiClientId { get; set; }
     }

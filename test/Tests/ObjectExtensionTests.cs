@@ -1,13 +1,6 @@
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using AzureRepositories.KeyValue;
-using AzureStorage.Tables;
-using Common;
-using Core.KeyValue;
 using Newtonsoft.Json;
-using Services;
-using Web.Extensions;
+using Services.Extensions;
 using Xunit;
 
 namespace Tests
@@ -28,6 +21,5 @@ namespace Tests
             Assert.Equal("redisIpOnDev", result.First().Key);
             Assert.Equal(2, result.Count);
         }
-
     }
 }

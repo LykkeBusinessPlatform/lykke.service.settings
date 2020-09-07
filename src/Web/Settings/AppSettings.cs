@@ -14,8 +14,10 @@ namespace Web.Settings
         public string DefaultUserEmail { get; set; }
         public string GoogleApiClientId { get; set; }
         public string AvailableEmailsRegex { get; set; }
-        //public string SlackNotificationsConnString { get; set; }
-        //public string SlackNotificationsQueueName { get; set; }
+        [Optional]
+        public string SlackNotificationsConnString { get; set; }
+        [Optional]
+        public string SlackNotificationsQueueName { get; set; }
         public BitbucketSettings BitBucketSettings { get; set; }
         public string GitHubToken { get; set; }
     }

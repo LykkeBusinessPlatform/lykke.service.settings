@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Globalization;
+using System.Threading.Tasks;
 using Autofac;
-using Autofac.Extensions.DependencyInjection;
-using Common.Log;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.Common.ApiLibrary.Middleware;
-using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Common.Log;
+using Lykke.Logs;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -15,24 +14,25 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Web.Middleware;
 using Web.Models;
 using Web.Modules;
-using System.Threading.Tasks;
 using Web.Code;
 using Web.Settings;
+using Microsoft.OpenApi.Models;
 
 namespace web
 {
     public class Startup
     {
-        public IConfigurationRoot Configuration { get; }
-        public IHostingEnvironment Environment { get; }
-        public IContainer ApplicationContainer { get; set; }
-        public ILog Log { get; private set; }
-        public IHealthNotifier HealthNotifier { get; set; }
+        private const string ApiName = "SettingsServiceV2 API";
+        private AppSettings _appSettings;
 
-        public Startup(IHostingEnvironment env)
+        public IConfigurationRoot Configuration { get; }
+        public IWebHostEnvironment Environment { get; }
+
+        public Startup(IWebHostEnvironment env)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
@@ -44,151 +44,158 @@ namespace web
             Environment = env;
         }
 
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
-            try
+            _appSettings = Configuration.Get<AppSettings>();
+
+            services.AddAuthentication(opts =>
             {
-                var appSettings = Configuration.Get<AppSettings>();
-
-                services.AddAuthentication(opts =>
-                {
-                    opts.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    opts.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                })
-                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, o =>
-                {
-                    o.LoginPath = new PathString("/Account/SignIn");
-                    o.ExpireTimeSpan = TimeSpan.FromMinutes(appSettings.UserLoginTime);
-                });
-
-                services.AddAuthorization(options =>
-                {
-                    options.DefaultPolicy = new AuthorizationPolicyBuilder(CookieAuthenticationDefaults.AuthenticationScheme)
-                        .RequireAuthenticatedUser()
-                        .Build();
-                });
-
-                services.AddMemoryCache();
-
-                services.AddMvc();
-
-                services.AddSwaggerGen(options =>
-                {
-                    options.DefaultLykkeConfiguration("v1", "SettingsServiceV2 API");
-                    options.OperationFilter<ApiKeyHeaderOperationFilter>();
-                });
-
-                var builder = new ContainerBuilder();
-
-                builder.RegisterModule(new AppModule(appSettings));
-                builder.RegisterModule(new DbModule(appSettings));
-
-                builder.Populate(services);
-
-                var provider = new AnnotationsBasedMetamodelProvider();
-                EntityMetamodel.Configure(provider);
-
-                ApplicationContainer = builder.Build();
-
-                Log = ApplicationContainer.Resolve<ILogFactory>().CreateLog(this);
-                HealthNotifier = ApplicationContainer.Resolve<IHealthNotifier>();
-
-                return new AutofacServiceProvider(ApplicationContainer);
-            }
-            catch (Exception ex)
+                opts.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                opts.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            })
+            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, o =>
             {
-                Log?.Critical(ex);
-                throw;
-            }
+                o.LoginPath = new PathString("/Account/SignIn");
+                o.ExpireTimeSpan = TimeSpan.FromMinutes(_appSettings.UserLoginTime);
+            });
+
+            services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy = new AuthorizationPolicyBuilder(CookieAuthenticationDefaults.AuthenticationScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
+
+            services.AddMemoryCache();
+
+            services.AddControllersWithViews(); //services.AddRazorPages();
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = ApiName, Version = "v1" });
+                c.CustomSchemaIds(type => type.ToString());
+                c.OperationFilter<ApiKeyHeaderOperationFilter>();
+            });
+
+            ConfigureLogging(services);
+
+            var provider = new AnnotationsBasedMetamodelProvider();
+            EntityMetamodel.Configure(provider);
         }
+
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            builder.RegisterModule(new AppModule(_appSettings));
+            builder.RegisterModule(new DbModule(_appSettings));
+        }
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
+        public void Configure(
+            IApplicationBuilder app,
+            IWebHostEnvironment env,
+            IHostApplicationLifetime appLifetime)
         {
-            try
+            if (env.IsDevelopment())
             {
-                if (env.IsDevelopment())
-                {
-                    app.UseDeveloperExceptionPage();
-                }
-                else
-                {
-                    app.UseStatusCodePagesWithReExecute("/home/error/{0}");
-                }
-
-                app.UseLykkeMiddleware(ex => new ErrorResponse { ErrorMessage = "Technical problem" });
-
-                app.UseAuthentication();
-                app.UseStaticFiles();
-
-                app.UseMvc(routes =>
-                {
-                    routes.MapRoute(
-                        name: "default",
-                        template: "{controller=Home}/{action=Index}/{id?}");
-                });
-
-                app.UseSwagger();
-
-                app.UseSwaggerUI(x =>
-                {
-                    x.RoutePrefix = "swagger/ui";
-                    x.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-                    x.EnableDeepLinking();
-                });
-
-                var cultureInfo = new CultureInfo("en-US");
-
-                CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
-                CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
-
-                appLifetime.ApplicationStarted.Register(() => StartApplicationAsync().GetAwaiter().GetResult());
-                appLifetime.ApplicationStopped.Register(CleanUp);
+                app.UseDeveloperExceptionPage();
             }
-            catch (Exception ex)
+            else
             {
-                Log?.Critical(ex);
-                throw;
+                app.UseStatusCodePagesWithReExecute("/home/error/{0}");
             }
+
+            app.UseLykkeMiddleware(ex => new ErrorResponse { ErrorMessage = "Technical problem" });
+
+            app.UseStaticFiles();
+
+            app.UseRouting();
+            app.UseAuthentication();
+            app.UseAuthorization();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
+            });
+
+            app.UseSwagger();
+
+            app.UseSwaggerUI(x =>
+            {
+                x.RoutePrefix = "swagger/ui";
+                x.SwaggerEndpoint("/swagger/v1/swagger.json", ApiName);
+                x.EnableDeepLinking();
+            });
+
+            var cultureInfo = new CultureInfo("en-US");
+
+            CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+            CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+
+            appLifetime.ApplicationStarted.Register(() => StartApplicationAsync(app.ApplicationServices).GetAwaiter().GetResult());
+            appLifetime.ApplicationStopped.Register(() => CleanUp(app.ApplicationServices));
         }
 
-        private async Task StartApplicationAsync()
+        private async Task StartApplicationAsync(IServiceProvider serviceProvider)
         {
             try
             {
-                var selfTestService = ApplicationContainer.Resolve<SelfTestService>();
+                var selfTestService = serviceProvider.GetRequiredService<SelfTestService>();
                 await selfTestService.SelfTestAsync();
 
-                if (HealthNotifier != null)
-                    HealthNotifier.Notify("Starting");
+                var healthNotifier = serviceProvider.GetService<IHealthNotifier>();
+                if (healthNotifier != null)
+                    healthNotifier.Notify("Starting");
             }
             catch (Exception ex)
             {
-                Log?.Critical(ex);
+                var log = serviceProvider.GetService<ILogFactory>().CreateLog(this);
+                log.Critical(ex);
 
                 throw;
             }
         }
 
-        private void CleanUp()
+        private void CleanUp(IServiceProvider serviceProvider)
         {
             try
             {
-                if (HealthNotifier != null)
-                    HealthNotifier.Notify("Terminating");
-
-                ApplicationContainer.Dispose();
+                var healthNotifier = serviceProvider.GetService<IHealthNotifier>();
+                if (healthNotifier != null)
+                    healthNotifier.Notify("Terminating");
             }
             catch (Exception ex)
             {
-                if (Log != null)
+                var log = serviceProvider.GetService<ILogFactory>().CreateLog(this);
+                if (log != null)
                 {
-                    Log?.Critical(ex);
-                    (Log as IDisposable)?.Dispose();
+                    log.Critical(ex);
+                    (log as IDisposable)?.Dispose();
                 }
 
                 throw;
             }
+        }
+
+        private void ConfigureLogging(IServiceCollection services)
+        {
+            services.AddLykkeLogging();
+
+            var serilogConfigurator = new SerilogConfigurator();
+#if !DEBUG
+            if (!string.IsNullOrWhiteSpace(_appSettings.ConnectionString))
+                serilogConfigurator.AddAzureTable(
+                    _appSettings.ConnectionString,
+                    "SettingsServiceLog");
+
+            if (!string.IsNullOrWhiteSpace(_appSettings.SlackNotificationsConnString)
+                && !string.IsNullOrWhiteSpace(_appSettings.SlackNotificationsQueueName))
+                serilogConfigurator.AddAzureQueue(
+                    _appSettings.SlackNotificationsConnString,
+                    _appSettings.SlackNotificationsQueueName);
+#endif
+            serilogConfigurator.Configure();
         }
     }
 }

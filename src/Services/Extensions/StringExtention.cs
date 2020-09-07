@@ -2,13 +2,13 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Web.Extensions
+namespace Services.Extensions
 {
     public static class StringExtention
     {
         public static string GetHash(this string str)
         {
-            var hash = BitConverter.ToString(Hash(str)).Replace("-",string.Empty);
+            var hash = BitConverter.ToString(Hash(str)).Replace("-", string.Empty);
             return hash;
         }
 
@@ -18,14 +18,14 @@ namespace Web.Extensions
         }
 
         private static byte[] Hash(byte[] value)
-        {  
+        {
             using (var sha256 = SHA256.Create())
             {
                 // Send a sample text to hash.  
                 return sha256.ComputeHash(value);
                 // Get the hashed string.  
             }
-            
+
         }
     }
 }

@@ -67,7 +67,7 @@ namespace Services
         }
     }
 
-    static class Extensions
+    internal static class ForEachExtensions
     {
         public static void ForEach<T>(this IEnumerable<T> ie, Action<T> action)
         {

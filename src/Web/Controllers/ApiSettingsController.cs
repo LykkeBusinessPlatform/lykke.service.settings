@@ -7,7 +7,6 @@ using Common.Log;
 using Core.KeyValue;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Mvc;
-using Web.Extensions;
 
 namespace Web.Controllers
 {

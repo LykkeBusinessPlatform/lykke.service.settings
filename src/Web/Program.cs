@@ -2,7 +2,9 @@
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
 using Web.Code;
 
@@ -20,30 +22,31 @@ namespace web
 #else
                 Console.WriteLine("Is RELEASE");
 #endif
-                var hostBuilder = new WebHostBuilder()
-                        .UseContentRoot(Directory.GetCurrentDirectory());
-
-                var sertConnString = Environment.GetEnvironmentVariable("CertConnectionString");
-                if (string.IsNullOrWhiteSpace(sertConnString) || sertConnString.Length < 10)
-                {
-                    hostBuilder = hostBuilder
-                        .UseKestrel()
-                        .UseUrls("http://*:5000/");
-                }
-                else
-                {
-                    var xcert = CertificateLoader.Load(sertConnString);
-                    hostBuilder = hostBuilder
-                        .UseKestrel(x =>
+                var host = Host.CreateDefaultBuilder(args)
+                    .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                    .UseContentRoot(Directory.GetCurrentDirectory())
+                    .ConfigureWebHostDefaults(hostBuilder =>
+                    {
+                        var sertConnString = Environment.GetEnvironmentVariable("CertConnectionString");
+                        if (string.IsNullOrWhiteSpace(sertConnString) || sertConnString.Length < 10)
                         {
-                            x.Listen(IPAddress.Any, 443, listenOptions => listenOptions.UseHttps(xcert));
-                            x.AddServerHeader = false;
-                        })
-                        .UseUrls("https://*:443/");
-                }
-
-                var host = hostBuilder
-                    .UseStartup<Startup>()
+                            hostBuilder
+                                .UseKestrel()
+                                .UseUrls("http://*:5000/");
+                        }
+                        else
+                        {
+                            var xcert = CertificateLoader.Load(sertConnString);
+                            hostBuilder
+                                .UseKestrel(x =>
+                                {
+                                    x.Listen(IPAddress.Any, 443, listenOptions => listenOptions.UseHttps(xcert));
+                                    x.AddServerHeader = false;
+                                })
+                                .UseUrls("https://*:443/");
+                        }
+                        hostBuilder.UseStartup<Startup>();
+                    })
                     .Build();
 
                 host.Run();

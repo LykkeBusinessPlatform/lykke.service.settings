@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using Core.Token;
 using Newtonsoft.Json.Linq;
 
-namespace Web.Extensions
+namespace Services.Extensions
 {
     public static class ObjectExstention
     {
@@ -69,7 +69,7 @@ namespace Web.Extensions
 
             if (obj.Type == JTokenType.Array)
             {
-                foreach (var prop in ((JArray)obj))
+                foreach (var prop in (JArray)obj)
                 {
                     AddKeys(prop, path, keysDict);
                 }

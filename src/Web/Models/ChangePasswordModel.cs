@@ -7,10 +7,10 @@ namespace Web.Models
     {
         [Required]
         [DisplayName("Old Password")]
-        public string OldPassword;
+        public string OldPassword { get; set; }
 
         [Required]
         [DisplayName("Password")]
-        public string Password;
+        public string Password { get; set; }
     }
 }

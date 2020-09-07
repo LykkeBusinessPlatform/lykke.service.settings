@@ -3,9 +3,9 @@ using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace Web.Extensions
+namespace Services.Extensions
 {
-    internal static class ByteExtensions
+    public static class ByteExtensions
     {
         internal static byte[] Encrypt<T>(this T src, string key)
         {
