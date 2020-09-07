@@ -18,7 +18,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Web.Middleware;
 using Web.Models;
 using Web.Modules;
-using Core.Services;
 using System.Threading.Tasks;
 using Web.Code;
 using Web.Settings;
@@ -59,12 +58,14 @@ namespace web
                 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, o =>
                 {
                     o.LoginPath = new PathString("/Account/SignIn");
-                    o.ExpireTimeSpan = TimeSpan.FromMinutes(int.Parse(Configuration["UserLoginTime"]));
+                    o.ExpireTimeSpan = TimeSpan.FromMinutes(appSettings.UserLoginTime);
                 });
 
                 services.AddAuthorization(options =>
                 {
-                    options.DefaultPolicy = new AuthorizationPolicyBuilder(CookieAuthenticationDefaults.AuthenticationScheme).RequireAuthenticatedUser().Build();
+                    options.DefaultPolicy = new AuthorizationPolicyBuilder(CookieAuthenticationDefaults.AuthenticationScheme)
+                        .RequireAuthenticatedUser()
+                        .Build();
                 });
 
                 services.AddMemoryCache();
@@ -133,6 +134,7 @@ namespace web
                 {
                     x.RoutePrefix = "swagger/ui";
                     x.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                    x.EnableDeepLinking();
                 });
 
                 var cultureInfo = new CultureInfo("en-US");

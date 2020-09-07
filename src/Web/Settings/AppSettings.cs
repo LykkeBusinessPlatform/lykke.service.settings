@@ -9,6 +9,7 @@ namespace Web.Settings
         [Optional]
         public string SecretsConnString { get; set; }
         public int LockTimeInMinutes { get; set; }
+        public int UserLoginTime { get; set; }
         public string DefaultPassword { get; set; }
         public string DefaultUserEmail { get; set; }
         public string GoogleApiClientId { get; set; }
