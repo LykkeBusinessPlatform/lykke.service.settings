@@ -9,7 +9,6 @@ using AzureRepositories.Repository;
 using AzureRepositories.ServiceToken;
 using AzureRepositories.Token;
 using Common;
-using Common.Log;
 using Core.Blob;
 using Core.Extensions;
 using Core.KeyValue;
@@ -25,10 +24,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using Services;
-using Shared.Settings;
 using Web.Code;
 using Web.Extensions;
 using Web.Models;
+using Web.Settings;
 
 namespace Web.Controllers
 {

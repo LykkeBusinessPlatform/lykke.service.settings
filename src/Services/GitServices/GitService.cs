@@ -6,7 +6,6 @@ using Common.Log;
 using Core;
 using Core.Services;
 using Lykke.Common.Log;
-using Shared.Settings;
 
 namespace Services.GitServices
 {
@@ -17,12 +16,19 @@ namespace Services.GitServices
         private const string FILE_FORMAT_ON_GIT = ".yaml";
         private const string FILENAME = "settings";
 
-        private readonly AppSettings _appSettings;
         private readonly Encoding _encoding = Encoding.GetEncoding("ISO-8859-1");
+        private readonly string _gitHubToken;
+        private readonly string _bitbucketEmail;
+        private readonly string _bitbucketPassword;
 
-        public GitService(AppSettings appSettings)
+        public GitService(
+            string gitHubToken,
+            string bitbucketEmail,
+            string bitbucketPassword)
         {
-            _appSettings = appSettings;
+            _gitHubToken = gitHubToken;
+            _bitbucketEmail = bitbucketEmail;
+            _bitbucketPassword = bitbucketPassword;
         }
 
         public SourceControlTypes ResolveSourceControlTypeFromUrl(string url)
@@ -150,11 +156,11 @@ namespace Services.GitServices
                     break;
                 case SourceControlTypes.GithubPrivate:
                     request.Accept = "application/vnd.github.v3.raw";
-                    request.Headers.Add("Authorization", "token " + _appSettings.GitHubToken);
+                    request.Headers.Add("Authorization", "token " + _gitHubToken);
                     break;
                 case SourceControlTypes.Bitbucket:
                     // we need to be authenticated on bitbucket to get access on repository. so, appending encoded username and password to request headers
-                    var credentials = _appSettings.BitBucketSettings.BitbucketEmail + ":" + _appSettings.BitBucketSettings.BitbucketPassword;
+                    var credentials = _bitbucketEmail + ":" + _bitbucketPassword;
                     string encoded = Convert.ToBase64String(_encoding.GetBytes(credentials));
                     request.Headers.Add("Authorization", "Basic " + encoded);
                     break;

@@ -5,7 +5,6 @@ using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
-using Lykke.SettingsReader.ReloadingManager;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Common.Log;
@@ -16,10 +15,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Settings;
 using Web.Middleware;
 using Web.Models;
 using Web.Modules;
+using Core.Services;
+using System.Threading.Tasks;
+using Web.Code;
+using Web.Settings;
 
 namespace web
 {
@@ -77,11 +79,9 @@ namespace web
 
                 var builder = new ContainerBuilder();
 
-                var settings = ConstantReloadingManager.From(appSettings);
+                builder.RegisterModule(new AppModule(appSettings));
+                builder.RegisterModule(new DbModule(appSettings));
 
-                builder.RegisterModule(new AppModule(settings));
-                builder.RegisterModule(new DbModule(settings));
-                //builder.RegisterModule(new RabbitModule(settings, Log, _consoleLogger));
                 builder.Populate(services);
 
                 var provider = new AnnotationsBasedMetamodelProvider();
@@ -140,7 +140,7 @@ namespace web
                 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
                 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-                appLifetime.ApplicationStarted.Register(StartApplication);
+                appLifetime.ApplicationStarted.Register(() => StartApplicationAsync().GetAwaiter().GetResult());
                 appLifetime.ApplicationStopped.Register(CleanUp);
             }
             catch (Exception ex)
@@ -150,11 +150,14 @@ namespace web
             }
         }
 
-        private void StartApplication()
+        private async Task StartApplicationAsync()
         {
             try
             {
-                if (Log != null)
+                var selfTestService = ApplicationContainer.Resolve<SelfTestService>();
+                await selfTestService.SelfTestAsync();
+
+                if (HealthNotifier != null)
                     HealthNotifier.Notify("Starting");
             }
             catch (Exception ex)
@@ -169,7 +172,7 @@ namespace web
         {
             try
             {
-                if (Log != null)
+                if (HealthNotifier != null)
                     HealthNotifier.Notify("Terminating");
 
                 ApplicationContainer.Dispose();

@@ -1,6 +1,6 @@
 ﻿using Lykke.SettingsReader.Attributes;
 
-namespace Shared.Settings
+namespace Web.Settings
 {
     public class AppSettings
     {

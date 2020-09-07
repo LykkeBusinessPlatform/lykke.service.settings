@@ -15,7 +15,6 @@ using Core.Repository;
 using Core.Services;
 using Lykke.Common.Log;
 using Newtonsoft.Json;
-using Shared.Settings;
 
 namespace Services.RepositoryServices
 {
@@ -29,7 +28,7 @@ namespace Services.RepositoryServices
         private readonly IRepositoriesUpdateHistoryRepository _repositoriesUpdateHistoryRepository;
         private readonly ISecretKeyValuesRepository _secretKeyValuesRepository;
         private readonly IGitService _gitService;
-        private readonly AppSettings _appSettings;
+        private readonly string _secretsConnString;
         private readonly ILog _log;
 
         #region Constants
@@ -48,7 +47,7 @@ namespace Services.RepositoryServices
             IRepositoriesUpdateHistoryRepository repositoriesUpdateHistoryRepository,
             ISecretKeyValuesRepository secretKeyValuesRepository,
             IGitService gitService,
-            AppSettings appSettings,
+            string secretsConnString,
             ILogFactory logFactory)
         {
             _keyValuesRepository = keyValuesRepository;
@@ -58,7 +57,7 @@ namespace Services.RepositoryServices
             _repositoriesUpdateHistoryRepository = repositoriesUpdateHistoryRepository;
             _secretKeyValuesRepository = secretKeyValuesRepository;
             _gitService = gitService;
-            _appSettings = appSettings;
+            _secretsConnString = secretsConnString;
             _log = logFactory.CreateLog(this);
         }
 
@@ -215,7 +214,7 @@ namespace Services.RepositoryServices
             var secretKeyValues = new List<IKeyValueEntity>();
             foreach (var item in uniqueDict.Values)
             {
-                if (isProduction && !string.IsNullOrEmpty(_appSettings.SecretsConnString))
+                if (isProduction && !string.IsNullOrEmpty(_secretsConnString))
                 {
                     if (item.Types == null || item.Types != null && !item.Types.Contains("Secret"))
                         regularKeyValues.Add(item);

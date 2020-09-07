@@ -1,4 +1,6 @@
-﻿using Autofac;
+﻿using System;
+using System.Diagnostics;
+using Autofac;
 using AzureRepositories.ApplicationSettings;
 using AzureRepositories.Blob;
 using AzureRepositories.KeyValue;
@@ -9,7 +11,6 @@ using AzureRepositories.ServiceToken;
 using AzureRepositories.Token;
 using AzureRepositories.User;
 using AzureStorage.Tables;
-using Common.Log;
 using Core.ApplicationSettings;
 using Core.Blob;
 using Core.KeyValue;
@@ -19,11 +20,10 @@ using Core.Repository;
 using Core.ServiceToken;
 using Core.Token;
 using Core.User;
-using Lykke.SettingsReader;
-using System;
-using Shared.Settings;
-using System.Diagnostics;
 using Lykke.Common.Log;
+using Lykke.SettingsReader;
+using Lykke.SettingsReader.ReloadingManager;
+using Web.Settings;
 
 namespace Web.Modules
 {
@@ -31,9 +31,9 @@ namespace Web.Modules
     {
         private readonly IReloadingManager<AppSettings> _settings;
 
-        public DbModule(IReloadingManager<AppSettings> settings)
+        public DbModule(AppSettings settings)
         {
-            _settings = settings;
+            _settings = ConstantReloadingManager.From(settings);
         }
 
         protected override void Load(ContainerBuilder builder)

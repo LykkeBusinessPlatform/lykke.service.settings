@@ -16,10 +16,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MoreLinq;
 using Newtonsoft.Json;
-using Shared.Settings;
 using Web.Code;
 using Web.Extensions;
 using Web.Models;
+using Web.Settings;
 
 namespace Web.Controllers
 {

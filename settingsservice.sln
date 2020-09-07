@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2010
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30204.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6FAA044F-58A1-4067-A66A-073A0825E2B3}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0. Solution Items", "0. Solution Items", "{6FAA044F-58A1-4067-A66A-073A0825E2B3}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 	EndProjectSection
@@ -23,8 +23,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Tests", "3. Tests", "{D747EF68-4C9D-427E-B194-14E431D88CFA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "test\Tests\Tests.csproj", "{2DDE31B4-DF71-4A9A-8220-879D0D86B7F8}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{9A249084-6439-4A21-ABB4-66934B270FA5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,10 +50,6 @@ Global
 		{2DDE31B4-DF71-4A9A-8220-879D0D86B7F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DDE31B4-DF71-4A9A-8220-879D0D86B7F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DDE31B4-DF71-4A9A-8220-879D0D86B7F8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9A249084-6439-4A21-ABB4-66934B270FA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9A249084-6439-4A21-ABB4-66934B270FA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9A249084-6439-4A21-ABB4-66934B270FA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9A249084-6439-4A21-ABB4-66934B270FA5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
