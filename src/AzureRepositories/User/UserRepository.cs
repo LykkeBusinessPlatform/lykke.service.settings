@@ -10,10 +10,17 @@ namespace AzureRepositories.User
     public class UserRepository : IUserRepository
     {
         private readonly INoSQLTableStorage<UserEntity> _tableStorage;
+        private readonly string _defaultUserEmail;
+        private readonly string _defaultUserPasswordHash;
 
-        public UserRepository(INoSQLTableStorage<UserEntity> tableStorage)
+        public UserRepository(
+            INoSQLTableStorage<UserEntity> tableStorage,
+            string defaultUserEmail,
+            string defaultPasswordHash)
         {
             _tableStorage = tableStorage;
+            _defaultUserEmail = defaultUserEmail;
+            _defaultUserPasswordHash = defaultPasswordHash;
         }
 
         public async Task<IUserEntity> GetUserByUserEmailAsync(string userEmail)
@@ -27,10 +34,25 @@ namespace AzureRepositories.User
             var pk = UserEntity.GeneratePartitionKey();
             var result = await _tableStorage.GetDataAsync(pk, UserEntity.GenerateRowKey(userEmail));
             if (result == null)
-            {
                 return null;
-            }
+
             return result.PasswordHash.Equals(passwordHash) ? result : null;
+        }
+
+        public async Task CreateInitialAdminAsync()
+        {
+            var usr = new UserEntity
+            {
+                PartitionKey = UserEntity.GeneratePartitionKey(),
+                RowKey = _defaultUserEmail,
+                PasswordHash = _defaultUserPasswordHash,
+                Email = _defaultUserEmail,
+                FirstName = "Admin",
+                LastName = "Initial",
+                Active = true,
+                Admin = true
+            };
+            await _tableStorage.InsertOrMergeAsync(usr);
         }
 
         public async Task<bool> SaveUserAsync(IUserEntity user)
@@ -38,15 +60,12 @@ namespace AzureRepositories.User
             try
             {
                 var te = (UserEntity)user;
-                te.RowKey = UserEntity.GenerateRowKey(te.RowKey);
                 if (te.PartitionKey == null)
-                {
                     te.PartitionKey = UserEntity.GeneratePartitionKey();
-                }
+                te.RowKey = UserEntity.GenerateRowKey(te.Email);
+
                 await _tableStorage.InsertOrMergeAsync(te);
             }
-
-
             catch
             {
                 return false;

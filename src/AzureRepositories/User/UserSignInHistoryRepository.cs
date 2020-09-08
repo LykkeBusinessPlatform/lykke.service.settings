@@ -21,11 +21,9 @@ namespace AzureRepositories.User
             var uh = new UserSignInHistoryEntity
             {
                 PartitionKey = UserSignInHistoryEntity.GeneratePartitionKey(),
-
-                UserEmail = user.RowKey,
+                UserEmail = user.Email,
                 SignInDate = DateTime.UtcNow,
                 IpAddress = userIpAddress
-
             };
 
             uh.RowKey = uh.GetRawKey();

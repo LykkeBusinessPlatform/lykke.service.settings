@@ -1,7 +1,8 @@
 ﻿namespace Core.Entities
 {
-    public interface IUserEntity : IEntity
+    public interface IUserEntity
     {
+        string Email { get; set; }
         string Salt { get; set; }
         string PasswordHash { get; set; }
         string FirstName { get; set; }

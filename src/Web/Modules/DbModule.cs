@@ -13,24 +13,26 @@ using Core.Repositories;
 using Lykke.Common.Log;
 using Lykke.SettingsReader;
 using Lykke.SettingsReader.ReloadingManager;
+using Services.Extensions;
 using Web.Settings;
 
 namespace Web.Modules
 {
     public class DbModule : Module
     {
-        private readonly IReloadingManager<AppSettings> _settingsManager;
+        private readonly AppSettings _settings;
 
         public DbModule(AppSettings settings)
         {
-            _settingsManager = ConstantReloadingManager.From(settings);
+            _settings = settings;
         }
 
         protected override void Load(ContainerBuilder builder)
         {
-            var connectionString = _settingsManager.ConnectionString(x => x.Db.ConnectionString);
-            var userConnectionString = _settingsManager.ConnectionString(x => x.Db.UserConnectionString);
-            var secretsConnString = _settingsManager.ConnectionString(x => x.Db.SecretsConnString);
+            var settingsManager = ConstantReloadingManager.From(_settings);
+            var connectionString = settingsManager.ConnectionString(x => x.Db.ConnectionString);
+            var userConnectionString = settingsManager.ConnectionString(x => x.Db.UserConnectionString);
+            var secretsConnString = settingsManager.ConnectionString(x => x.Db.SecretsConnString);
 
             builder.Register(c=>
                 new ServiceTokenRepository(
@@ -40,7 +42,9 @@ namespace Web.Modules
 
             builder.Register(c=>
                 new UserRepository(
-                    AzureTableStorage<UserEntity>.Create(userConnectionString, "User", c.Resolve<ILogFactory>())))
+                    AzureTableStorage<UserEntity>.Create(userConnectionString, "User", c.Resolve<ILogFactory>()),
+                    _settings.DefaultUserEmail,
+                    _settings.DefaultPassword.GetHash()))
                 .As<IUserRepository>()
                 .SingleInstance();
 

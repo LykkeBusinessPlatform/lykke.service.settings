@@ -33,7 +33,6 @@ namespace Web.Controllers
         private readonly IKeyValuesRepository _keyValuesRepository;
         private readonly string _googleApiClientId;
         private readonly string _availableEmailsRegex;
-        private readonly string _defaultUserEmail;
         private readonly string _defaultUserPasswordHash;
 
         private string HomeUrl => Url.Action("Repository", "Home");
@@ -55,7 +54,6 @@ namespace Web.Controllers
 
             _googleApiClientId = appSettings.GoogleApiClientId;
             _availableEmailsRegex = appSettings.AvailableEmailsRegex;
-            _defaultUserEmail = appSettings.DefaultUserEmail;
             _defaultUserPasswordHash = appSettings.DefaultPassword.GetHash();
         }
 
@@ -66,21 +64,8 @@ namespace Web.Controllers
             try
             {
                 var topUser = await _userRepository.GetTopUserRecordAsync();
-
                 if (topUser == null)
-                {
-                    var usr = new UserEntity
-                    {
-                        PasswordHash = _defaultUserPasswordHash,
-                        RowKey = _defaultUserEmail,
-                        FirstName = "Admin",
-                        LastName = "Initial",
-                        Active = true,
-                        Admin = true
-                    };
-
-                    await _userRepository.SaveUserAsync(usr);
-                }
+                    await _userRepository.CreateInitialAdminAsync();
 
                 ViewData["ReturnUrl"] = returnUrl;
 
@@ -135,11 +120,11 @@ namespace Web.Controllers
                 if (user?.Active != null && user.Active.Value)
                 {
                     var claims = new List<Claim>
-                 {
-                     new Claim(ClaimTypes.Sid, email),
-                     new Claim("IsAdmin", user.Admin.ToString()),
-                     new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}".Trim())
-                 };
+                    {
+                        new Claim(ClaimTypes.Sid, email),
+                        new Claim("IsAdmin", user.Admin.ToString()),
+                        new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}".Trim())
+                    };
 
                     var claimsIdentity = new ClaimsIdentity(claims, "password");
                     var claimsPrinciple = new ClaimsPrincipal(claimsIdentity);
@@ -186,6 +171,7 @@ namespace Web.Controllers
 
                 user.Salt = Convert.ToBase64String(salt);
                 user.PasswordHash = $"{password}{user.Salt}".GetHash();
+
                 await _userRepository.SaveUserAsync(user);
 
                 return Redirect(HomeUrl);
@@ -268,12 +254,14 @@ namespace Web.Controllers
         {
             try
             {
-                var usr = (await _userRepository.GetUserByUserEmailAsync(user.Email)) as UserEntity ?? new UserEntity
-                {
-                    PasswordHash = _defaultUserPasswordHash
-                };
+                var usr = await _userRepository.GetUserByUserEmailAsync(user.Email);
+                if (usr == null)
+                    usr = new UserEntity
+                    {
+                        PasswordHash = _defaultUserPasswordHash,
+                        Email = user.Email,
+                    };
 
-                usr.RowKey = user.Email;
                 usr.FirstName = user.FirstName;
                 usr.LastName = user.LastName;
                 usr.Active = user.Active;
@@ -366,7 +354,8 @@ namespace Web.Controllers
         {
             try
             {
-                if (!(await _userRepository.GetUserByUserEmailAsync(userEmail) is UserEntity user))
+                var user = await _userRepository.GetUserByUserEmailAsync(userEmail);
+                if (user == null)
                     return new JsonResult(new { result = "User not found" });
 
                 user.PasswordHash = _defaultUserPasswordHash;

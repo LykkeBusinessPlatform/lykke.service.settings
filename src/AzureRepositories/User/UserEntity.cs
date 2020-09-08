@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Core.Entities;
-using Core.KeyValue;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
@@ -14,6 +12,7 @@ namespace AzureRepositories.User
 
         public static string GenerateRowKey(string userEmail) => userEmail.ToLowerInvariant();
 
+        public string Email { get; set; }
         public string Salt { get; set; }
         public string PasswordHash { get; set; }
         public string FirstName { get; set; }
@@ -24,37 +23,28 @@ namespace AzureRepositories.User
 
         public override void ReadEntity(IDictionary<string, EntityProperty> properties, OperationContext operationContext)
         {
-            if (properties.TryGetValue("Salt", out var salt))
-            {
+            if (properties.TryGetValue(nameof(Email), out var email))
+                Email = email.StringValue;
+
+            if (properties.TryGetValue(nameof(Salt), out var salt))
                 Salt = salt.StringValue;
-            }
 
-            if (properties.TryGetValue("PasswordHash", out var passwordHash))
-            {
+            if (properties.TryGetValue(nameof(PasswordHash), out var passwordHash))
                 PasswordHash = passwordHash.StringValue;
-            }
 
-            if (properties.TryGetValue("FirstName", out var firstName))
-            {
+            if (properties.TryGetValue(nameof(FirstName), out var firstName))
                 FirstName = firstName.StringValue;
-            }
 
-            if (properties.TryGetValue("LastName", out var lastName))
-            {
+            if (properties.TryGetValue(nameof(LastName), out var lastName))
                 LastName = lastName.StringValue;
-            }
 
-            if (properties.TryGetValue("Active", out var active))
-            {
+            if (properties.TryGetValue(nameof(Active), out var active))
                 Active = active.BooleanValue;
-            }
 
-            if (properties.TryGetValue("Admin", out var admin))
-            {
+            if (properties.TryGetValue(nameof(Admin), out var admin))
                 Admin = admin.BooleanValue;
-            }
 
-            if (properties.TryGetValue("Roles", out var roles))
+            if (properties.TryGetValue(nameof(Roles), out var roles))
             {
                 var json = roles.StringValue;
                 if (!string.IsNullOrEmpty(json))
@@ -68,6 +58,7 @@ namespace AzureRepositories.User
         {
             var dict = new Dictionary<string, EntityProperty>
             {
+                {"Email", new EntityProperty(Email)},
                 {"Salt", new EntityProperty(Salt)},
                 {"PasswordHash", new EntityProperty(PasswordHash)},
                 {"FirstName", new EntityProperty(FirstName)},
