@@ -26,14 +26,14 @@ namespace Web.Modules
             builder.RegisterType<RepositoriesService>()
                 .As<IRepositoriesService>()
                 .SingleInstance()
-                .WithParameter(TypedParameter.From(_settings.SecretsConnString));
+                .WithParameter(TypedParameter.From(!string.IsNullOrEmpty(_settings.Db.SecretsConnString)));
 
             builder.RegisterType<GitService>()
                 .As<IGitService>()
                 .SingleInstance()
-                .WithParameter("gitHubToken", _settings.GitHubToken)
-                .WithParameter("bitbucketEmail", _settings.BitBucketSettings?.BitbucketEmail)
-                .WithParameter("bitbucketPassword", _settings.BitBucketSettings?.BitbucketPassword);
+                .WithParameter("gitHubToken", _settings.GitSettings.GitHubToken)
+                .WithParameter("bitbucketEmail", _settings.GitSettings.BitbucketEmail)
+                .WithParameter("bitbucketPassword", _settings.GitSettings.BitbucketPassword);
 
             builder.RegisterType<SelfTestService>()
                 .AsSelf()

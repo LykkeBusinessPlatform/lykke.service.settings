@@ -24,6 +24,13 @@ namespace AzureRepositories.KeyValue
             return entries.ToDictionary(itm => itm.RowKey, itm => itm);
         }
 
+        public async Task<IKeyValueEntity> GetTopRecordAsync()
+        {
+            var pk = KeyValueEntity.GeneratePartitionKey();
+            var result = await _tableStorage.GetTopRecordAsync(pk);
+            return result;
+        }
+
         public async Task<IEnumerable<IKeyValueEntity>> GetAsync(Func<IKeyValueEntity, bool> filter)
         {
             var pk = KeyValueEntity.GeneratePartitionKey();
@@ -119,19 +126,6 @@ namespace AzureRepositories.KeyValue
             {
                 await _tableStorage.DeleteAsync(kvItem);
                 await _history.DeleteKeyValueHistoryAsync(keyValueId, description, userName, userIpAddress);
-            }
-        }
-
-        public async Task DeleteKeyValuesWithHistoryAsync(string[] keyValueIds, string description, string userName, string userIpAddress)
-        {
-            foreach (var keyValueId in keyValueIds)
-            {
-                var kvItem = await _tableStorage.GetDataAsync(KeyValueEntity.GeneratePartitionKey(), keyValueId);
-                if (kvItem != null)
-                {
-                    await _tableStorage.DeleteAsync(kvItem);
-                    await _history.DeleteKeyValueHistoryAsync(keyValueId, description, userName, userIpAddress);
-                }
             }
         }
     }

@@ -4,10 +4,7 @@ namespace Web.Settings
 {
     public class AppSettings
     {
-        public string UserConnectionString { get; set; }
-        public string ConnectionString { get; set; }
-        [Optional]
-        public string SecretsConnString { get; set; }
+        public DbSettings Db { get; set; }
         public int LockTimeInMinutes { get; set; }
         public int UserLoginTime { get; set; }
         public string DefaultPassword { get; set; }
@@ -18,13 +15,31 @@ namespace Web.Settings
         public string SlackNotificationsConnString { get; set; }
         [Optional]
         public string SlackNotificationsQueueName { get; set; }
-        public BitbucketSettings BitBucketSettings { get; set; }
-        public string GitHubToken { get; set; }
+        public GitSettings GitSettings { get; set; }
     }
 
-    public class BitbucketSettings
+    public enum DbType
     {
+        AzureStorageTables,
+        Postgres,
+    }
+
+    public class DbSettings
+    {
+        public DbType DbType { get; set; }
+        public string UserConnectionString { get; set; }
+        public string ConnectionString { get; set; }
+        [Optional]
+        public string SecretsConnString { get; set; }
+    }
+
+    public class GitSettings
+    {
+        [Optional]
+        public string GitHubToken { get; set; }
+        [Optional]
         public string BitbucketEmail { get; set; }
+        [Optional]
         public string BitbucketPassword { get; set; }
     }
 }

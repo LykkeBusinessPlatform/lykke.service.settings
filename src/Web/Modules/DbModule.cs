@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using Autofac;
 using AzureRepositories.ApplicationSettings;
 using AzureRepositories.Blob;
@@ -38,12 +37,9 @@ namespace Web.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-
-            var connectionString = _settings.ConnectionString(x => x.ConnectionString);
-            var secretsConnString = _settings.ConnectionString(x => x.SecretsConnString);
-            var userConnectionString = _settings.ConnectionString(x => x.UserConnectionString);
+            var connectionString = _settings.ConnectionString(x => x.Db.ConnectionString);
+            var secretsConnString = _settings.ConnectionString(x => x.Db.SecretsConnString);
+            var userConnectionString = _settings.ConnectionString(x => x.Db.UserConnectionString);
 
             builder.Register(c=>
                 new ServiceTokenRepository(AzureTableStorage<ServiceTokenEntity>.Create(connectionString,
@@ -169,9 +165,6 @@ namespace Web.Modules
                 c.Resolve<ILogFactory>())))
                 .As<IApplicationSettingsRepostiory>()
                 .SingleInstance();
-
-            stopwatch.Stop();
-            Console.WriteLine($"----- DbModule init finished: {stopwatch.ElapsedMilliseconds} ms -----");
         }
     }
 }

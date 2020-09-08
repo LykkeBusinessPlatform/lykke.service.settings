@@ -120,7 +120,12 @@ namespace Web.Controllers
                 jsonData = jsonData.SubstituteServiceTokens(servTokens);
                 var network = await _networkRepository.GetByIpAsync(UserInfo.Ip);
                 var repositoryVersionSeparator = "-";
-                jsonData = jsonData.Substitute(keyValues, network?.Id, repositoryVersion: !String.IsNullOrEmpty(repository.Tag) ? repository.Tag + repositoryVersionSeparator : String.Empty);
+                jsonData = jsonData.Substitute(
+                    keyValues,
+                    network?.Id,
+                    repositoryVersion: !string.IsNullOrEmpty(repository.Tag)
+                        ? repository.Tag + repositoryVersionSeparator
+                        : string.Empty);
                 //TODO: do we need this?
                 jsonData = jsonData.Replace(@"\/", @"/");
 

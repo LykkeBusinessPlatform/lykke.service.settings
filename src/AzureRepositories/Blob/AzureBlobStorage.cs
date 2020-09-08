@@ -78,29 +78,6 @@ namespace AzureRepositories.Blob
             return new AzureBlobResult(memStream, blockBlob.Properties.ETag);
         }
 
-        public string GetETag(string blobContainer, string key)
-        {
-            var containerRef = _blobClient.GetContainerReference(blobContainer);
-            var blockBlob = containerRef.GetBlockBlobReference(key);
-            return blockBlob.Properties.ETag;
-        }
-
-        public async Task<string> GetLastModified(string blobContainer, string key)
-        {
-            try
-            {
-                var containerRef = _blobClient.GetContainerReference(blobContainer);
-                var blockBlob = containerRef.GetBlockBlobReference(key);
-                await blockBlob.FetchAttributesAsync();
-                var lastModified = blockBlob.Properties.LastModified;
-                return lastModified.HasValue ? lastModified.Value.ToString("g") : String.Empty;
-            }
-            catch(Exception)
-            {
-                return String.Empty;
-            }
-        }
-
         public string GetBlobUrl(string container, string key)
         {
             var containerRef = _blobClient.GetContainerReference(container);

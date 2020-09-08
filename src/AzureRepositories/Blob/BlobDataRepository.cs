@@ -31,34 +31,16 @@ namespace AzureRepositories.Blob
 
         public async Task<string> GetDataAsync(string file = null)
         {
-            var data = await GetDataWithMetaAsync(file);
-            return data.Item1;
-        }
-
-        public async Task<Tuple<string, string>> GetDataWithMetaAsync(string file = null)
-        {
             var fileName = GetFileName(file);
             try
             {
                 var result = await _blobStorage.GetAsync(_container, fileName);
-                return new Tuple<string, string>(result.AsString(), result.ETag);
+                return result.AsString();
             }
             catch (Exception)
             {
-                return new Tuple<string, string>(string.Empty, string.Empty);
+                return string.Empty;
             }
-        }
-
-        public string GetETag(string file = null)
-        {
-            var fileName = GetFileName(file);
-            return _blobStorage.GetETag(_container, fileName);
-        }
-
-        public async Task<string> GetLastModified(string file = null)
-        {
-            var fileName = GetFileName(file);
-            return await _blobStorage.GetLastModified(_container, fileName);
         }
 
         public async Task UpdateBlobAsync(string json, string userName, string ipAddress, string file = null)
@@ -73,9 +55,15 @@ namespace AzureRepositories.Blob
                     data);
         }
 
-        public async Task<List<string>> GetExistingFileNames()
+        public async Task<List<string>> GetExistingFileNamesAsync()
         {
             return await _blobStorage.GetExistingFileNames(_container);
+        }
+
+        public Task<bool> ExistsAsync(string file = null)
+        {
+            var fileName = GetFileName(file);
+            return _blobStorage.HasBlobAsync(_container, fileName);
         }
 
         public async Task DelBlobAsync(string file = null)

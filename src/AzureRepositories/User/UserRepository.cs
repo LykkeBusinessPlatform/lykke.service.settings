@@ -15,13 +15,13 @@ namespace AzureRepositories.User
             _tableStorage = tableStorage;
         }
 
-        public async Task<IUserEntity> GetUserByUserEmail(string userEmail)
+        public async Task<IUserEntity> GetUserByUserEmailAsync(string userEmail)
         {
             var pk = UserEntity.GeneratePartitionKey();
             return await _tableStorage.GetDataAsync(pk, UserEntity.GenerateRowKey(userEmail));
         }
 
-        public async Task<IUserEntity> GetUserByUserEmail(string userEmail, string passwordHash)
+        public async Task<IUserEntity> GetUserByUserEmailAsync(string userEmail, string passwordHash)
         {
             var pk = UserEntity.GeneratePartitionKey();
             var result = await _tableStorage.GetDataAsync(pk, UserEntity.GenerateRowKey(userEmail));
@@ -32,7 +32,7 @@ namespace AzureRepositories.User
             return result.PasswordHash.Equals(passwordHash) ? result : null;
         }
 
-        public async Task<bool> SaveUser(IUserEntity user)
+        public async Task<bool> SaveUserAsync(IUserEntity user)
         {
             try
             {
@@ -54,13 +54,21 @@ namespace AzureRepositories.User
             return true;
         }
 
-        public async Task<List<IUserEntity>> GetUsers()
+        public async Task<List<IUserEntity>> GetUsersAsync()
         {
             var pk = UserEntity.GeneratePartitionKey();
-            return (await _tableStorage.GetDataAsync(pk)).Cast<IUserEntity>().ToList();
+            var users = await _tableStorage.GetDataAsync(pk);
+            return users.Cast<IUserEntity>().ToList();
         }
 
-        public async Task<bool> RemoveUser(string userEmail)
+        public async Task<IUserEntity> GetTopUserRecordAsync()
+        {
+            var pk = UserEntity.GeneratePartitionKey();
+            var result = await _tableStorage.GetTopRecordAsync(pk);
+            return result;
+        }
+
+        public async Task<bool> RemoveUserAsync(string userEmail)
         {
             try
             {

@@ -6,6 +6,7 @@ using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
+using Serilog;
 using Web.Code;
 
 namespace web
@@ -24,6 +25,7 @@ namespace web
 #endif
                 var host = Host.CreateDefaultBuilder(args)
                     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                    .UseSerilog()
                     .UseContentRoot(Directory.GetCurrentDirectory())
                     .ConfigureWebHostDefaults(hostBuilder =>
                     {

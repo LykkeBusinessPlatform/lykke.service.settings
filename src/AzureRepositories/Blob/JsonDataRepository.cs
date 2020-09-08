@@ -4,7 +4,8 @@ namespace AzureRepositories.Blob
 {
     public class JsonDataRepository : BlobDataRepository, IJsonDataRepository
     {
-        public JsonDataRepository(IBlobStorage blobStorage, string container, string historyContainer, string file) : base(blobStorage, container, historyContainer, file)
+        public JsonDataRepository(IBlobStorage blobStorage, string container, string historyContainer, string file)
+            : base(blobStorage, container, historyContainer, file)
         {
         }
     }

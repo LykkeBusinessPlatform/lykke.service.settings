@@ -41,7 +41,6 @@ namespace Web.Controllers
         private readonly IServiceTokenRepository _serviceTokensRepository;
         private readonly IKeyValuesRepository _keyValuesRepository;
         private readonly ILockRepository _lockRepository;
-        private readonly AppSettings _appSettings;
         private readonly IKeyValueHistoryRepository _keyValueHistoryRepository;
         private readonly IServiceTokenHistoryRepository _serviceTokenHistoryRepository;
         private readonly IAccessDataRepository _accessDataRepository;
@@ -53,6 +52,8 @@ namespace Web.Controllers
         private readonly IRepositoriesUpdateHistoryRepository _repositoriesUpdateHistoryRepository;
         private readonly ISecretKeyValuesRepository _secretKeyValuesRepository;
         private readonly IRepositoriesService _repositoriesService;
+        private readonly int _lockTimeInMinutes;
+        private readonly bool _useSecrets;
 
         private static readonly object Lock = new object();
 
@@ -94,7 +95,6 @@ namespace Web.Controllers
             _serviceTokensRepository = serviceTokensRepository;
             _keyValuesRepository = keyValuesRepository;
             _lockRepository = lockRepository;
-            _appSettings = appSettings;
             _tokenHistoryRepository = tokenHistoryRepository;
             _keyValueHistoryRepository = keyValueHistoryRepository;
             _serviceTokenHistoryRepository = serviceTokenHistoryRepository;
@@ -107,6 +107,9 @@ namespace Web.Controllers
             _userRepository = userRepository;
             _secretKeyValuesRepository = secretKeyValuesRepository;
             _repositoriesService = repositoriesService;
+
+            _lockTimeInMinutes = appSettings.LockTimeInMinutes;
+            _useSecrets = !string.IsNullOrEmpty(appSettings.Db.SecretsConnString);
         }
 
         [HttpPost("/Home/UploadJson")]
@@ -211,7 +214,7 @@ namespace Web.Controllers
                 var repositoryNames = repositoriesModel.CollectionData as List<string>;
 
                 ViewData["repositoryNames"] = JsonConvert.SerializeObject(repositoryNames);
-                ViewData["timeToEditInMinutes"] = _appSettings.LockTimeInMinutes;
+                ViewData["timeToEditInMinutes"] = _lockTimeInMinutes;
 
                 return View(new RepositoryModel
                 {
@@ -769,7 +772,7 @@ namespace Web.Controllers
 
             try
             {
-                ViewData["timeToEditInMinutes"] = _appSettings.LockTimeInMinutes;
+                ViewData["timeToEditInMinutes"] = _lockTimeInMinutes;
                 ViewBag.RabbitConn = false;
                 ViewData["isProduction"] = IS_PRODUCTION;
 
@@ -1001,7 +1004,7 @@ namespace Web.Controllers
                 {
                     return new JsonResult(new
                     {
-                        diff = _appSettings.LockTimeInMinutes + 1
+                        diff = _lockTimeInMinutes + 1
                     });
                 }
 
@@ -1412,7 +1415,7 @@ namespace Web.Controllers
             try
             {
                 // get json data from blob. if manual file does not exists, get original json instead
-                var listOfNames = await _repositoryDataRepository.GetExistingFileNames();
+                var listOfNames = await _repositoryDataRepository.GetExistingFileNamesAsync();
 
                 var fileName = listOfNames.Contains(MANUAL_FILE_PREFIX + originalFileName) ? MANUAL_FILE_PREFIX + originalFileName : originalFileName;
 
@@ -1440,7 +1443,7 @@ namespace Web.Controllers
 
                 if (IS_PRODUCTION)
                 {
-                    if (!string.IsNullOrEmpty(_appSettings.SecretsConnString))
+                    if (_useSecrets)
                     {
                         var secretskeyValues = await _secretKeyValuesRepository.GetKeyValuesAsync();
                         keyValues.AddRange(secretskeyValues);

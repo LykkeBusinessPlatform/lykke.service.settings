@@ -28,7 +28,7 @@ namespace Services.RepositoryServices
         private readonly IRepositoriesUpdateHistoryRepository _repositoriesUpdateHistoryRepository;
         private readonly ISecretKeyValuesRepository _secretKeyValuesRepository;
         private readonly IGitService _gitService;
-        private readonly string _secretsConnString;
+        private readonly bool _useSecrets;
         private readonly ILog _log;
 
         #region Constants
@@ -47,7 +47,7 @@ namespace Services.RepositoryServices
             IRepositoriesUpdateHistoryRepository repositoriesUpdateHistoryRepository,
             ISecretKeyValuesRepository secretKeyValuesRepository,
             IGitService gitService,
-            string secretsConnString,
+            bool useSecrets,
             ILogFactory logFactory)
         {
             _keyValuesRepository = keyValuesRepository;
@@ -57,7 +57,7 @@ namespace Services.RepositoryServices
             _repositoriesUpdateHistoryRepository = repositoriesUpdateHistoryRepository;
             _secretKeyValuesRepository = secretKeyValuesRepository;
             _gitService = gitService;
-            _secretsConnString = secretsConnString;
+            _useSecrets = useSecrets;
             _log = logFactory.CreateLog(this);
         }
 
@@ -214,7 +214,7 @@ namespace Services.RepositoryServices
             var secretKeyValues = new List<IKeyValueEntity>();
             foreach (var item in uniqueDict.Values)
             {
-                if (isProduction && !string.IsNullOrEmpty(_secretsConnString))
+                if (isProduction && _useSecrets)
                 {
                     if (item.Types == null || item.Types != null && !item.Types.Contains("Secret"))
                         regularKeyValues.Add(item);

@@ -27,15 +27,16 @@ namespace Web.Controllers
     [IgnoreLogAction]
     public class AccountController : BaseController
     {
-        private readonly AppSettings _appSettings;
         private readonly IUserRepository _userRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IUserSignInHistoryRepository _userHistoryRepository;
         private readonly IKeyValuesRepository _keyValuesRepository;
+        private readonly string _googleApiClientId;
+        private readonly string _availableEmailsRegex;
+        private readonly string _defaultUserEmail;
+        private readonly string _defaultUserPasswordHash;
 
         private string HomeUrl => Url.Action("Repository", "Home");
-        private string ApiClientId { get; }
-        private string AvailableEmailsRegex { get; }
 
         public AccountController(
             ILogFactory logFactory,
@@ -47,14 +48,15 @@ namespace Web.Controllers
             IKeyValuesRepository keyValuesRepository)
             : base(userActionHistoryRepository, logFactory)
         {
-            _appSettings = appSettings;
             _userRepository = userRepository;
             _roleRepository = roleRepository;
             _userHistoryRepository = userHistoryRepository;
             _keyValuesRepository = keyValuesRepository;
 
-            ApiClientId = _appSettings.GoogleApiClientId;
-            AvailableEmailsRegex = _appSettings.AvailableEmailsRegex;
+            _googleApiClientId = appSettings.GoogleApiClientId;
+            _availableEmailsRegex = appSettings.AvailableEmailsRegex;
+            _defaultUserEmail = appSettings.DefaultUserEmail;
+            _defaultUserPasswordHash = appSettings.DefaultPassword.GetHash();
         }
 
         [AllowAnonymous]
@@ -63,34 +65,31 @@ namespace Web.Controllers
         {
             try
             {
-                // TODO: don't forget to remove this line
-                _log.Info("Sign In");
+                var topUser = await _userRepository.GetTopUserRecordAsync();
 
-                var users = await _userRepository.GetUsers();
-
-                if (users.Count == 0)
+                if (topUser == null)
                 {
                     var usr = new UserEntity
                     {
-                        PasswordHash = _appSettings.DefaultPassword.GetHash(),
-                        RowKey = _appSettings.DefaultUserEmail,
+                        PasswordHash = _defaultUserPasswordHash,
+                        RowKey = _defaultUserEmail,
                         FirstName = "Admin",
                         LastName = "Initial",
                         Active = true,
                         Admin = true
                     };
 
-                    await _userRepository.SaveUser(usr);
+                    await _userRepository.SaveUserAsync(usr);
                 }
 
                 ViewData["ReturnUrl"] = returnUrl;
 
-                return View(new SignInModel { GoogleApiClientId = ApiClientId });
+                return View(new SignInModel { GoogleApiClientId = _googleApiClientId });
             }
             catch (Exception ex)
             {
                 _log.Error(ex, context: returnUrl);
-                return View(new SignInModel { GoogleApiClientId = ApiClientId });
+                return View(new SignInModel { GoogleApiClientId = _googleApiClientId });
             }
         }
 
@@ -100,7 +99,7 @@ namespace Web.Controllers
         {
             try
             {
-                var user = await _userRepository.GetUserByUserEmail(email);
+                var user = await _userRepository.GetUserByUserEmailAsync(email);
 
                 if (user == null)
                     return View(new SignInModel());
@@ -150,12 +149,12 @@ namespace Web.Controllers
                     return Redirect(Url.IsLocalUrl(returnUrl) ? returnUrl : "~/");
                 }
 
-                return View(new SignInModel { GoogleApiClientId = ApiClientId });
+                return View(new SignInModel { GoogleApiClientId = _googleApiClientId });
             }
             catch (Exception ex)
             {
                 _log.Error(ex, context: new { email, password, returnUrl });
-                return View(new SignInModel { GoogleApiClientId = ApiClientId });
+                return View(new SignInModel { GoogleApiClientId = _googleApiClientId });
             }
         }
 
@@ -170,7 +169,7 @@ namespace Web.Controllers
         {
             try
             {
-                var user = await _userRepository.GetUserByUserEmail(UserInfo.UserEmail, oldPassword.GetHash());
+                var user = await _userRepository.GetUserByUserEmailAsync(UserInfo.UserEmail, oldPassword.GetHash());
 
                 if (user == null)
                 {
@@ -187,7 +186,7 @@ namespace Web.Controllers
 
                 user.Salt = Convert.ToBase64String(salt);
                 user.PasswordHash = $"{password}{user.Salt}".GetHash();
-                await _userRepository.SaveUser(user);
+                await _userRepository.SaveUserAsync(user);
 
                 return Redirect(HomeUrl);
             }
@@ -225,7 +224,7 @@ namespace Web.Controllers
         {
             try
             {
-                var user = await _userRepository.GetUserByUserEmail(UserInfo.UserEmail);
+                var user = await _userRepository.GetUserByUserEmailAsync(UserInfo.UserEmail);
 
                 if (user == null || !(user.Admin.HasValue && user.Admin.Value))
                 {
@@ -249,7 +248,7 @@ namespace Web.Controllers
         {
             try
             {
-                var user = await _userRepository.GetUserByUserEmail(UserInfo.UserEmail);
+                var user = await _userRepository.GetUserByUserEmailAsync(UserInfo.UserEmail);
                 if (user == null || !(user.Admin.HasValue && user.Admin.Value))
                 {
                     return Forbid();
@@ -269,9 +268,9 @@ namespace Web.Controllers
         {
             try
             {
-                var usr = (await _userRepository.GetUserByUserEmail(user.Email)) as UserEntity ?? new UserEntity
+                var usr = (await _userRepository.GetUserByUserEmailAsync(user.Email)) as UserEntity ?? new UserEntity
                 {
-                    PasswordHash = _appSettings.DefaultPassword.GetHash()
+                    PasswordHash = _defaultUserPasswordHash
                 };
 
                 usr.RowKey = user.Email;
@@ -286,7 +285,7 @@ namespace Web.Controllers
                 // save rowKeys to user
                 usr.Roles = roles.Select(x => x.RowKey).ToArray();
 
-                await _userRepository.SaveUser(usr);
+                await _userRepository.SaveUserAsync(usr);
                 var result = await GetAllUsers();
 
                 return new JsonResult(new { json = JsonConvert.SerializeObject(result) });
@@ -302,7 +301,7 @@ namespace Web.Controllers
         {
             try
             {
-                await _userRepository.RemoveUser(userEmail);
+                await _userRepository.RemoveUserAsync(userEmail);
                 var result = await GetAllUsers();
 
                 return new JsonResult(new { json = JsonConvert.SerializeObject(result) });
@@ -367,11 +366,11 @@ namespace Web.Controllers
         {
             try
             {
-                if (!(await _userRepository.GetUserByUserEmail(userEmail) is UserEntity user))
+                if (!(await _userRepository.GetUserByUserEmailAsync(userEmail) is UserEntity user))
                     return new JsonResult(new { result = "User not found" });
 
-                user.PasswordHash = _appSettings.DefaultPassword.GetHash();
-                await _userRepository.SaveUser(user);
+                user.PasswordHash = _defaultUserPasswordHash;
+                await _userRepository.SaveUserAsync(user);
 
                 return new JsonResult(new { Result = UpdateSettingsStatus.Ok });
             }
@@ -390,9 +389,9 @@ namespace Web.Controllers
             {
                 var webSignature = await GoogleJsonWebSignatureEx.ValidateAsync(googleSignInIdToken);
 
-                if (!webSignature.Audience.Equals(ApiClientId))
+                if (!webSignature.Audience.Equals(_googleApiClientId))
                 {
-                    _log.Warning($"{nameof(ApiClientId)} doesn't match.");
+                    _log.Warning($"{nameof(_googleApiClientId)} doesn't match.");
                     return Content(string.Empty);
                 }
                 if (string.IsNullOrWhiteSpace(webSignature.Email) || !webSignature.IsEmailValidated)
@@ -400,13 +399,13 @@ namespace Web.Controllers
                     _log.Warning("Email is empty or not validated.", context: webSignature.Email);
                     return Content(string.Empty);
                 }
-                if (!Regex.IsMatch(webSignature.Email, AvailableEmailsRegex) )
+                if (!Regex.IsMatch(webSignature.Email, _availableEmailsRegex) )
                 {
-                    _log.Warning($"Email {webSignature.Email} failed regex validation", context: AvailableEmailsRegex);
+                    _log.Warning($"Email {webSignature.Email} failed regex validation", context: _availableEmailsRegex);
                     return Content(string.Empty);
                 }
 
-                var user = await _userRepository.GetUserByUserEmail(webSignature.Email);
+                var user = await _userRepository.GetUserByUserEmailAsync(webSignature.Email);
                 if (user == null)
                 {
                     _log.Warning("Coudn't find user by email", context: webSignature.Email);
@@ -445,7 +444,7 @@ namespace Web.Controllers
         {
             try
             {
-                var result = await _userRepository.GetUsers();
+                var result = await _userRepository.GetUsersAsync();
 
                 var users = (from u in result
                              let uc = u as UserEntity

@@ -7,6 +7,7 @@ namespace Core.KeyValue
     public interface IKeyValuesRepository
     {
         Task<Dictionary<string, IKeyValueEntity>> GetAsync();
+        Task<IKeyValueEntity> GetTopRecordAsync();
         Task<IEnumerable<IKeyValueEntity>> GetAsync(Func<IKeyValueEntity, bool> filter);
         Task<IEnumerable<IKeyValueEntity>> GetKeyValuesAsync();
         Task<IEnumerable<IKeyValueEntity>> GetKeyValuesAsync(Func<IKeyValueEntity, bool> filter, string repositoryId = null);
@@ -17,9 +18,10 @@ namespace Core.KeyValue
         Task<bool> ReplaceKeyValueAsync(IEnumerable<IKeyValueEntity> keyValueList);
         Task RemoveNetworkOverridesAsync(string networkId);
 
-        Task DeleteKeyValueWithHistoryAsync(string keyValueId, string description, string userName,
+        Task DeleteKeyValueWithHistoryAsync(
+            string keyValueId,
+            string description,
+            string userName,
             string userIpAddress);
-
-        Task DeleteKeyValuesWithHistoryAsync(string[] keyValueIds, string description, string userName, string userIpAddress);
     }
 }

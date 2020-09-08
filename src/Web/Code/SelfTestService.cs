@@ -53,17 +53,17 @@ namespace Web.Code
 
         private Task TestDatabaseAsync()
         {
-            // TODO do not fetch all data, just check 1 record
             var tasks = new List<Task>
             {
-                _userRepository.GetUsers(),
-                _jsonDataRepository.GetDataAsync(),
-                _tokensRepository.GetAllAsync(),
-                _accessDataRepository.GetDataAsync(),
-                _serviceTokensRepository.GetAllAsync(),
-                _keyValuesRepository.GetAsync(),
+                _jsonDataRepository.ExistsAsync(),
+                _accessDataRepository.ExistsAsync(),
+                _accessDataRepository.ExistsAsync(),
+
+                _userRepository.GetTopUserRecordAsync(),
+                _keyValuesRepository.GetTopRecordAsync(),
+                _tokensRepository.GetTopRecordAsync(),
+                _serviceTokensRepository.GetTopRecordAsync(),
                 _lockRepository.GetJsonPageLockAsync(),
-                _accessDataRepository.GetDataAsync(),
             };
 
             return Task.WhenAll(tasks);
@@ -71,8 +71,8 @@ namespace Web.Code
 
         private void TestSettings()
         {
-            TestSettingString(nameof(_appSettings.UserConnectionString), _appSettings.UserConnectionString);
-            TestSettingString(nameof(_appSettings.ConnectionString), _appSettings.ConnectionString);
+            TestSettingString(nameof(_appSettings.Db.UserConnectionString), _appSettings.Db.UserConnectionString);
+            TestSettingString(nameof(_appSettings.Db.ConnectionString), _appSettings.Db.ConnectionString);
             TestSettingString(nameof(_appSettings.DefaultPassword), _appSettings.DefaultPassword);
             TestSettingString(nameof(_appSettings.DefaultUserEmail), _appSettings.DefaultUserEmail);
             TestSettingString(nameof(_appSettings.GoogleApiClientId), _appSettings.GoogleApiClientId);

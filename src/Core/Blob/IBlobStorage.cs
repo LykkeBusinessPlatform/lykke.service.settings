@@ -27,10 +27,6 @@ namespace Core.Blob
 
         Task<AzureBlobResult> GetAsync(string blobContainer, string key);
 
-        string GetETag(string blobContainer, string key);
-
-        Task<string> GetLastModified(string blobContainer, string key);
-
         string GetBlobUrl(string container, string key);
 
         Task<IEnumerable<string>> FindNamesByPrefixAsync(string container, string prefix);

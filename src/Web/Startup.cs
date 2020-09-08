@@ -21,6 +21,7 @@ using Web.Modules;
 using Web.Code;
 using Web.Settings;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 namespace web
 {
@@ -183,7 +184,11 @@ namespace web
             services.AddLykkeLogging();
 
             var serilogConfigurator = new SerilogConfigurator();
-#if !DEBUG
+#if DEBUG
+            var configBuilder = new ConfigurationBuilder();
+            configBuilder.AddJsonFile("serilogsettings.json", optional: false);
+            serilogConfigurator.AddFromConfiguration(configBuilder.Build());
+#else
             if (!string.IsNullOrWhiteSpace(_appSettings.ConnectionString))
                 serilogConfigurator.AddAzureTable(
                     _appSettings.ConnectionString,

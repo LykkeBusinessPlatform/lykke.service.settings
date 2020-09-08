@@ -12,15 +12,21 @@ namespace AzureRepositories.Token
         public TokensRepository(INoSQLTableStorage<TokenEntity> tableStorage)
         {
             _tableStorage = tableStorage;
-            
         }
-        
+
         public async Task<IToken> GetAsync(string tokenId)
         {
             var pk = TokenEntity.GeneratePartitionKey();
             var rk = TokenEntity.GenerateRowKey(tokenId);
 
             return await _tableStorage.GetDataAsync(pk, rk);
+        }
+
+        public async Task<IToken> GetTopRecordAsync()
+        {
+            var pk = TokenEntity.GeneratePartitionKey();
+            var result = await _tableStorage.GetTopRecordAsync(pk);
+            return result;
         }
 
         public async Task<IEnumerable<IToken>> GetAllAsync()

@@ -1,19 +1,20 @@
 {
-  "UserConnectionString": "<Azure Storage connection string to keep user info>",
-  "ConnectionString": "<Azure Storage connection string to keep settings data>",
-  "LockTimeInMinutes": "<how many time admin can lock key for edit some value in KeyVault>",
-  "UserLoginTime": "<how many keep session, in minutes>",
+  "Db": {
+    "UserConnectionString": "<Azure Storage connection string to keep user info>",
+    "ConnectionString": "<Azure Storage connection string to keep settings data>",
+    "SecretsConnString": "<Optional. Azure Storage connection string to keep secrets>"
+  },
+  "LockTimeInMinutes": "<How much time admin can lock key for edit some value in KeyValues>",
+  "UserLoginTime": "<User session duration, in minutes>",
   "DefaultPassword": "<Password for new user>",
-  "DefaultUserEmail": "<login for default user>",
-  "DefaultUserFirstName": "<name for default user>",
-  "DefaultUserLastName": "<name for default user>",
-  "ApiClientId": "<Token for google auth>",
+  "DefaultUserEmail": "<Login for default user>",
+  "GoogleApiClientId": "<Token for google auth>",
   "AvailableEmailsRegex": "<Regex to check available emails. Example: .*@google\\.com|.*@lykke-business\\.ch",
-  "SlackNotificationsConnString": "<Azure account used for Lykke.Service.SlackNotification service>",
-  "SlackNotificationsQueueName": "<queue name for Lykke.Service.SlackNotification service>",
-  "BitBucketSettings": {
+  "SlackNotificationsConnString": "Optional. <Azure account used for Lykke.Service.SlackNotification service>",
+  "SlackNotificationsQueueName": "Optional. <queue name for Lykke.Service.SlackNotification service>",
+  "GitSettings": {
+    "GitHubToken": "<Optional. Personal access token with full control for private repositories - for private repositories on enterprise github>",
     "BitbucketEmail": "<Optional. User with read access to Bitbacket private repository to upload settings.yaml files>",
     "BitbucketPassword": "Optional. Password for Bitbacket user"
-  },
-  "GitHubToken": "<Optional. Personal access token with full control for private repositories - for private repositories on enterprise github>"
+  }
 }

@@ -9,7 +9,7 @@ namespace AzureRepositories.ServiceToken
     public class ServiceTokenRepository : IServiceTokenRepository
     {
         private readonly INoSQLTableStorage<ServiceTokenEntity> _tableStorage;
-        
+
         public ServiceTokenRepository(INoSQLTableStorage<ServiceTokenEntity> tableStorage)
         {
             _tableStorage = tableStorage;
@@ -18,7 +18,15 @@ namespace AzureRepositories.ServiceToken
         public async Task<List<IServiceTokenEntity>> GetAllAsync()
         {
             var pk = ServiceTokenEntity.GeneratePartitionKey();
-            return (await _tableStorage.GetDataAsync(pk)).Cast<IServiceTokenEntity>().ToList();
+            var tokens = await _tableStorage.GetDataAsync(pk);
+            return tokens.Cast<IServiceTokenEntity>().ToList();
+        }
+
+        public async Task<IServiceTokenEntity> GetTopRecordAsync()
+        {
+            var pk = ServiceTokenEntity.GeneratePartitionKey();
+            var result = await _tableStorage.GetTopRecordAsync(pk);
+            return result;
         }
 
         public async Task<IServiceTokenEntity> GetAsync(string tokenKey)
@@ -26,7 +34,7 @@ namespace AzureRepositories.ServiceToken
             var pk = ServiceTokenEntity.GeneratePartitionKey();
             return await _tableStorage.GetDataAsync(pk, tokenKey);
         }
-        
+
         public async Task<bool> SaveAsync(IServiceTokenEntity token)
         {
             try
@@ -34,7 +42,7 @@ namespace AzureRepositories.ServiceToken
                 var pk = ServiceTokenEntity.GeneratePartitionKey();
                 var sToken = await _tableStorage.GetDataAsync(pk, token.RowKey);
                 var sNewToken = (ServiceTokenEntity)token;
-                
+
                 if (sToken == null)
                 {
                     sToken = new ServiceTokenEntity
