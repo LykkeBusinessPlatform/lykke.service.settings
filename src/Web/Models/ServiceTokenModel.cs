@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Core.ServiceToken;
+using Core.Entities;
 
 namespace Web.Models
 {

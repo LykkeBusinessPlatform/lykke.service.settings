@@ -1,4 +1,4 @@
-﻿using Core.KeyValue;
+﻿using Core.Entities;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.KeyValue

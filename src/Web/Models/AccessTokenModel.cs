@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Core.Token;
+using Core.Entities;
 
 namespace Web.Models
 {

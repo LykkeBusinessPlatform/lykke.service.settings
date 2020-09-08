@@ -1,6 +1,6 @@
 ﻿using System;
 using AzureRepositories.Extensions;
-using Core.User;
+using Core.Entities;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.User

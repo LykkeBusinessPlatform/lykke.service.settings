@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading.Tasks;
 using AzureRepositories.Extensions;
 using Core.Blob;
+using Core.Models;
+using Core.Repositories;
 
 namespace AzureRepositories.Blob
 {

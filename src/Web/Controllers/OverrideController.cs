@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
-using Core.KeyValue;
-using Core.Networks;
-using Core.User;
+using Core.Entities;
+using Core.Models;
+using Core.Repositories;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

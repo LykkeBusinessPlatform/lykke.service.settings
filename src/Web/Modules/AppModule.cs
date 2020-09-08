@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using Core.Repository;
 using Core.Services;
 using Services.GitServices;
 using Services.RepositoryServices;

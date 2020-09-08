@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AzureStorage;
-using Core.Lock;
+using Core.Entities;
+using Core.Repositories;
 
 namespace AzureRepositories.Lock
 {

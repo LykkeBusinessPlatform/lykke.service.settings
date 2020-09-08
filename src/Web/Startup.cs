@@ -21,7 +21,6 @@ using Web.Modules;
 using Web.Code;
 using Web.Settings;
 using Microsoft.OpenApi.Models;
-using Serilog;
 
 namespace web
 {

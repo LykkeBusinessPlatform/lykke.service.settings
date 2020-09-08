@@ -2,7 +2,8 @@
 using System.Text;
 using System.Threading.Tasks;
 using AzureStorage;
-using Core.User;
+using Core.Entities;
+using Core.Repositories;
 using IBlobStorage = Core.Blob.IBlobStorage;
 
 namespace AzureRepositories.User

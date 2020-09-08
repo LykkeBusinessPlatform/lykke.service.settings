@@ -1,5 +1,5 @@
 ﻿using System;
-using Core.Lock;
+using Core.Entities;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.Lock

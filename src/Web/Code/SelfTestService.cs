@@ -2,12 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Core.Blob;
-using Core.KeyValue;
-using Core.Lock;
-using Core.ServiceToken;
-using Core.Token;
-using Core.User;
+using Core.Repositories;
 using Web.Settings;
 
 namespace Web.Code

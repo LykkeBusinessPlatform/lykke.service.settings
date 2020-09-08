@@ -3,7 +3,8 @@ using System.IO;
 using System.Net;
 using System.Text;
 using Common.Log;
-using Core;
+using Core.Enums;
+using Core.Models;
 using Core.Services;
 using Lykke.Common.Log;
 

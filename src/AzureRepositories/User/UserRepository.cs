@@ -2,7 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
-using Core.User;
+using Core.Entities;
+using Core.Repositories;
 
 namespace AzureRepositories.User
 {

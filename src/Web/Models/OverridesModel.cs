@@ -1,5 +1,5 @@
-﻿using Core.KeyValue;
-using Core.Networks;
+﻿using Core.Entities;
+using Core.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Web.Models

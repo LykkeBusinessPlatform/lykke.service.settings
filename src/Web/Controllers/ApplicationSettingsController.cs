@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Core.ApplicationSettings;
-using Core.User;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Core.Extensions;
 using Web.Models;
+using Core.Enums;
+using Core.Repositories;
 
 namespace Web.Controllers
 {

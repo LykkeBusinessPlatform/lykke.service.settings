@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AzureStorage;
-using Core.Repository;
+using Core.Entities;
+using Core.Repositories;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.Repository

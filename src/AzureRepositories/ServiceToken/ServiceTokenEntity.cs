@@ -1,4 +1,4 @@
-﻿using Core.ServiceToken;
+﻿using Core.Entities;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.ServiceToken

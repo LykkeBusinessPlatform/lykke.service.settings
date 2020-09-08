@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Core.ApplicationSettings;
+using Core.Entities;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.ApplicationSettings

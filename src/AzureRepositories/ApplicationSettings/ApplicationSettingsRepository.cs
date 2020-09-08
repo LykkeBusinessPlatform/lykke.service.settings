@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
-using Core.ApplicationSettings;
+using Core.Entities;
+using Core.Repositories;
 
 namespace AzureRepositories.ApplicationSettings
 {

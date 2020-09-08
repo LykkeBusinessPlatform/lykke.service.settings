@@ -1,5 +1,6 @@
 ﻿using AzureStorage;
-using Core.Repository;
+using Core.Entities;
+using Core.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

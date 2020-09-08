@@ -24,6 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Tests", "3. Tests", "{D7
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "test\Tests\Tests.csproj", "{2DDE31B4-DF71-4A9A-8220-879D0D86B7F8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PostgresRepositories", "src\PostgresRepositories\PostgresRepositories.csproj", "{87EE5B97-7A81-4B2E-9BFA-FC2E10C5A989}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +52,10 @@ Global
 		{2DDE31B4-DF71-4A9A-8220-879D0D86B7F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DDE31B4-DF71-4A9A-8220-879D0D86B7F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DDE31B4-DF71-4A9A-8220-879D0D86B7F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87EE5B97-7A81-4B2E-9BFA-FC2E10C5A989}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87EE5B97-7A81-4B2E-9BFA-FC2E10C5A989}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87EE5B97-7A81-4B2E-9BFA-FC2E10C5A989}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87EE5B97-7A81-4B2E-9BFA-FC2E10C5A989}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -59,6 +65,7 @@ Global
 		{EF7DFC71-9717-41E0-A55E-15252B17D772} = {9360E645-70C3-4C76-845F-0FE44A674859}
 		{97DBAC6E-2E6D-4FF1-B471-CB663B9DC748} = {C4718439-33E4-4DB2-BC86-75220BF5DB02}
 		{2DDE31B4-DF71-4A9A-8220-879D0D86B7F8} = {D747EF68-4C9D-427E-B194-14E431D88CFA}
+		{87EE5B97-7A81-4B2E-9BFA-FC2E10C5A989} = {C4718439-33E4-4DB2-BC86-75220BF5DB02}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {622C4E97-D3F2-4E60-8193-776D16ACB62E}

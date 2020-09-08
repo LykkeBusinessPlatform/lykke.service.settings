@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using AzureRepositories.KeyValue;
+using Core.Entities;
 using Core.KeyValue;
+using Core.Models;
 
 namespace Web.Models
 {

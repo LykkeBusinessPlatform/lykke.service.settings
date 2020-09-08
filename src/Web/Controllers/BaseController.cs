@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using AzureRepositories.User;
 using Common;
 using Common.Log;
-using Core.User;
+using Core.Repositories;
 using Lykke.Common.Extensions;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Mvc;

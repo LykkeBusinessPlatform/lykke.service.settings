@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using AzureRepositories.Extensions;
 using AzureStorage;
-using Core.KeyValue;
+using Core.Entities;
+using Core.Repositories;
 using Newtonsoft.Json;
 using IBlobStorage = Core.Blob.IBlobStorage;
 

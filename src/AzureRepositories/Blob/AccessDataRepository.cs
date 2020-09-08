@@ -1,4 +1,5 @@
 ﻿using Core.Blob;
+using Core.Repositories;
 
 namespace AzureRepositories.Blob
 {

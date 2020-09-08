@@ -1,4 +1,4 @@
-﻿using Core.Networks;
+﻿using Core.Entities;
 
 namespace Web.Models
 {

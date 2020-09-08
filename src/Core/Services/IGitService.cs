@@ -1,4 +1,6 @@
 ﻿using Common.Log;
+using Core.Enums;
+using Core.Models;
 
 namespace Core.Services
 {

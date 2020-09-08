@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Core.KeyValue;
-using Core.Networks;
-using Core.User;
+using Core.Models;
+using Core.Repositories;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -1,6 +1,6 @@
-﻿using Core.Repository;
-using System.Collections.Generic;
-using Core.Extensions;
+﻿using System.Collections.Generic;
+using Core.Entities;
+using Core.Enums;
 
 namespace Web.Models
 {

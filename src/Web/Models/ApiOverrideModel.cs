@@ -1,8 +1,8 @@
-﻿using Core.KeyValue;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Core.Extensions;
+using Core.Entities;
+using Core.Enums;
 
 namespace Web.Models
 {

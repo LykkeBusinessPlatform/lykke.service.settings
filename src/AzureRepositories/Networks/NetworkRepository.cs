@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
-using Core.Networks;
+using Core.Entities;
+using Core.Models;
+using Core.Repositories;
 
 namespace AzureRepositories.Networks
 {

@@ -4,7 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Core.Entities;
 using Core.KeyValue;
+using Core.Repositories;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Mvc;
 

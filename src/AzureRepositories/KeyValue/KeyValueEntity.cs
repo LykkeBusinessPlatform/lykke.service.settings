@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-using Core.KeyValue;
+using Core.Entities;
+using Core.Models;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;

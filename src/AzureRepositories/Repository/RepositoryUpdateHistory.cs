@@ -1,5 +1,5 @@
 ﻿using System;
-using Core.Repository;
+using Core.Entities;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.Repository

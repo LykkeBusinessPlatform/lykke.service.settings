@@ -1,5 +1,6 @@
 ﻿using System;
-using Core.Networks;
+using Core.Entities;
+using Core.Models;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.Networks

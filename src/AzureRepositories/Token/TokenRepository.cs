@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using AzureStorage;
-using Core.Token;
+using Core.Entities;
+using Core.Repositories;
 
 namespace AzureRepositories.Token
 {

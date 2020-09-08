@@ -1,5 +1,5 @@
-﻿using Core.Extensions;
-using Core.Repository;
+﻿using Core.Entities;
+using Core.Models;
 
 namespace Web.Models
 {
