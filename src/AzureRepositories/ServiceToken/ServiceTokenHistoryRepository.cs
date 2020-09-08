@@ -24,7 +24,7 @@ namespace AzureRepositories.ServiceToken
                 UserName = userName,
                 KeyOne = token.SecurityKeyOne,
                 KeyTwo = token.SecurityKeyTwo,
-                TokenId = token.RowKey,
+                TokenId = token.Token,
                 UserIpAddress = userIpAddress
             };
 

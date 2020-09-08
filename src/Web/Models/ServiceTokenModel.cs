@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
-using Core.Entities;
+﻿using Core.Entities;
 
 namespace Web.Models
 {
-    public class ServiceTokenModel
+    public class ServiceTokenModel : IServiceTokenEntity
     {
-        public List<IServiceTokenEntity> Tokens { get; set; }
+        public string Token { get; set; }
+        public string SecurityKeyOne { get; set; }
+        public string SecurityKeyTwo { get; set; }
     }
 }

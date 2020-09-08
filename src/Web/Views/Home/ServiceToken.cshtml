@@ -1,7 +1,6 @@
 ﻿@using Newtonsoft.Json
-@using Web.Code
 @using Core.Enums
-@model Web.Models.ServiceTokenModel
+@model Web.Models.ServiceTokensModel
 
 @{
     ViewBag.Title = "Service tokens";
@@ -22,20 +21,12 @@
                     '<table class="table table-striped table-bordered"><tr><th>Token</th><th>Key 1</th><th>Key 2</th><th style="text-align:center">Actions</th></tr>';
                 for (var i = 0; i < list.length; i++) {
                     var elem = list[i];
-                    html += '<tr eTag="' +
-                        escape(elem.ETag) +
-                        '" elemId="' +
-                        elem.RowKey +
-                        '"><td class="token"><span class="viewMode">' +
-                        elem.RowKey +
+                    html += '<tr elemId="' + elem.Token + '"><td class="token"><span class="viewMode">' +
+                        elem.Token +
                         '</span><input type="text" class="editMode form-control"/></td><td class="key1"><span oldValue="' +
-                        elem.SecurityKeyOne +
-                        '" >' +
-                        elem.SecurityKeyOne +
+                        elem.SecurityKeyOne + '" >' + elem.SecurityKeyOne +
                         '</span><a style="display:none" class="editMode generate"></a></td><td class="key2"><span oldValue="' +
-                        elem.SecurityKeyTwo +
-                        '" >' +
-                        elem.SecurityKeyTwo +
+                        elem.SecurityKeyTwo + '" >' + elem.SecurityKeyTwo +
                         '</span><a style="display:none" class="editMode generate"></a></td>' +
                         '<td class="actions" style="text-align:center"><a href="javascript:;" class="elemEdit"></a><a href="javascript:;" class="elemDelete"></a><a href="javascript:;" style="display:none" class="elemSave"></a><a href="javascript:;" style="display:none" class="elemCancel"></a></td></tr>';
                 }
@@ -88,12 +79,10 @@
                     }
                     var url = '@Url.Action("SaveServiceToken")';
                     $.tokenToSave = {
-                        'token': {
-                            'rowKey': $('tr[elemId="' + elemId + '"] td.token input').val(),
+                        'tokenEntity': {
+                            'token': $('tr[elemId="' + elemId + '"] td.token input').val(),
                             'securityKeyOne': $('tr[elemId="' + elemId + '"] td.key1 span').text(),
-                            'securityKeyTwo': $('tr[elemId="' + elemId + '"] td.key2 span').text(),
-                            'eTag': $('tr[elemId="' + elemId + '"]').attr('eTag')
-
+                            'securityKeyTwo': $('tr[elemId="' + elemId + '"] td.key2 span').text()
                         }
                     };
                     $.post(url,

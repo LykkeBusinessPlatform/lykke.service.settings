@@ -36,26 +36,24 @@ namespace AzureRepositories.ServiceToken
             return await _tableStorage.GetDataAsync(pk, tokenKey);
         }
 
-        public async Task<bool> SaveAsync(IServiceTokenEntity token)
+        public async Task<bool> SaveOrUpdateAsync(IServiceTokenEntity token)
         {
             try
             {
                 var pk = ServiceTokenEntity.GeneratePartitionKey();
-                var sToken = await _tableStorage.GetDataAsync(pk, token.RowKey);
-                var sNewToken = (ServiceTokenEntity)token;
-
+                var sToken = await _tableStorage.GetDataAsync(pk, token.Token);
                 if (sToken == null)
                 {
                     sToken = new ServiceTokenEntity
                     {
                         PartitionKey = ServiceTokenEntity.GeneratePartitionKey(),
-                        RowKey = token.RowKey,
-                        ETag = token.ETag
+                        RowKey = token.Token,
+                        Token = token.Token,
                     };
                 }
 
-                sToken.SecurityKeyOne = sNewToken.SecurityKeyOne;
-                sToken.SecurityKeyTwo = sNewToken.SecurityKeyTwo;
+                sToken.SecurityKeyOne = token.SecurityKeyOne;
+                sToken.SecurityKeyTwo = token.SecurityKeyTwo;
                 await _tableStorage.InsertOrMergeAsync(sToken);
             }
             catch

@@ -10,7 +10,7 @@ namespace Core.Repositories
         Task<List<IServiceTokenEntity>> GetAllAsync();
         Task<IServiceTokenEntity> GetTopRecordAsync();
         Task<IServiceTokenEntity> GetAsync(string tokenKey);
-        Task<bool> SaveAsync(IServiceTokenEntity token);
+        Task<bool> SaveOrUpdateAsync(IServiceTokenEntity token);
         Task<bool> RemoveAsync(string tokenId);
     }
 }

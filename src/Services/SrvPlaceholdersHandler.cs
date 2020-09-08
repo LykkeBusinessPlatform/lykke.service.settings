@@ -48,7 +48,7 @@ namespace Services
                     case 1:
                         tok =
                             serviceTokens.FirstOrDefault(
-                                st => st.RowKey.Equals(keyNum[0], StringComparison.CurrentCultureIgnoreCase));
+                                st => st.Token.Equals(keyNum[0], StringComparison.CurrentCultureIgnoreCase));
                         if (tok == null)
                         {
                             return m.Value;
@@ -57,7 +57,7 @@ namespace Services
                     case 2:
                         tok =
                            serviceTokens.FirstOrDefault(
-                               st => st.RowKey.Equals(keyNum[0], StringComparison.CurrentCultureIgnoreCase));
+                               st => st.Token.Equals(keyNum[0], StringComparison.CurrentCultureIgnoreCase));
                         if (tok == null)
                             return m.Value;
                         return $@"""{(int.Parse(keyNum[1]) == 1 ? tok.SecurityKeyOne : tok.SecurityKeyTwo)}""";

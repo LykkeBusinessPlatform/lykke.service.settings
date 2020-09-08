@@ -1136,9 +1136,9 @@ namespace Web.Controllers
         [HttpGet]
         public async Task<IActionResult> ServiceToken()
         {
-            return View(new ServiceTokenModel
+            return View(new ServiceTokensModel
             {
-                Tokens = await GetAllServiceTokens()
+                Tokens = await GetAllServiceTokensAsync()
             });
         }
 
@@ -1232,47 +1232,47 @@ namespace Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveServiceToken(ServiceTokenEntity token)
+        public async Task<IActionResult> SaveServiceToken(ServiceTokenModel tokenEntity)
         {
             try
             {
-                token.ETag = WebUtility.UrlDecode(token.ETag);
-                var origToken = await _serviceTokensRepository.GetAsync(token.RowKey);
+                var origToken = await _serviceTokensRepository.GetAsync(tokenEntity.Token);
 
-                if (origToken != null && !token.ETag.Equals(origToken.ETag))
+                if (origToken != null
+                    && (tokenEntity.SecurityKeyOne != origToken.SecurityKeyOne
+                    || tokenEntity.SecurityKeyTwo != origToken.SecurityKeyTwo))
                 {
                     return new JsonResult(new
                     {
                         Result = UpdateSettingsStatus.OutOfDate,
-                        Json = JsonConvert.SerializeObject(await GetAllServiceTokens())
+                        Json = JsonConvert.SerializeObject(await GetAllServiceTokensAsync())
                     });
                 }
 
                 if (origToken == null)
                 {
-                    token.ETag = "*";
-                    token.SecurityKeyOne = Guid.NewGuid().ToString();
-                    token.SecurityKeyTwo = Guid.NewGuid().ToString();
+                    tokenEntity.SecurityKeyOne = Guid.NewGuid().ToString();
+                    tokenEntity.SecurityKeyTwo = Guid.NewGuid().ToString();
                 }
 
-                await _serviceTokensRepository.SaveAsync(token);
-                await _serviceTokenHistoryRepository.SaveTokenHistoryAsync(token, UserInfo.UserEmail, UserInfo.Ip);
+                await _serviceTokensRepository.SaveOrUpdateAsync(tokenEntity);
+                await _serviceTokenHistoryRepository.SaveTokenHistoryAsync(tokenEntity, UserInfo.UserEmail, UserInfo.Ip);
 
                 return new JsonResult(new
                 {
                     Result = UpdateSettingsStatus.Ok,
-                    Json = JsonConvert.SerializeObject(await GetAllServiceTokens())
+                    Json = JsonConvert.SerializeObject(await GetAllServiceTokensAsync())
                 });
             }
             catch (Exception ex)
             {
-                _log.Error(ex, context: token);
+                _log.Error(ex, context: tokenEntity);
                 return new JsonResult(new { Result = UpdateSettingsStatus.InternalError });
             }
         }
 
         [HttpPost]
-        public IActionResult GenerateNewServiceToken(ServiceTokenEntity token)
+        public IActionResult GenerateNewServiceToken(ServiceTokenModel tokenEntity)
         {
             return new JsonResult(new
             {
@@ -1282,24 +1282,22 @@ namespace Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ForceSaveServiceToken(ServiceTokenEntity token)
+        public async Task<IActionResult> ForceSaveServiceToken(ServiceTokenModel tokenEntity)
         {
             try
             {
-                token.ETag = "*";
-
-                await _serviceTokensRepository.SaveAsync(token);
-                await _serviceTokenHistoryRepository.SaveTokenHistoryAsync(token, UserInfo.UserEmail, UserInfo.Ip);
+                await _serviceTokensRepository.SaveOrUpdateAsync(tokenEntity);
+                await _serviceTokenHistoryRepository.SaveTokenHistoryAsync(tokenEntity, UserInfo.UserEmail, UserInfo.Ip);
 
                 return new JsonResult(new
                 {
                     Result = UpdateSettingsStatus.Ok,
-                    Json = JsonConvert.SerializeObject(await GetAllServiceTokens())
+                    Json = JsonConvert.SerializeObject(await GetAllServiceTokensAsync())
                 });
             }
             catch (Exception ex)
             {
-                _log.Error(ex, context: token);
+                _log.Error(ex, context: tokenEntity);
                 return new JsonResult(new { Result = UpdateSettingsStatus.InternalError });
             }
         }
@@ -1313,7 +1311,7 @@ namespace Web.Controllers
                 return new JsonResult(new
                 {
                     Result = UpdateSettingsStatus.Ok,
-                    Json = JsonConvert.SerializeObject(await GetAllServiceTokens())
+                    Json = JsonConvert.SerializeObject(await GetAllServiceTokensAsync())
                 });
             }
             catch (Exception ex)
@@ -1325,18 +1323,25 @@ namespace Web.Controllers
 
         #region private funcitons
 
-        private async Task<List<IServiceTokenEntity>> GetAllServiceTokens()
+        private async Task<List<ServiceTokenModel>> GetAllServiceTokensAsync()
         {
             try
             {
-                return (from t in await _serviceTokensRepository.GetAllAsync()
-                        orderby t.RowKey
-                        select t).ToList();
+                var tokens = await _serviceTokensRepository.GetAllAsync();
+                return tokens
+                    .Select(t => new ServiceTokenModel
+                    {
+                        Token = t.Token,
+                        SecurityKeyOne = t.SecurityKeyOne,
+                        SecurityKeyTwo = t.SecurityKeyTwo,
+                    })
+                    .OrderBy(t => t.Token)
+                    .ToList();
             }
             catch (Exception ex)
             {
                 _log.Error(ex);
-                return new List<IServiceTokenEntity>();
+                return new List<ServiceTokenModel>();
             }
         }
 

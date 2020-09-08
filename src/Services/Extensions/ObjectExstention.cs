@@ -20,33 +20,6 @@ namespace Services.Extensions
             return result;
         }
 
-        public static Dictionary<string, List<string>> GetAccessDict(this Dictionary<string, List<string>> keyDics, List<IToken> tokens)
-        {
-            var result = new Dictionary<string, List<string>>();
-            var tokenDic = new Dictionary<string, List<string>>();
-
-            foreach (var token in tokens)
-            {
-                foreach (var access in token.AccessList.Split(";", StringSplitOptions.RemoveEmptyEntries))
-                {
-
-                    var forCheck = access.Split(new[] { "->" }, StringSplitOptions.RemoveEmptyEntries)[0].Trim().TrimEnd('*');
-                    if (!tokenDic.ContainsKey(forCheck))
-                    {
-                        tokenDic.Add(forCheck, new List<string>());
-                    }
-                    tokenDic[forCheck].Add(token.RowKey);
-                }
-            }
-
-            foreach (var key in keyDics.Keys)
-            {
-                result.Add(key, GetTokens(keyDics[key], tokenDic));
-            }
-
-            return result;
-        }
-
         private static List<string> GetTokens(List<string> keyDic, Dictionary<string, List<string>> tokens)
         {
             var result = new List<string>();

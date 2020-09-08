@@ -1,8 +1,11 @@
-﻿namespace Core.Entities
+﻿using System;
+
+namespace Core.Entities
 {
-    public interface IServiceTokenEntity : IEntity
+    public interface IServiceTokenEntity
     {
-        string SecurityKeyOne { get; set; }
-        string SecurityKeyTwo { get; set; }
+        public string Token { get; set; }
+        public string SecurityKeyOne { get; set; }
+        public string SecurityKeyTwo { get; set; }
     }
 }
