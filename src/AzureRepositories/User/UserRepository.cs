@@ -45,8 +45,8 @@ namespace AzureRepositories.User
             {
                 PartitionKey = UserEntity.GeneratePartitionKey(),
                 RowKey = _defaultUserEmail,
-                PasswordHash = _defaultUserPasswordHash,
                 Email = _defaultUserEmail,
+                PasswordHash = _defaultUserPasswordHash,
                 FirstName = "Admin",
                 LastName = "Initial",
                 Active = true,
@@ -55,7 +55,26 @@ namespace AzureRepositories.User
             await _tableStorage.InsertOrMergeAsync(usr);
         }
 
-        public async Task<bool> SaveUserAsync(IUserEntity user)
+        public Task CreateUserAsync(IUserEntity user)
+        {
+            var email = UserEntity.GenerateRowKey(user.Email);
+            var usr = new UserEntity
+            {
+                PartitionKey = UserEntity.GeneratePartitionKey(),
+                RowKey = email,
+                Email = email,
+                PasswordHash = _defaultUserPasswordHash,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Active = user.Active,
+                Admin = user.Admin,
+                Roles = user.Roles,
+            };
+
+            return _tableStorage.InsertOrMergeAsync(usr);
+        }
+
+        public async Task<bool> UpdateUserAsync(IUserEntity user)
         {
             try
             {

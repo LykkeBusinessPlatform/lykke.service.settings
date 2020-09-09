@@ -18,8 +18,11 @@ namespace Core.Repositories
         /// <summary>Create initial admin</summary>
         Task CreateInitialAdminAsync();
 
+        /// <summary>Create user</summary>
+        Task CreateUserAsync(IUserEntity user);
+
         /// <summary>Save user</summary>
-        Task<bool> SaveUserAsync(IUserEntity user);
+        Task<bool> UpdateUserAsync(IUserEntity user);
 
         /// <summary>Get list of all users</summary>
         Task<List<IUserEntity>> GetUsersAsync();

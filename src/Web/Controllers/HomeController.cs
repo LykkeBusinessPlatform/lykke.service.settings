@@ -1029,7 +1029,7 @@ namespace Web.Controllers
                     history = historyData.Select(h => new
                     {
                         name = h.UserName,
-                        date = ((KeyValueHistory)h).Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                        date = h.DateTime,
                         ip = h.UserIpAddress,
                         value = h.NewValue
                     }).ToList()

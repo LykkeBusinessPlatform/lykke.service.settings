@@ -172,7 +172,7 @@ namespace Web.Controllers
                 user.Salt = Convert.ToBase64String(salt);
                 user.PasswordHash = $"{password}{user.Salt}".GetHash();
 
-                await _userRepository.SaveUserAsync(user);
+                await _userRepository.UpdateUserAsync(user);
 
                 return Redirect(HomeUrl);
             }
@@ -255,25 +255,24 @@ namespace Web.Controllers
             try
             {
                 var usr = await _userRepository.GetUserByUserEmailAsync(user.Email);
-                if (usr == null)
-                    usr = new UserEntity
-                    {
-                        PasswordHash = _defaultUserPasswordHash,
-                        Email = user.Email,
-                    };
-
-                usr.FirstName = user.FirstName;
-                usr.LastName = user.LastName;
-                usr.Active = user.Active;
-                usr.Admin = user.Admin;
-
-                // get rowKeys for roles by roleNames
                 var roles = await _roleRepository.GetAllAsync(x => user.Roles.Contains(x.Name));
 
-                // save rowKeys to user
-                usr.Roles = roles.Select(x => x.RowKey).ToArray();
+                if (usr == null)
+                {
+                    user.Roles = roles.Select(x => x.RowKey).ToArray();
+                    await _userRepository.CreateUserAsync(user);
+                }
+                else
+                {
+                    usr.FirstName = user.FirstName;
+                    usr.LastName = user.LastName;
+                    usr.Active = user.Active;
+                    usr.Admin = user.Admin;
+                    usr.Roles = roles.Select(x => x.RowKey).ToArray();
 
-                await _userRepository.SaveUserAsync(usr);
+                    await _userRepository.UpdateUserAsync(usr);
+                }
+
                 var result = await GetAllUsers();
 
                 return new JsonResult(new { json = JsonConvert.SerializeObject(result) });
@@ -359,7 +358,7 @@ namespace Web.Controllers
                     return new JsonResult(new { result = "User not found" });
 
                 user.PasswordHash = _defaultUserPasswordHash;
-                await _userRepository.SaveUserAsync(user);
+                await _userRepository.UpdateUserAsync(user);
 
                 return new JsonResult(new { Result = UpdateSettingsStatus.Ok });
             }
@@ -436,17 +435,16 @@ namespace Web.Controllers
                 var result = await _userRepository.GetUsersAsync();
 
                 var users = (from u in result
-                             let uc = u as UserEntity
-                             let ord = uc.Active.HasValue && uc.Active.Value ? 0 : 1
-                             orderby ord, uc.RowKey
+                             let ord = u.Active.HasValue && u.Active.Value ? 0 : 1
+                             orderby ord, u.Email
                              select new UserModel
                              {
-                                 Email = uc.RowKey,
-                                 FirstName = uc.FirstName,
-                                 LastName = uc.LastName,
-                                 Active = uc.Active ?? false,
-                                 Admin = uc.Admin ?? false,
-                                 Roles = uc.Roles
+                                 Email = u.Email,
+                                 FirstName = u.FirstName,
+                                 LastName = u.LastName,
+                                 Active = u.Active ?? false,
+                                 Admin = u.Admin ?? false,
+                                 Roles = u.Roles
                              }).ToList();
 
                 // iterate through all users and get roleNames by role rowKeys

@@ -5,7 +5,15 @@ namespace AzureRepositories.KeyValue
 {
     public class KeyValueHistory : TableEntity, IKeyValueHistory
     {
+        private string _dateTime;
+
         public string GeneratePartitionKey() => KeyValueId;
+
+        public string DateTime
+        {
+            get => _dateTime ?? RowKey;
+            set => _dateTime = value;
+        }
 
         public string KeyValueId { get; set; }
         public string NewValue { get; set; }

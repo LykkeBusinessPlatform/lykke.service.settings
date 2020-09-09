@@ -35,12 +35,14 @@ namespace AzureRepositories.KeyValue
             string userName,
             string userIpAddress)
         {
+            var datetime = DateTime.UtcNow.StorageString();
             var th = new KeyValueHistory
             {
+                PartitionKey = keyValueId,
+                RowKey = datetime,
+                DateTime = datetime,
                 KeyValueId = keyValueId,
                 NewOverride = newOverride,
-                PartitionKey = keyValueId,
-                RowKey = DateTime.UtcNow.StorageString(),
                 UserName = userName,
                 UserIpAddress = userIpAddress
             };
@@ -59,12 +61,14 @@ namespace AzureRepositories.KeyValue
             string userName,
             string userIpAddress)
         {
+            var datetime = DateTime.UtcNow.StorageString();
             var th = new KeyValueHistory
             {
+                PartitionKey = keyValueId,
+                RowKey = datetime,
+                DateTime = datetime,
                 KeyValueId = keyValueId,
                 NewValue = newValue,
-                PartitionKey = keyValueId,
-                RowKey = DateTime.UtcNow.StorageString(),
                 UserName = userName,
                 UserIpAddress = userIpAddress
             };
@@ -93,6 +97,7 @@ namespace AzureRepositories.KeyValue
                 {
                     PartitionKey = k.KeyValueId,
                     RowKey = timestamp,
+                    DateTime = timestamp,
                     KeyValueId = k.KeyValueId,
                     NewValue = k.Value,
                     UserName = userName,
@@ -103,11 +108,13 @@ namespace AzureRepositories.KeyValue
 
         public async Task DeleteKeyValueHistoryAsync(string keyValueId, string description, string userName, string userIpAddress)
         {
+            var datetime = DateTime.UtcNow.StorageString();
             var th = new KeyValueHistory
             {
-                KeyValueId = keyValueId,
                 PartitionKey = keyValueId,
-                RowKey = DateTime.UtcNow.StorageString(),
+                RowKey = datetime,
+                DateTime = datetime,
+                KeyValueId = keyValueId,
                 UserName = userName,
                 UserIpAddress = userIpAddress
             };
@@ -126,36 +133,12 @@ namespace AzureRepositories.KeyValue
                 return new List<IKeyValueHistory>();
             }
 
-            var hist = await _tableStorage.GetDataAsync(keyValueId);
-            var history = from h in hist
-                where keyValueId.Equals(h.KeyValueId)
-                orderby h.Timestamp descending
-                select (IKeyValueHistory)h;
+            var hist = await _tableStorage.GetDataAsync(keyValueId, v => v.KeyValueId == keyValueId);
 
-            return history.ToList();
-        }
-
-        public async Task<List<IKeyValueHistory>> GetAllAsync()
-        {
-            var hist = await _tableStorage.GetDataAsync();
-            return hist.Select(kvh=>(IKeyValueHistory)kvh).ToList();
-        }
-
-        public async Task<Dictionary<string, byte[]>> GetAllBlobAsync()
-        {
-            var keys = await _blobStorage.GetListOfBlobsAsync(_container);
-            var result = new Dictionary<string, byte[]>();
-            foreach (var k in keys)
-            {
-                var ks = k.Split(@"/\".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                if (ks.Length == 0)
-                {
-                    continue;
-                }
-                result.Add(ks[ks.Length - 1], (await _blobStorage.GetAsync(_container, ks[ks.Length-1])).AsBytes());
-            }
-
-            return result;
+            return hist
+                .OrderByDescending(h => h.Timestamp)
+                .Cast<IKeyValueHistory>()
+                .ToList();
         }
     }
 }

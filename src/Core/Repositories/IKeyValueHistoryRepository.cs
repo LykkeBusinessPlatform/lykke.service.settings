@@ -32,9 +32,5 @@ namespace Core.Repositories
             string userIpAddress);
 
         Task<List<IKeyValueHistory>> GetHistoryByKeyValueAsync(string keyValueId);
-
-        Task<List<IKeyValueHistory>> GetAllAsync();
-
-        Task<Dictionary<string, byte[]>> GetAllBlobAsync();
     }
 }

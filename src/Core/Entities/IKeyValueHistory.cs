@@ -1,7 +1,8 @@
 ﻿namespace Core.Entities
 {
-    public interface IKeyValueHistory : IEntity
+    public interface IKeyValueHistory
     {
+        string DateTime { get; set; }
         string KeyValueId { get; set; }
         string NewValue { get; set; }
         string NewOverride { get; set; }
