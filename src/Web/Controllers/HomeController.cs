@@ -21,7 +21,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using Services;
-using Services.Extensions;
 using Web.Code;
 using Web.Extensions;
 using Web.Models;
@@ -134,14 +133,14 @@ namespace Web.Controllers
 
                     // update key values
                     var placeholders = fileData.PlaceholderList();
-                    var keyValues = new List<KeyValueEntity>();
+                    var keyValues = new List<IKeyValueEntity>();
 
                     if (!string.IsNullOrEmpty(repository.Tag))
                         foreach (var item in placeholders)
                         {
                             if (item.Types != null)
                             {
-                                item.RowKey = repository.Tag + "-" + item.RowKey;
+                                item.KeyValueId = repository.Tag + "-" + item.KeyValueId;
                                 item.Tag = repository.Tag;
                             }
                         }
@@ -149,18 +148,18 @@ namespace Web.Controllers
                     // save key values history
                     foreach (var keyValue in placeholders)
                     {
-                        IKeyValueEntity keyValueEntity = await _keyValuesRepository.GetKeyValueAsync(keyValue.RowKey);
+                        IKeyValueEntity keyValueEntity = await _keyValuesRepository.GetKeyValueAsync(keyValue.KeyValueId);
                         var keyRepoName = !string.IsNullOrEmpty(repository?.Tag) ? repository?.Tag + "-" + repository?.OriginalName : repository?.OriginalName;
                         if (keyValueEntity == null)
                         {
-                            keyValueEntity = new KeyValueEntity
+                            keyValueEntity = new KeyValue
                             {
-                                RowKey = keyValue.RowKey,
+                                KeyValueId = keyValue.KeyValueId,
                                 RepositoryNames = new [] { keyRepoName }
                             };
                         }
 
-                        keyValues.Add(keyValueEntity as KeyValueEntity);
+                        keyValues.Add(keyValueEntity);
                     }
                     await _repositoriesService.SaveKeyValuesAsync(keyValues, UserInfo.UserEmail, UserInfo.Ip, IS_PRODUCTION);
                 }
@@ -471,9 +470,9 @@ namespace Web.Controllers
 
                 var jsonData = await _repositoryDataRepository.GetDataAsync(correctFileName);
                 var placeholders = jsonData.PlaceholderList();
-                var keyValueKeys = placeholders.Select(p => p.RowKey);
+                var keyValueKeys = placeholders.Select(p => p.KeyValueId);
                 if (!string.IsNullOrEmpty(tag))
-                    keyValueKeys = keyValueKeys.Concat(placeholders.Select(p => $"{tag}-{p.RowKey}"));
+                    keyValueKeys = keyValueKeys.Concat(placeholders.Select(p => $"{tag}-{p.KeyValueId}"));
                 var keyValues = await _keyValuesRepository.GetKeyValuesAsync(keyValueKeys);
 
                 foreach (var keyValue in keyValues)
@@ -483,8 +482,8 @@ namespace Web.Controllers
                         || !keyValue.Value.UseNotTaggedValue.Value)
                         continue;
 
-                    string searchStr = keyValue.Value.RowKey.SubstringFromString(keyValue.Value.Tag + "-");
-                    var originalKeyValue = keyValues.FirstOrDefault(k => k.Value.RowKey == searchStr);
+                    string searchStr = keyValue.Value.KeyValueId.SubstringFromString(keyValue.Value.Tag + "-");
+                    var originalKeyValue = keyValues.FirstOrDefault(k => k.Value.KeyValueId == searchStr);
                     if (originalKeyValue.Value != null)
                         keyValue.Value.Value = originalKeyValue.Value.Value;
                 }
@@ -787,8 +786,8 @@ namespace Web.Controllers
                         ViewBag.KeyValuesWithJsonTypes = JsonConvert.SerializeObject(
                             from r in keyValues
                             where r.Types != null && (r.Types.Contains(KeyValueTypes.Json) || r.Types.Contains(KeyValueTypes.JsonArray))
-                            select new { Key = r.RowKey, r.Value });
-                        ViewData["keyValueNames"] = JsonConvert.SerializeObject(keyValues.Select(key => key.RowKey).Distinct());
+                            select new { Key = r.KeyValueId, r.Value });
+                        ViewData["keyValueNames"] = JsonConvert.SerializeObject(keyValues.Select(key => key.KeyValueId).Distinct());
 
                         var keyValueEntities = keyValues as IKeyValueEntity[] ?? keyValues.ToArray();
                         ViewData["errorInputs"] = keyValueEntities.Any()
@@ -820,7 +819,7 @@ namespace Web.Controllers
             try
             {
                 var keyValues = await GetKeyValuesAsync(i => FilterKeyValue(i, filter, search), repositoryId);
-                var keyValue = keyValues.FirstOrDefault(oe => oe.RowKey.Equals(keyValueId));
+                var keyValue = keyValues.FirstOrDefault(oe => oe.KeyValueId.Equals(keyValueId));
                 if (keyValue == null)
                 {
                     return new JsonResult(new
@@ -840,7 +839,10 @@ namespace Web.Controllers
                         await _keyValuesRepository.DeleteKeyValueWithHistoryAsync(keyValueId, $"Removing '{keyValueId}'", UserInfo.UserEmail, UserInfo.Ip);
 
                         var duplicatedKeys = keyValues
-                            .Where(x => x.RowKey != keyValue.RowKey && !string.IsNullOrEmpty(x.Value) && x.Value == keyValue.Value && string.IsNullOrEmpty(x.Tag))
+                            .Where(x =>
+                                x.KeyValueId != keyValue.KeyValueId
+                                && !string.IsNullOrEmpty(x.Value)
+                                && x.Value == keyValue.Value && string.IsNullOrEmpty(x.Tag))
                             .ToList();
                         if (duplicatedKeys.Count == 1)
                         {
@@ -895,14 +897,8 @@ namespace Web.Controllers
             search = search?.ToLower();
             try
             {
-                if (entity.HasFullAccess.HasValue && !entity.HasFullAccess.Value)
-                    return new JsonResult(new
-                    {
-                        status = UpdateSettingsStatus.InvalidRequest
-                    });
-
                 var keyValues = await GetKeyValuesAsync(null, repositoryId);
-                var keyValue = keyValues.FirstOrDefault(x => x.RowKey == entity.RowKey);
+                var keyValue = keyValues.FirstOrDefault(x => x.KeyValueId == entity.KeyValueId);
                 if (keyValue == null)
                     return new JsonResult(new
                     {
@@ -910,18 +906,18 @@ namespace Web.Controllers
                     });
 
                 var duplicatedKeys = keyValues
-                    .Where(x => x.RowKey != entity.RowKey && !string.IsNullOrEmpty(x.Value) && x.Value == entity.Value && string.IsNullOrEmpty(x.Tag))
+                    .Where(x => x.KeyValueId != entity.KeyValueId && !string.IsNullOrEmpty(x.Value) && x.Value == entity.Value && string.IsNullOrEmpty(x.Tag))
                     .ToList();
                 if ((!forced.HasValue || !forced.Value) && IS_PRODUCTION && duplicatedKeys.Count > 0)
                     return new JsonResult(new
                     {
                         status = UpdateSettingsStatus.HasDuplicated,
-                        duplicatedKeys = duplicatedKeys.Select(x => x.RowKey)
+                        duplicatedKeys = duplicatedKeys.Select(x => x.KeyValueId)
                     });
 
-                var keyValueEntity = new KeyValueEntity
+                var keyValueEntity = new KeyValue
                 {
-                    RowKey = entity.RowKey,
+                    KeyValueId = entity.KeyValueId,
                     Value = entity.Value,
                     UseNotTaggedValue = entity.UseNotTaggedValue,
                     IsDuplicated = duplicatedKeys.Count > 0,
@@ -944,7 +940,7 @@ namespace Web.Controllers
                     });
                 }
 
-                var oldDuplications = keyValues.Where(x => x.RowKey != keyValue.RowKey && x.Value == keyValue.Value);
+                var oldDuplications = keyValues.Where(x => x.KeyValueId != keyValue.KeyValueId && x.Value == keyValue.Value);
                 if (oldDuplications.Count() == 1)
                 {
                     var oldDuplication = oldDuplications.First();
@@ -970,7 +966,7 @@ namespace Web.Controllers
                     valueEntity.Value = valueEntity.Value?.Replace("\"", "&quot;");
                 }
 
-                ViewBag.KeyValuesWithJsonTypes = JsonConvert.SerializeObject(jsonTypedKeyValues.Select(r => new { Key = r.RowKey, r.Value }));
+                ViewBag.KeyValuesWithJsonTypes = JsonConvert.SerializeObject(jsonTypedKeyValues.Select(r => new { Key = r.KeyValueId, r.Value }));
 
                 return new JsonResult(new
                 {
@@ -1373,7 +1369,7 @@ namespace Web.Controllers
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                if (entity.RowKey.ToLower().Contains(search)
+                if (entity.KeyValueId.ToLower().Contains(search)
                     || !string.IsNullOrWhiteSpace(entity.Value) && entity.Value.ToLower().Contains(search)
                     || entity.Override != null && string.Join("", entity.Override.Select(x => x.Value?.ToLower() ?? string.Empty)).Contains(search))
                     return true;
@@ -1461,7 +1457,7 @@ namespace Web.Controllers
                     if (!keyValue.UseNotTaggedValue.HasValue || !keyValue.UseNotTaggedValue.Value)
                         continue;
 
-                    var originalKeyValue = keyValues.FirstOrDefault(k => k.RowKey == keyValue.RowKey.SubstringFromString(keyValue.Tag + "-"));
+                    var originalKeyValue = keyValues.FirstOrDefault(k => k.KeyValueId == keyValue.KeyValueId.SubstringFromString(keyValue.Tag + "-"));
                     if (originalKeyValue != null)
                         keyValue.Value = originalKeyValue.Value;
                 }

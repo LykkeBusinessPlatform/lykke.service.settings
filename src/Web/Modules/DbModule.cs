@@ -152,10 +152,6 @@ namespace Web.Modules
             builder.RegisterInstance(
                 new AccessDataRepository(new AzureBlobStorage(connectionString.CurrentValue), "access", "accesshistory", "accessHistory.json")
             ).As<IAccessDataRepository>().SingleInstance();
-
-            //var kvHistory = new KeyValueHistoryRepository(
-            //    AzureTableStorage<KeyValueHistory>.Create(_connectionString, "KeyValueHistory", _log),
-            //    new AzureBlobStorage(_connectionString.CurrentValue), "keyvaluehistory");
         }
     }
 }

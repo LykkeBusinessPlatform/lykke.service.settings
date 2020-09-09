@@ -5,8 +5,7 @@ namespace Core.Models
 {
     public class KeyValue : IKeyValueEntity
     {
-        public string RowKey { get; set; }
-        public string ETag { get; set; }
+        public string KeyValueId { get; set; }
         public string Value { get; set; }
         public OverrideValue[] Override { get; set; } = Array.Empty<OverrideValue>();
         public string[] Types { get; set; }

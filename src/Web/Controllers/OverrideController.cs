@@ -170,7 +170,7 @@ namespace Web.Controllers
                 var keyValues = (await _keyValuesRepository.GetKeyValuesAsync(null, keyValue.RepositoryId)).ToList();
 
                 await _keyValueHistoryRepository.SaveKeyValueOverrideHistoryAsync(
-                    keyValue.RowKey,
+                    keyValue.KeyValueId,
                     keyValue.Override.ToArray().ToJson(),
                     keyValues.ToJson(),
                     UserInfo.UserEmail,

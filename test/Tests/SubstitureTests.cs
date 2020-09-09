@@ -1,13 +1,10 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AzureRepositories.KeyValue;
 using AzureRepositories.Networks;
 using AzureStorage.Tables;
-using Common;
 using Core.Entities;
 using Core.Models;
 using Core.Repositories;
-using Newtonsoft.Json;
 using Services;
 using Xunit;
 
@@ -51,12 +48,12 @@ namespace Tests
 
             var keyValues = new Dictionary<string, IKeyValueEntity>
             {
-                {"service1", new KeyValueEntity
+                {"service1", new KeyValue
                 {
                     Value = "127.0.0.1",
                     Override = new[] {new OverrideValue{NetworkId = "1", Value = "192.168.1.1"}}
                 }},
-                {"val", new KeyValueEntity {Value = "5"}}
+                {"val", new KeyValue {Value = "5"}}
             };
 
             string result = json.Substitute(keyValues, "5");
@@ -70,12 +67,12 @@ namespace Tests
             string json = "{'Service': {'ServiceUrl': '${service1}'}, 'Val': '${val}'}";
             var keyValues = new Dictionary<string, IKeyValueEntity>
             {
-                {"service1", new KeyValueEntity
+                {"service1", new KeyValue
                 {
                     Value = "127.0.0.1",
                     Override = new[] {new OverrideValue{NetworkId = "1", Value = "192.168.1.1"}}
                 }},
-                {"val", new KeyValueEntity {Value = "5"}}
+                {"val", new KeyValue {Value = "5"}}
             };
 
             string result = json.Substitute(keyValues);
@@ -97,11 +94,11 @@ namespace Tests
                             "\"TestBool1\": \"${bool2}\"}}";
             var keyValues = new Dictionary<string, IKeyValueEntity>
             {
-                {"string", new KeyValueEntity {Value = "127.0.0.1"}},
-                {"int", new KeyValueEntity {Value = "5"}},
-                {"double", new KeyValueEntity {Value = "10.2"}},
-                {"bool1", new KeyValueEntity {Value = "True"}},
-                {"bool2", new KeyValueEntity {Value = "false"}}
+                {"string", new KeyValue {Value = "127.0.0.1"}},
+                {"int", new KeyValue {Value = "5"}},
+                {"double", new KeyValue {Value = "10.2"}},
+                {"bool1", new KeyValue {Value = "True"}},
+                {"bool2", new KeyValue {Value = "false"}}
             };
 
             string result = json.Substitute(keyValues);
@@ -123,12 +120,12 @@ namespace Tests
             string json = "{'Service': {'ServiceUrl': '${service1}'}, 'Val': '${val}'}";
             var keyValues = new Dictionary<string, IKeyValueEntity>
             {
-                {"service1", new KeyValueEntity
+                {"service1", new KeyValue
                 {
                     Value = "127.0.0.1",
                     Override = new[] {new OverrideValue{NetworkId = "1", Value = "192.168.1.1"}}
                 }},
-                {"val", new KeyValueEntity {Value = "5"}}
+                {"val", new KeyValue {Value = "5"}}
             };
 
             string result = json.SubstituteNew(keyValues);
@@ -143,12 +140,12 @@ namespace Tests
 
             var keyValues = new Dictionary<string, IKeyValueEntity>
             {
-                {"service1", new KeyValueEntity
+                {"service1", new KeyValue
                 {
                     Value = "127.0.0.1",
                     Override = new[] {new OverrideValue{NetworkId = "1", Value = "8.8.8.8"}}
                 }},
-                {"val", new KeyValueEntity {Value = "5"}}
+                {"val", new KeyValue {Value = "5"}}
             };
 
             string result = json.Substitute(keyValues, "1");

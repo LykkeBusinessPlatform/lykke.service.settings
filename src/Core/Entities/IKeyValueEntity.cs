@@ -2,8 +2,9 @@
 
 namespace Core.Entities
 {
-    public interface IKeyValueEntity : IEntity
+    public interface IKeyValueEntity
     {
+        string KeyValueId { get; set; }
         string Value { get; set; }
         OverrideValue[] Override { get; set; }
         string[] Types { get; set; }

@@ -49,8 +49,8 @@
             </tr>
             @foreach (var en in Model)
             {
-                <tr class="infoTr" rowId="@en.RowKey">
-                    <td class="col-md-2" style="@("background-color:" + (!en.IsUsedInRepository?"yellow":""))">@en.RowKey</td>
+                <tr class="infoTr" rowId="@en.KeyValueId">
+                    <td class="col-md-2" style="@("background-color:" + (!en.IsUsedInRepository?"yellow":""))">@en.KeyValueId</td>
                     <td class="col-md-2">@(en.Types == null ? " " : String.Join(", ", en.Types))</td>
                     <td class="col-md-2">
                         @if (en.RepositoryNames == null)
@@ -59,7 +59,7 @@
                         }
                         else
                         {
-                            <ul class="list-unstyled list-container" id="@("list-" + en.RowKey)">
+                            <ul class="list-unstyled list-container" id="@("list-" + en.KeyValueId)">
                                 @for (int i = 0; i < en.RepositoryNames.Length; i++)
                                 {
                                     if (i <= 2)
@@ -70,25 +70,18 @@
                             </ul>
                             @if (en.RepositoryNames.Length > 3)
                             {
-                                <span class="expandButton" data-id="@en.RowKey">expand...</span>
+                                <span class="expandButton" data-id="@en.KeyValueId">expand...</span>
                             }
                         }
                     </td>
                     <td class="col-md-6" style="position:relative;">
                         <div class="col-md-10">
-                            <input type="text" id="@en.RowKey" eTag="@en.ETag" isJson="@en.IsJsonType.ToString()" readonly="readonly" class="form-control" value="@en.Value" />
+                            <input type="text" id="@en.KeyValueId" isJson="@en.IsJsonType.ToString()" readonly="readonly" class="form-control" value="@en.Value" />
                         </div>
-                        @if (en.HasFullAccess == null || en.HasFullAccess)
-                        {
-                            <a href="javascript:;" class="col-md-1 elemEdit editKV icon" title="Edit value '@en.RowKey'" emptyValueType="@(!String.IsNullOrEmpty(en.EmptyValueType)?en.EmptyValueType:String.Empty)" rowId="@en.RowKey" data-command="@en.MustGenerateValue.ToString()" data-hasFullAccess="@en.HasFullAccess" tag="@en.Tag" useNotTagged="@en.UseNotTaggedValue"></a>
-                        }
-                        else
-                        {
-                            <a href="javascript:;" class="col-md-1 elemEdit icon" style="background-color: #aaa9a9;"></a>
-                        }
+                        <a href="javascript:;" class="col-md-1 elemEdit editKV icon" title="Edit value '@en.KeyValueId'" emptyValueType="@(!String.IsNullOrEmpty(en.EmptyValueType)?en.EmptyValueType:String.Empty)" rowId="@en.KeyValueId" data-command="@en.MustGenerateValue.ToString()" tag="@en.Tag" useNotTagged="@en.UseNotTaggedValue"></a>
                         @if (!en.IsUsedInRepository)
                         {
-                            <a href="javascript:;" class="col-md-1 elemDelete remKV icon" title="Remove unused '@en.RowKey'" rowId="@en.RowKey"></a>
+                            <a href="javascript:;" class="col-md-1 elemDelete remKV icon" title="Remove unused '@en.KeyValueId'" rowId="@en.KeyValueId"></a>
                         }
                         @if (en.IsDuplicated != null && en.IsDuplicated && isProduction)
                         {
@@ -129,7 +122,7 @@
                         <label for="nullValue">Null</label>
                     </div>
 
-                    <input type="text" id="editInput" eTag="" class="form-control" placeholder="" value="" />
+                    <input type="text" id="editInput" class="form-control" placeholder="" value="" />
 
                     <div class="jsonView">
                         <div class="controls">
@@ -258,7 +251,7 @@
                 var id = $(this).attr('data-id');
                 var expand = $(this).text() == "expand...";
 
-                var keyValue = eval('(' + $.keyValues + ')').find(x => x.RowKey === id);
+                var keyValue = eval('(' + $.keyValues + ')').find(x => x.KeyValueId === id);
                 var endIndex = expand ? keyValue.RepositoryNames.length : 3;
 
                 $('#list-' + id).empty();
@@ -331,7 +324,7 @@
 
             $.jsoneditor = new JSONEditor(container, options);
 
-            $.updateKeyValuesList = function (newData, eTag) {
+            $.updateKeyValuesList = function (newData) {
                 $.jsoneditor.set(eval('(' + newData + ')'));
 				};
 
@@ -388,14 +381,14 @@
 				for (var i = 0; i < data.length; i++) {
 					var elem = data[i];
 
-                    html += '<tr class="infoTr" rowId="' + elem.RowKey + '">' +
-                        '<td class="col-md-2" style="background-color:' + (!elem.IsUsedInRepository ? "yellow" : "") + '">' + elem.RowKey + '</td>' +
+                    html += '<tr class="infoTr" rowId="' + elem.KeyValueId + '">' +
+                        '<td class="col-md-2" style="background-color:' + (!elem.IsUsedInRepository ? "yellow" : "") + '">' + elem.KeyValueId + '</td>' +
                         '<td class="col-md-2">' + (elem.Types == null || typeof elem.Types == 'undefined' ? ' ' : elem.Types.join(', ')) + '</td>';
 
                     html += '<td class="col-md-2">';
 
                     if (elem.RepositoryNames != null && typeof elem.RepositoryNames != 'undefined') {
-                        html+='<ul class="list-unstyled list-container" id="list-' + elem.RowKey +'" </ul>';
+                        html+='<ul class="list-unstyled list-container" id="list-' + elem.KeyValueId +'" </ul>';
                         for (var j = 0; j < elem.RepositoryNames.length; j++) {
                             if (j <= 2) {
                                 var item = elem.RepositoryNames[j];
@@ -404,22 +397,18 @@
                         }
                         html += '</ul>';
                         if (elem.RepositoryNames.length > 3) {
-                            html += '<span class="expandButton" data-id="' + elem.RowKey + '" >expand...</span>';
+                            html += '<span class="expandButton" data-id="' + elem.KeyValueId + '" >expand...</span>';
                         }
                     }
                     html += '</td>';
 						// '<td class="col-md-2">' + (elem.RepositoryNames == null || typeof elem.RepositoryNames == 'undefined' ? ' ' : elem.RepositoryNames.join(', ')) + '</td>' +
 					html += '<td class="col-md-7" style="position:relative;">' +
 						'<div class="col-md-10">' +
-						'<input type="text" id="' + elem.RowKey + '" eTag="' + elem.ETag + '" isJson="' + elem.IsJsonType + '" readonly="readonly" class="form-control" value="' + (elem.Value !== null && typeof elem.Value !== 'undefined' ? elem.Value : '') + '" />' +
+						'<input type="text" id="' + elem.KeyValueId + '" isJson="' + elem.IsJsonType + '" readonly="readonly" class="form-control" value="' + (elem.Value !== null && typeof elem.Value !== 'undefined' ? elem.Value : '') + '" />' +
 						'</div>';
-                    if (elem.HasFullAccess == null || elem.HasFullAccess) {
-                        html += '<a href="javascript:;" class="col-md-1 elemEdit editKV icon" title="Edit value "' + elem.RowKey + '" emptyValueType="' + (elem.EmptyValueType !== null && typeof elem.EmptyValueType !== 'undefined' ? elem.EmptyValueType : '') + '" rowId="' + elem.RowKey + '" data-command="' + elem.MustGenerateValue + '" data-hasFullAccess="' + elem.HasFullAccess + '" tag="' + elem.Tag + '" useNotTagged="' + elem.UseNotTaggedValue + '"></a>';
-					} else {
-						html += '<a href="javascript:;" class="col-md-1 elemEdit icon" style="background-color: #aaa9a9;"></a>';
-					}
+                    html += '<a href="javascript:;" class="col-md-1 elemEdit editKV icon" title="Edit value "' + elem.KeyValueId + '" emptyValueType="' + (elem.EmptyValueType !== null && typeof elem.EmptyValueType !== 'undefined' ? elem.EmptyValueType : '') + '" rowId="' + elem.KeyValueId + '" data-command="' + elem.MustGenerateValue + '" tag="' + elem.Tag + '" useNotTagged="' + elem.UseNotTaggedValue + '"></a>';
 					if (!elem.IsUsedInRepository) {
-						html += '<a href="javascript:;" class="col-md-1 elemDelete remKV icon" title="Remove unused "' + elem.RowKey + '" rowId="' + elem.RowKey + '"></a>';
+						html += '<a href="javascript:;" class="col-md-1 elemDelete remKV icon" title="Remove unused "' + elem.KeyValueId + '" rowId="' + elem.KeyValueId + '"></a>';
 					}
 					if (elem.IsDuplicated != null && typeof elem.IsDuplicated !== 'undefined' && elem.IsDuplicated && isProduction) {
 						html += '<div class="input-group-btn col-md-1 showWarning" style="height: 34px;width: 34px; position: absolute; left:-10px;"></div>';
@@ -435,14 +424,12 @@
 
 
             $('.keyValue').on('click', '.editKV', function () {
-					var elem = $(this).parents('tr').find('input[type="text"]');
-					var elemValue = elem.attr('eTag') ? elem.val() : '';
+				var elem = $(this).parents('tr').find('input[type="text"]');
+				var elemValue = elem.val();
                 $.rowId = $(this).attr('rowId');
-                $.eTag = $(this).attr('eTag');
                 $.tag = $(this).attr('tag');
 				$.useNotTagged = $(this).attr('useNotTagged');
 				$.notTagged = $('#useNotTagged');
-                $.hasFullAccess = $(this).attr('data-hasFullAccess');
                 var emptyValueType = $(this).attr('emptyValueType');
                 $.emptyValueType = emptyValueType != '' ? emptyValueType : null;
 
@@ -465,7 +452,6 @@
 
 				if ($.isValueJson !== "True" && $.isValueJson !== "true") {
                     $.jsonEditorIsActive = false;
-                    $('#editInput').attr('eTag', elem.attr('eTag'));
                     $('#editInput').val(elemValue !== null && typeof elemValue !== 'undefined' ? elemValue : '');
                     $('#editInput').attr('rowId', $.rowId);
                     $('#editInput').show();
@@ -475,7 +461,7 @@
                     var keyValue = {};
 				    $.keyValuesWithJsonTypes = @Html.Raw(ViewBag.KeyValuesWithJsonTypes);
 					if ($.keyValuesWithJsonTypes)
-                        keyValue = $.keyValuesWithJsonTypes.find(x => (x.Key && x.Key == $.rowId) || (x.key && x.key == $.rowId));
+                        keyValue = $.keyValuesWithJsonTypes.find(x => (x.KeyValueId && x.KeyValueId == $.rowId) || (x.KeyValueId && x.KeyValueId == $.rowId));
 					var jsonValue = keyValue ? keyValue.Value ? keyValue.Value : keyValue.value ? keyValue.value : '{}' : '{}';
                     $.jsoneditor.set(eval('(' + jsonValue + ')'));
                     $('.jsonView').show();
@@ -721,10 +707,8 @@
 
 						$.keyValueToSave = {
 								'entity': {
-									'key': $.rowId,
-									'eTag': $.eTag,
+									'KeyValueId': $.rowId,
 									'value': val,
-									'hasFullAccess': $.hasFullAccess,
 									'useNotTaggedValue': $('#useNotTagged').prop('checked')
 								}
 							};
@@ -745,10 +729,8 @@
 
 				$.keyValueToSave = {
 						'entity': {
-							'key': $.rowId,
-							'eTag': $.eTag,
+							'KeyValueId': $.rowId,
 							'value': val,
-							'hasFullAccess': $.hasFullAccess,
 							'useNotTaggedValue': $('#useNotTagged').prop('checked')
 						}
 					};
@@ -780,11 +762,9 @@
 					}
                 $.keyValueToSave = {
 						'entity': {
-							'key': $.rowId,
-                            'eTag': $.eTag,
+							'KeyValueId': $.rowId,
                             'value': val,
                             'isDuplicated': true,
-							'hasFullAccess': $.hasFullAccess,
 							'useNotTaggedValue': $('#useNotTagged').checked
 					    }
 					};

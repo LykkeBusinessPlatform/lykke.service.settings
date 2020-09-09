@@ -80,7 +80,7 @@ namespace Web.Controllers
                     if (!keyValue.UseNotTaggedValue.HasValue || !keyValue.UseNotTaggedValue.Value)
                         continue;
 
-                    var originalKeyValue = keyValues.FirstOrDefault(k => k.RowKey == keyValue.RowKey.SubstringFromString(keyValue.Tag + "-"));
+                    var originalKeyValue = keyValues.FirstOrDefault(k => k.KeyValueId == keyValue.KeyValueId.SubstringFromString(keyValue.Tag + "-"));
                     if (originalKeyValue != null)
                         keyValue.Value = originalKeyValue.Value;
                 }
@@ -107,7 +107,7 @@ namespace Web.Controllers
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                if (entity.RowKey.ToLower().Contains(search)
+                if (entity.KeyValueId.ToLower().Contains(search)
                     || !string.IsNullOrWhiteSpace(entity.Value) && entity.Value.ToLower().Contains(search)
                     || entity.Override != null && string.Join("", entity.Override.Select(x => x.Value?.ToLower() ?? string.Empty)).Contains(search))
                     return true;

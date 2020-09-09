@@ -198,7 +198,7 @@ namespace Services.RepositoryServices
             var uniqueDict = new Dictionary<string, IKeyValueEntity>();
             foreach (var keyValue in keyValues)
             {
-                uniqueDict[keyValue.RowKey] = keyValue;
+                uniqueDict[keyValue.KeyValueId] = keyValue;
             }
 
             var tasks = new List<Task>(3)
@@ -247,14 +247,14 @@ namespace Services.RepositoryServices
             return repositories;
         }
 
-        private async Task<List<KeyValueEntity>> InitKeyValuesAsync(
+        private async Task<List<IKeyValueEntity>> InitKeyValuesAsync(
             IRepository repositoryEntity,
             IEnumerable<KeyValue> placeholders,
             string repositoryTag,
             string keyRepoName,
             bool isCreate)
         {
-            var keyValues = new List<KeyValueEntity>();
+            var keyValues = new List<IKeyValueEntity>();
 
             // save key values history
             foreach (var keyValue in placeholders)
@@ -263,7 +263,7 @@ namespace Services.RepositoryServices
                 {
                     if (isCreate)
                     {
-                        var baseKeyValueEntity = await _keyValuesRepository.GetKeyValueAsync(keyValue.RowKey);
+                        var baseKeyValueEntity = await _keyValuesRepository.GetKeyValueAsync(keyValue.KeyValueId);
                         if (baseKeyValueEntity?.RepositoryNames != null && baseKeyValueEntity.RepositoryNames.Contains(repositoryEntity?.OriginalName))
                             keyValue.UseNotTaggedValue = true;
                     }
@@ -272,15 +272,15 @@ namespace Services.RepositoryServices
                         keyValue.UseNotTaggedValue = false;
                     }
 
-                    keyValue.RowKey = repositoryTag + "-" + keyValue.RowKey;
+                    keyValue.KeyValueId = repositoryTag + "-" + keyValue.KeyValueId;
                     keyValue.Tag = repositoryTag;
                 }
-                var keyValueEntity = await _keyValuesRepository.GetKeyValueAsync(keyValue.RowKey);
+                var keyValueEntity = await _keyValuesRepository.GetKeyValueAsync(keyValue.KeyValueId);
                 if (keyValueEntity == null)
                 {
-                    keyValueEntity = new KeyValueEntity
+                    keyValueEntity = new KeyValue
                     {
-                        RowKey = keyValue.RowKey,
+                        KeyValueId = keyValue.KeyValueId,
                         RepositoryNames = new[] { keyRepoName },
                         Value = keyValue.Value,
                     };
@@ -301,7 +301,7 @@ namespace Services.RepositoryServices
                 keyValueEntity.Tag = keyValue.Tag;
                 if (!keyValueEntity.UseNotTaggedValue.HasValue)
                     keyValueEntity.UseNotTaggedValue = keyValue.UseNotTaggedValue;
-                keyValues.Add(keyValueEntity as KeyValueEntity);
+                keyValues.Add(keyValueEntity);
             }
 
             return keyValues;
@@ -546,7 +546,7 @@ namespace Services.RepositoryServices
                     var changesCount = 0;
                     foreach (var item in keyValues)
                     {
-                        var oldItem = oldKeyValues.FirstOrDefault(x => x.RowKey == item.RowKey);
+                        var oldItem = oldKeyValues.FirstOrDefault(x => x.KeyValueId == item.KeyValueId);
                         var areTypesEqual = oldItem != null && oldItem.Types == null && item.Types == null
                             || (oldItem.Types != null && item.Types != null && !oldItem.Types.Except(item.Types).Any() && !item.Types.Except(oldItem.Types).Any());
                         if (oldItem == null || !areTypesEqual)
@@ -592,8 +592,9 @@ namespace Services.RepositoryServices
             {
                 foreach (var item in keyValues)
                 {
-                    if (lastPlaceholders[i].RowKey != null
-                        && lastPlaceholders[i].RowKey == (string.IsNullOrEmpty(repository.Tag) ? item.RowKey : item.RowKey.SubstringFromString(item.Tag + "-")))
+                    if (lastPlaceholders[i].KeyValueId != null
+                        && lastPlaceholders[i].KeyValueId == (
+                            string.IsNullOrEmpty(repository.Tag) ? item.KeyValueId : item.KeyValueId.SubstringFromString(item.Tag + "-")))
                     {
                         lastPlaceholders.Remove(lastPlaceholders[i]);
                         --i;
@@ -608,8 +609,8 @@ namespace Services.RepositoryServices
                 foreach (var lastItem in lastPlaceholders)
                 {
                     var keyValueToUpdate = await _keyValuesRepository.GetKeyValueAsync(string.IsNullOrEmpty(repository.Tag)
-                        ? lastItem.RowKey
-                        : repository.Tag + "-" + lastItem.RowKey);
+                        ? lastItem.KeyValueId
+                        : repository.Tag + "-" + lastItem.KeyValueId);
                     if (keyValueToUpdate != null)
                     {
                         var tempRepoNames = keyValueToUpdate.RepositoryNames?.ToList();

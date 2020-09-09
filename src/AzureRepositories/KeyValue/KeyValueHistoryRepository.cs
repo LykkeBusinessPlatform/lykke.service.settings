@@ -91,9 +91,9 @@ namespace AzureRepositories.KeyValue
             return Task.WhenAll(keyValues.Select(k =>
                 _tableStorage.InsertOrMergeAsync(new KeyValueHistory
                 {
-                    PartitionKey = k.RowKey,
+                    PartitionKey = k.KeyValueId,
                     RowKey = timestamp,
-                    KeyValueId = k.RowKey,
+                    KeyValueId = k.KeyValueId,
                     NewValue = k.Value,
                     UserName = userName,
                     UserIpAddress = userIpAddress,

@@ -321,12 +321,12 @@ namespace Services
                             var rowKey = items[0].Replace("}", string.Empty).Trim();
                             var typesString = items[1].Replace("[", string.Empty).Trim();
                             var types = typesString.Split(',');
-                            var keyItem = placeholders.FirstOrDefault(x => x.RowKey == rowKey);
+                            var keyItem = placeholders.FirstOrDefault(x => x.KeyValueId == rowKey);
                             if (keyItem == null)
                             {
                                 var keyValue = new KeyValue
                                 {
-                                    RowKey = rowKey,
+                                    KeyValueId = rowKey,
                                     Types = types
                                 };
                                 placeholders.Add(keyValue);
@@ -340,10 +340,10 @@ namespace Services
             {
                 keys.ForEach(item =>
                 {
-                    var keyItem = placeholders.FirstOrDefault(x => x.RowKey == item);
+                    var keyItem = placeholders.FirstOrDefault(x => x.KeyValueId == item);
                     if (keyItem == null)
                     {
-                        placeholders.Add(new KeyValue { RowKey = item });
+                        placeholders.Add(new KeyValue { KeyValueId = item });
                     }
                 });
             }
@@ -414,7 +414,7 @@ namespace Services
                         if (item.Value == null || string.IsNullOrEmpty(item.Value.ToString()))
                             TempKeyValue = new KeyValue();
                         else
-                            TempKeyValue.RowKey = item.Value.ToString();
+                            TempKeyValue.KeyValueId = item.Value.ToString();
                     }
                     else if (item.Key.ToString() == YamlTypes)
                     {

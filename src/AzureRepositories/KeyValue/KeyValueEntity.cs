@@ -9,17 +9,22 @@ namespace AzureRepositories.KeyValue
 {
     public class KeyValueEntity : TableEntity, IKeyValueEntity
     {
+        private string _keyValueId;
+
         public static string GeneratePartitionKey() => "K";
         public static string GenerateRowKey(string key) => key;
 
+        public string KeyValueId
+        {
+            get => _keyValueId ?? RowKey;
+            set => _keyValueId = value;
+        }
         public string Value { get; set; }
         public OverrideValue[] Override { get; set; }
         public string[] Types { get; set; }
         public bool? IsDuplicated { get; set; }
         public bool? UseNotTaggedValue { get; set; }
         public string[] RepositoryNames { get; set; }
-        // TODO: should I place this variable here?
-        public bool? HasFullAccess { get; set; }
 
         public string RepositoryId { get; set; }
 
@@ -43,62 +48,48 @@ namespace AzureRepositories.KeyValue
                 }
             }
 
-            if (properties.TryGetValue("Value", out var val))
-            {
+            if (properties.TryGetValue(nameof(Value), out var val))
                 Value = val.StringValue;
-            }
 
-            if (properties.TryGetValue("Types", out var types))
-            {
-                var typesJson = types.StringValue;
-                Types = JsonConvert.DeserializeObject<string[]>(typesJson);
-            }
+            if (properties.TryGetValue(nameof(KeyValueId), out var kvId))
+                KeyValueId = kvId.StringValue;
 
-            if (properties.TryGetValue("IsDuplicated", out var isDuplicated))
-            {
+            if (properties.TryGetValue(nameof(Types), out var types))
+                Types = JsonConvert.DeserializeObject<string[]>(types.StringValue);
+
+            if (properties.TryGetValue(nameof(IsDuplicated), out var isDuplicated))
                 IsDuplicated = isDuplicated.BooleanValue;
-            }
 
-            if (properties.TryGetValue("UseNotTaggedValue", out var useNotTaggedValue))
-            {
+            if (properties.TryGetValue(nameof(UseNotTaggedValue), out var useNotTaggedValue))
                 UseNotTaggedValue = useNotTaggedValue.BooleanValue;
-            }
 
-            if (properties.TryGetValue("RepositoryNames", out var repositoryIds))
-            {
-                var repositoryIdsJson = repositoryIds.StringValue;
-                RepositoryNames = JsonConvert.DeserializeObject<string[]>(repositoryIdsJson);
-            }
+            if (properties.TryGetValue(nameof(RepositoryNames), out var repositoryIds))
+                RepositoryNames = JsonConvert.DeserializeObject<string[]>(repositoryIds.StringValue);
 
-            if(properties.TryGetValue("RepositoryId", out var repositoryId))
-            {
+            if (properties.TryGetValue(nameof(RepositoryId), out var repositoryId))
                 RepositoryId = repositoryId.StringValue;
-            }
 
-            if(properties.TryGetValue("Tag", out var tag))
-            {
+            if (properties.TryGetValue(nameof(Tag), out var tag))
                 Tag = tag.StringValue;
-            }
 
-            if(properties.TryGetValue("EmptyValueType", out var emptyValueType))
-            {
+            if (properties.TryGetValue(nameof(EmptyValueType), out var emptyValueType))
                 EmptyValueType = emptyValueType.StringValue;
-            }
         }
 
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
             var dict = new Dictionary<string, EntityProperty>
             {
-                {"Override", new EntityProperty(JsonConvert.SerializeObject(Override))},
-                {"Value", new EntityProperty(Value)},
-                {"Types", new EntityProperty(JsonConvert.SerializeObject(Types))},
-                {"IsDuplicated", new EntityProperty(IsDuplicated)},
-                {"UseNotTaggedValue", new EntityProperty(UseNotTaggedValue)},
-                {"RepositoryNames", new EntityProperty(JsonConvert.SerializeObject(RepositoryNames))},
-                {"RepositoryId", new EntityProperty(RepositoryId) },
-                {"Tag", new EntityProperty(Tag) },
-                {"EmptyValueType", new EntityProperty(EmptyValueType) }
+                {nameof(Override), new EntityProperty(JsonConvert.SerializeObject(Override))},
+                {nameof(KeyValueId), new EntityProperty(KeyValueId)},
+                {nameof(Value), new EntityProperty(Value)},
+                {nameof(Types), new EntityProperty(JsonConvert.SerializeObject(Types))},
+                {nameof(IsDuplicated), new EntityProperty(IsDuplicated)},
+                {nameof(UseNotTaggedValue), new EntityProperty(UseNotTaggedValue)},
+                {nameof(RepositoryNames), new EntityProperty(JsonConvert.SerializeObject(RepositoryNames))},
+                {nameof(RepositoryId), new EntityProperty(RepositoryId) },
+                {nameof(Tag), new EntityProperty(Tag) },
+                {nameof(EmptyValueType), new EntityProperty(EmptyValueType) }
             };
 
             return dict;

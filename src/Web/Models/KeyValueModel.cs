@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using AzureRepositories.KeyValue;
 using Core.Entities;
 using Core.KeyValue;
 using Core.Models;
 
 namespace Web.Models
 {
-    public class KeyValueModel
+    public class KeyValueModel : IKeyValueEntity
     {
         private readonly List<string> _mustBeGeneratedTypes = new List<string>
         {
@@ -18,19 +17,17 @@ namespace Web.Models
             KeyValueTypes.SqlDB,
         };
 
-        public string RowKey => Key;
-        public string Key { get; set; }
-        public string ETag { get; set; }
+        public string KeyValueId { get; set; }
         public string Value { get; set; }
         public bool? IsDuplicated { get; set; }
         public bool? UseNotTaggedValue { get; set; }
         public string[] Types { get; set; }
         public string[] RepositoryNames { get; set; }
+        public string RepositoryId { get; set; }
         public OverrideValue[] Override { get; set; }
         public bool IsUsedInRepository { get; set; }
         public bool IsJsonType { get; set; }
         public bool MustGenerateValue { get; set; }
-        public bool? HasFullAccess { get; set; }
         public string Tag { get; set; }
         public string EmptyValueType { get; set; }
 
@@ -38,10 +35,9 @@ namespace Web.Models
         {
         }
 
-        public KeyValueModel(KeyValueEntity entry)
+        public KeyValueModel(IKeyValueEntity entry)
         {
-            Key = entry.RowKey;
-            ETag = entry.ETag;
+            KeyValueId = entry.KeyValueId;
             Value = entry.Value;
             Override = entry.Override;
             IsDuplicated = entry.IsDuplicated;
@@ -51,14 +47,13 @@ namespace Web.Models
             RepositoryNames = entry.RepositoryNames;
             Tag = entry.Tag;
             EmptyValueType = entry.EmptyValueType;
-            HasFullAccess = entry.HasFullAccess;
             IsJsonType = entry?.Types != null && (entry.Types.Contains(KeyValueTypes.Json) || entry.Types.Contains(KeyValueTypes.JsonArray));
             MustGenerateValue = entry?.Types != null && entry.Types.Any(t => _mustBeGeneratedTypes.Contains(t));
         }
 
         public static List<KeyValueModel> WithOld(IEnumerable<IKeyValueEntity> oridinEnt)
         {
-            var list = oridinEnt.Select(oe => new KeyValueModel(oe as KeyValueEntity)).OrderBy(kvm => kvm.RowKey).ToList();
+            var list = oridinEnt.Select(oe => new KeyValueModel(oe)).OrderBy(kvm => kvm.KeyValueId).ToList();
 
             return list;
         }

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AzureRepositories.KeyValue;
 using Core.Entities;
 using Core.Enums;
+using Core.Models;
 using Core.Repositories;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Mvc;
@@ -54,13 +54,13 @@ namespace Web.Controllers
         {
             try
             {
-                var keyValues = await _keyValuesRepository.GetAsync(x => x.RowKey == id);
+                var keyValues = await _keyValuesRepository.GetAsync(x => x.KeyValueId == id);
                 return keyValues.FirstOrDefault();
             }
             catch (Exception ex)
             {
                 _log.Error(ex, context: id);
-                return new KeyValueEntity();
+                return new KeyValue();
             }
         }
 
@@ -70,7 +70,7 @@ namespace Web.Controllers
             try
             {
                 var keyValues = await _keyValuesRepository.GetKeyValuesAsync();
-                return keyValues.Select(x => x.RowKey);
+                return keyValues.Select(x => x.KeyValueId);
             }
             catch (Exception ex)
             {
@@ -85,7 +85,7 @@ namespace Web.Controllers
             try
             {
                 var placeholders = await GetPlaceholdersList();
-                return placeholders.Select(x => x.RowKey).Distinct();
+                return placeholders.Select(x => x.KeyValueId).Distinct();
             }
             catch (Exception ex)
             {
@@ -100,7 +100,7 @@ namespace Web.Controllers
             try
             {
                 var keyValues = await _keyValuesRepository.GetKeyValuesAsync();
-                var keyValue = keyValues.FirstOrDefault(x => x.RowKey == entity.RowKey);
+                var keyValue = keyValues.FirstOrDefault(x => x.KeyValueId == entity.RowKey);
                 if (keyValue == null)
                 {
                     return new ApiOverrideModel
@@ -109,7 +109,7 @@ namespace Web.Controllers
                     };
                 }
 
-                var duplicatedKeys = keyValues.Where(x => x.RowKey != keyValue.RowKey && x.Value == entity.Value).ToList();
+                var duplicatedKeys = keyValues.Where(x => x.KeyValueId != keyValue.KeyValueId && x.Value == entity.Value).ToList();
                 if (entity.Forced == false && IS_PRODUCTION)
                 {
                     if (duplicatedKeys.Count > 0)
@@ -117,14 +117,14 @@ namespace Web.Controllers
                         return new ApiOverrideModel
                         {
                             Status = UpdateSettingsStatus.HasDuplicated,
-                            DuplicatedKeys = duplicatedKeys.Select(x => x.RowKey)
+                            DuplicatedKeys = duplicatedKeys.Select(x => x.KeyValueId)
                         };
                     }
                 }
 
-                var keyValueEntity = new KeyValueEntity
+                var keyValueEntity = new KeyValue
                 {
-                    RowKey = keyValue.RowKey,
+                    KeyValueId = keyValue.KeyValueId,
                     Value = entity.Value,
                     IsDuplicated = duplicatedKeys.Count > 0,
                     Override = keyValue.Override,
@@ -144,7 +144,7 @@ namespace Web.Controllers
                     });
                 }
 
-                var oldDuplications = keyValues.Where(x => x.RowKey != keyValue.RowKey && x.Value == keyValue.Value);
+                var oldDuplications = keyValues.Where(x => x.KeyValueId != keyValue.KeyValueId && x.Value == keyValue.Value);
                 if (oldDuplications.Count() == 1)
                 {
                     var oldDuplication = oldDuplications.First();
@@ -155,7 +155,7 @@ namespace Web.Controllers
                 var result = await _keyValuesRepository.UpdateKeyValueAsync(entitiesToUpload);
                 string strObj = JsonConvert.SerializeObject(keyValues);
                 await _keyValueHistoryRepository.SaveKeyValueHistoryAsync(
-                    keyValueEntity?.RowKey,
+                    keyValueEntity?.KeyValueId,
                     keyValueEntity?.Value,
                     strObj,
                     UserInfo.UserEmail,
@@ -181,13 +181,13 @@ namespace Web.Controllers
             try
             {
                 var keyValues = await _keyValuesRepository.GetKeyValuesAsync();
-                var keyValue = keyValues.FirstOrDefault(x => x.RowKey == id);
+                var keyValue = keyValues.FirstOrDefault(x => x.KeyValueId == id);
                 if (keyValue == null || string.IsNullOrWhiteSpace(keyValue.Value))
                     return false;
 
                 List<IKeyValueEntity> keysToUpdate = new List<IKeyValueEntity>();
                 // check for duplications. if duplicatedKeys == 1, then change isDuplicated property to false
-                var duplicatedKeys = keyValues.Where(x => x.RowKey != keyValue.RowKey && x.Value == keyValue.Value).ToList();
+                var duplicatedKeys = keyValues.Where(x => x.KeyValueId != keyValue.KeyValueId && x.Value == keyValue.Value).ToList();
                 if (duplicatedKeys.Count == 1)
                 {
                     var duplicatedKey = duplicatedKeys.First();
@@ -204,7 +204,7 @@ namespace Web.Controllers
                 await _keyValuesRepository.ReplaceKeyValueAsync(keysToUpdate.ToArray());
                 string strObj = JsonConvert.SerializeObject(keyValues);
                 await _keyValueHistoryRepository.SaveKeyValueHistoryAsync(
-                    keyValue?.RowKey,
+                    keyValue?.KeyValueId,
                     keyValue?.Value,
                     strObj,
                     UserInfo.UserEmail,

@@ -19,10 +19,11 @@ namespace AzureRepositories.KeyValue
             _tableStorage = tableStorage;
             _history = history;
         }
+
         public async Task<Dictionary<string, IKeyValueEntity>> GetAsync()
         {
             var entries = await GetKeyValuesAsync();
-            return entries.ToDictionary(itm => itm.RowKey, itm => itm);
+            return entries.ToDictionary(itm => itm.KeyValueId, itm => itm);
         }
 
         public async Task<IKeyValueEntity> GetTopRecordAsync()
@@ -100,7 +101,8 @@ namespace AzureRepositories.KeyValue
 
         public async Task RemoveNetworkOverridesAsync(string networkId)
         {
-            IEnumerable<IKeyValueEntity> keyValues = (await GetKeyValuesAsync()).Where(item => item.Override != null && item.Override.Any(o => o.NetworkId == networkId));
+            var kvs = await GetKeyValuesAsync();
+            IEnumerable<IKeyValueEntity> keyValues = kvs.Where(item => item.Override != null && item.Override.Any(o => o.NetworkId == networkId));
 
             var keyValuesToUpdate = new List<IKeyValueEntity>();
 

@@ -240,7 +240,7 @@ namespace Web.Controllers
                     return Forbid();
                 }
                 var keyValues = await _keyValuesRepository.GetKeyValuesAsync();
-                ViewData["keyValueNames"] = JsonConvert.SerializeObject(keyValues.Select(key => key.RowKey).Distinct());
+                ViewData["keyValueNames"] = JsonConvert.SerializeObject(keyValues.Select(key => key.KeyValueId).Distinct());
                 return View(await GetAllRoles());
             }
             catch (Exception ex)

@@ -53,11 +53,11 @@
     var currentIpValue = '';
 
     function addOverride() {
-        Request.doRequest({ url: '@Url.Action("AddOverride")', divResult: '#overrideValues', showLoading: false, params: {key: '@Model.KeyValue.RowKey', networkId: $('#network_id').val(), value: $('#override_value').val() } });
+        Request.doRequest({ url: '@Url.Action("AddOverride")', divResult: '#overrideValues', showLoading: false, params: {key: '@Model.KeyValue.KeyValueId', networkId: $('#network_id').val(), value: $('#override_value').val() } });
     }
 
     function saveOverride(id) {
-        Request.doRequest({ url: '@Url.Action("UpdateOverride")', divResult: '#overrideValues', showLoading: false, params: {key: '@Model.KeyValue.RowKey', networkId: id, value: $('#'+id).val() } });
+        Request.doRequest({ url: '@Url.Action("UpdateOverride")', divResult: '#overrideValues', showLoading: false, params: {key: '@Model.KeyValue.KeyValueId', networkId: id, value: $('#'+id).val() } });
     }
 
     function editOverride(id) {
@@ -79,7 +79,7 @@
 
     function deleteOverride(id) {
         if (confirm('Do you want to delete this override value?')) {
-            Request.doRequest({ url: '@Url.Action("DeleteOverride")', divResult: '#overrideValues', showLoading: false, params: {key: '@Model.KeyValue.RowKey', networkId: id } });
+            Request.doRequest({ url: '@Url.Action("DeleteOverride")', divResult: '#overrideValues', showLoading: false, params: {key: '@Model.KeyValue.KeyValueId', networkId: id } });
         }
     }
 

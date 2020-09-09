@@ -31,12 +31,12 @@
         @foreach (var en in Model)
         {
             <div class="form-group">
-                <label for="@en.RowKey">@en.RowKey</label>
+                <label for="@en.KeyValueId">@en.KeyValueId</label>
                 <div>
                     <div class="input-group">
                         @{
                             var data = Model as List<KeyValueModel>;
-                            var duplication = data.FirstOrDefault(x => x.RowKey != en.RowKey && x.Value == en.Value);
+                            var duplication = data.FirstOrDefault(x => x.KeyValueId != en.KeyValueId && x.Value == en.Value);
                             if (duplication != null)
                             {
                                 <div class="input-group-btn showWarning"></div>
@@ -46,17 +46,17 @@
                         @if (en.IsOld)
                         {
 
-                            <input type="text" id="@en.RowKey" eTag="@en.ETag" readonly="readonly" class="form-control" placeholder="@en.RowKey" inValue="@en.Value" />
+                            <input type="text" id="@en.KeyValueId" readonly="readonly" class="form-control" placeholder="@en.KeyValueId" inValue="@en.Value" />
                             <span class="input-group-btn">
-                                <a class="btn  btn-warning editKV" href="javascript:;" title="Edit value '@en.RowKey'" rowId="@en.RowKey">Edit</a>
-                                <a class="btn  btn-danger remKV" href="javascript:;" title="Remove unused '@en.RowKey'" rowId="@en.RowKey">Remove</a>
+                                <a class="btn  btn-warning editKV" href="javascript:;" title="Edit value '@en.KeyValueId'" rowId="@en.KeyValueId">Edit</a>
+                                <a class="btn  btn-danger remKV" href="javascript:;" title="Remove unused '@en.KeyValueId'" rowId="@en.KeyValueId">Remove</a>
                             </span>
                         }
                         else
                         {
-                            <input type="text" id="@en.RowKey" eTag="@en.ETag" readonly="readonly" class="form-control" placeholder="@en.RowKey" inValue="@en.Value" />
+                            <input type="text" id="@en.KeyValueId" readonly="readonly" class="form-control" placeholder="@en.KeyValueId" inValue="@en.Value" />
                             <span class="input-group-btn">
-                                <a class="btn  btn-warning editKV" href="javascript:;" title="Edit value '@en.RowKey'" rowId="@en.RowKey">Edit</a>
+                                <a class="btn  btn-warning editKV" href="javascript:;" title="Edit value '@en.KeyValueId'" rowId="@en.KeyValueId">Edit</a>
                             </span>
                         }
                     </div>
@@ -108,7 +108,7 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="editInput">Value</label>
-                    <input type="text" id="editInput" eTag="" class="form-control" placeholder="" value="" />
+                    <input type="text" id="editInput" class="form-control" placeholder="" value="" />
                 </div>
                 <div class="form-group">
                     <label for="editHistory">History</label>
@@ -177,7 +177,7 @@
                     function(data) {
                         if (data.status == 0) {
                             $.showMessage('success',
-                                'The "' + kvId + '" key value has been deletedsuccessfully',
+                                'The "' + kvId + '" key value has been deleted successfully',
                                 [
                                     {
                                         text: 'Ok',
@@ -273,7 +273,6 @@
             $.onEditKvClicked = function() {
                 var elem = $(this).parents('.input-group').find('input[type="text"]');
                 var rowId = $(this).attr('rowId');
-                $('#editInput').attr('eTag', elem.attr('eTag'));
                 $('#editInput').val(elem.attr('inValue'));
                 $('#editInput').attr('rowId', rowId);
 
@@ -310,67 +309,35 @@
                 for (var i = 0; i < newData.length; i++) {
                     var nd = newData[i];
 
-                    var elem = $('<div class="form-group"><label for="' +
-                        nd.rowKey +
-                        '">' +
-                        nd.rowKey +
-                        '</label>' +
+                    var elem = $('<div class="form-group"><label for="' + nd.KeyValueId + '">' + nd.KeyValueId + '</label>'
+                        +
                         (!nd.isOld
-                        ? '<div class="input-group">' +
-                        '<input type="text" id="' +
-                        nd.rowKey +
-                        '"  readonly="readonly" class="form-control" placeholder="' +
-                        nd.rowKey +
-                        '" eTag="' +
-                        nd.eTag +
-                        '" inValue="' +
-                        nd.value +
-                        '" class="form-control"/>' +
-                        '<span class="input-group-btn">' +
-                        '<a class="btn  btn-warning editKV" href="javascript:;" title="Edit value \'' +
-                        nd.rowKey +
-                        '\'" rowId="' +
-                        nd.rowKey +
-                        '">Edit</a></span></div>'
-                            : '<div class="input-group">' +
-                            '<input type="text" id="' +
-                            nd.rowKey +
-                            '" readonly="readonly" class="form-control" placeholder="' +
-                            nd.rowKey +
-                            '" eTag="' +
-                            nd.eTag +
-                            '" inValue="' +
-                            nd.value +
-                            '" class="form-control"/>' +
-                            '<span class="input-group-btn">' +
-                            '<a class="btn  btn-warning editKV" href="javascript:;" title="Edit value \'' +
-                            nd.rowKey +
-                            '\'" rowId="' +
-                            nd.rowKey +
-                            '">Edit</a>' +
-                            '<a class="btn  btn-danger remKV" href="javascript:;" title="Remove unused \'' +
-                            nd.rowKey +
-                            '\'" rowId="' +
-                            nd.rowKey +
-                            '">Remove</a></span></div>') +
-                        '</div>');
+                            ? '<div class="input-group">' + '<input type="text" id="' + nd.KeyValueId +
+                                '"  readonly="readonly" class="form-control" placeholder="' +
+                                nd.KeyValueId + '" inValue="' + nd.value +
+                                '" class="form-control"/>' + '<span class="input-group-btn">' +
+                                '<a class="btn  btn-warning editKV" href="javascript:;" title="Edit value \'' +
+                                nd.KeyValueId + '\'" rowId="' + nd.KeyValueId + '">Edit</a></span></div>'
+                            : '<div class="input-group">' + '<input type="text" id="' +
+                                nd.KeyValueId + '" readonly="readonly" class="form-control" placeholder="' +
+                                nd.KeyValueId + '" inValue="' + nd.value +
+                                '" class="form-control"/>' + '<span class="input-group-btn">' +
+                                '<a class="btn  btn-warning editKV" href="javascript:;" title="Edit value \'' +
+                                nd.KeyValueId + '\'" rowId="' + nd.KeyValueId + '">Edit</a>' +
+                                '<a class="btn  btn-danger remKV" href="javascript:;" title="Remove unused \'' +
+                                nd.KeyValueId + '\'" rowId="' + nd.KeyValueId + '">Remove</a></span></div>')
+                        + '</div>');
                     $('.list').append(elem);
 
-                    var input = $('input[id="' + nd.rowKey + '"]');
-                    input.attr('eTag', nd.eTag);
+                    var input = $('input[id="' + nd.KeyValueId + '"]');
                     input.val(nd.value);
                     // $.onInputChange(input);
-
-
                 }
                // $('#update').addClass('disabled');
                 $.hideKeyValues();
                 if ($.keyValuesShowsInterval == 0) {
                     $.showInputValues();
                 }
-                $('input[eTag]').change(function() {
-                    $.onInputChange($(this));
-                });
                 $('.remKV').click($.onRemKvClicked);
                 $('.editKV').click($.onEditKvClicked);
                 $.updateBadges();
@@ -442,10 +409,9 @@
                 }
             };
 
-            $.saveKeyValue = function(key, eTag, value) {
+            $.saveKeyValue = function(key, value) {
                 $.keyValueToSave = {
-                    Key: key,
-                    ETag: eTag,
+                    KeyValueId: key,
                     Value: value
                 }
                 $.sendKeyValueToServer(false);
@@ -478,8 +444,7 @@
                 //for (var i = 0; i < $.keysToUpload.length; i++) {
                 var inp = $('#editInput');
                     $.keyValueToSave.push({
-                        Key: inp.attr('rowId'),
-                        ETag: inp.attr('eTag'),
+                        KeyValueId: inp.attr('rowId'),
                         Value: inp.val()
                     });
                 //}
@@ -491,8 +456,7 @@
                 //for (var i = 0; i < $.keysToUpload.length; i++) {
                 var inp = $('#editInput');
                 $.keyValueToSave.push({
-                    Key: inp.attr('rowId'),
-                    ETag: inp.attr('eTag'),
+                    KeyValueId: inp.attr('rowId'),
                     Value: inp.val()
                 });
 

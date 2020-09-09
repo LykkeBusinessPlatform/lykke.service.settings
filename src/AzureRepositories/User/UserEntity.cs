@@ -8,11 +8,17 @@ namespace AzureRepositories.User
 {
     public class UserEntity : TableEntity, IUserEntity
     {
+        private string _email;
+
         public static string GeneratePartitionKey() => "U";
 
         public static string GenerateRowKey(string userEmail) => userEmail.ToLowerInvariant();
 
-        public string Email { get; set; }
+        public string Email
+        {
+            get => _email ?? RowKey;
+            set => _email = value;
+        }
         public string Salt { get; set; }
         public string PasswordHash { get; set; }
         public string FirstName { get; set; }
@@ -58,14 +64,14 @@ namespace AzureRepositories.User
         {
             var dict = new Dictionary<string, EntityProperty>
             {
-                {"Email", new EntityProperty(Email)},
-                {"Salt", new EntityProperty(Salt)},
-                {"PasswordHash", new EntityProperty(PasswordHash)},
-                {"FirstName", new EntityProperty(FirstName)},
-                {"LastName", new EntityProperty(LastName)},
-                {"Active", new EntityProperty(Active)},
-                {"Admin", new EntityProperty(Admin)},
-                {"Roles", new EntityProperty(JsonConvert.SerializeObject(Roles))},
+                {nameof(Email), new EntityProperty(Email)},
+                {nameof(Salt), new EntityProperty(Salt)},
+                {nameof(PasswordHash), new EntityProperty(PasswordHash)},
+                {nameof(FirstName), new EntityProperty(FirstName)},
+                {nameof(LastName), new EntityProperty(LastName)},
+                {nameof(Active), new EntityProperty(Active)},
+                {nameof(Admin), new EntityProperty(Admin)},
+                {nameof(Roles), new EntityProperty(JsonConvert.SerializeObject(Roles))},
             };
 
             return dict;
