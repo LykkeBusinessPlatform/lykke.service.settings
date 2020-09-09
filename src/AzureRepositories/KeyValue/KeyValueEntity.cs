@@ -37,6 +37,22 @@ namespace AzureRepositories.KeyValue
             PartitionKey = GeneratePartitionKey();
         }
 
+        public KeyValueEntity(IKeyValueEntity keyValue)
+        {
+            PartitionKey = GeneratePartitionKey();
+            RowKey = keyValue.KeyValueId;
+            KeyValueId = keyValue.KeyValueId;
+            Value = keyValue.Value;
+            Override = keyValue.Override;
+            Types = keyValue.Types;
+            IsDuplicated = keyValue.IsDuplicated;
+            UseNotTaggedValue = keyValue.UseNotTaggedValue;
+            RepositoryNames = keyValue.RepositoryNames;
+            RepositoryId = keyValue.RepositoryId;
+            Tag = keyValue.Tag;
+            EmptyValueType = keyValue.EmptyValueType;
+        }
+
         public override void ReadEntity(IDictionary<string, EntityProperty> properties, OperationContext operationContext)
         {
             if (properties.TryGetValue("Override", out var property))

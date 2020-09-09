@@ -71,9 +71,19 @@ namespace AzureRepositories.KeyValue
 
         public async Task<bool> UpdateKeyValueAsync(IEnumerable<IKeyValueEntity> keyValueList)
         {
+            if (!keyValueList.Any())
+                return true;
+
+            var list = new List<KeyValueEntity>();
+            foreach (var item in keyValueList)
+            {
+                var kv = item as KeyValueEntity;
+                list.Add(kv ?? new KeyValueEntity(item));
+            }
+
             try
             {
-                await _tableStorage.InsertOrMergeBatchAsync(keyValueList.Cast<KeyValueEntity>());
+                await _tableStorage.InsertOrMergeBatchAsync(list);
             }
             catch (Exception ex)
             {
@@ -86,9 +96,19 @@ namespace AzureRepositories.KeyValue
 
         public async Task<bool> ReplaceKeyValueAsync(IEnumerable<IKeyValueEntity> keyValueList)
         {
+            if (!keyValueList.Any())
+                return true;
+
+            var list = new List<KeyValueEntity>();
+            foreach (var item in keyValueList)
+            {
+                var kv = item as KeyValueEntity;
+                list.Add(kv ?? new KeyValueEntity(item));
+            }
+
             try
             {
-                await _tableStorage.InsertOrReplaceBatchAsync(keyValueList.Cast<KeyValueEntity>());
+                await _tableStorage.InsertOrReplaceBatchAsync(list);
             }
             catch (Exception ex)
             {
