@@ -518,17 +518,24 @@ namespace Web.Controllers
         {
             try
             {
-                var data = await _connectionUrlHistoryRepository.GetAllAsync();
-                var connectionUrlHistory = data.OrderByDescending(x => ((ConnectionUrlHistory)x).Timestamp).Select(x => new ConnectionUrlHistoryModel
-                {
-                    RowKey = x.RowKey,
-                    Ip = x.Ip,
-                    RepositoryId = x.RepositoryId,
-                    Timestamp = ((ConnectionUrlHistory)x).Timestamp.ToString("g"),
-                    UserAgent = x.UserAgent
-                });
+                var (data , totalCount) = await _connectionUrlHistoryRepository.GetPageAsync(page.Value, PAGE_SIZE);
+                var connectionUrlHistory = data
+                    .OrderByDescending(x => ((ConnectionUrlHistory)x).Timestamp)
+                    .Select(x => new ConnectionUrlHistoryModel
+                    {
+                        RowKey = x.RowKey,
+                        Ip = x.Ip,
+                        RepositoryId = x.RepositoryId,
+                        Timestamp = ((ConnectionUrlHistory)x).Timestamp.ToString("g"),
+                        UserAgent = x.UserAgent
+                    })
+                    .ToList();
 
-                return View(PaginatedList<ConnectionUrlHistoryModel>.CreateAsync(connectionUrlHistory, page ?? 1, PAGE_SIZE));
+                return View(new PaginatedList<ConnectionUrlHistoryModel>(
+                    connectionUrlHistory,
+                    totalCount,
+                    page.Value,
+                    PAGE_SIZE));
             }
             catch (Exception ex)
             {
