@@ -3,7 +3,7 @@ using Core.Models;
 
 namespace Web.Models
 {
-    public class RepositoryModel
+    public class RepositoriesModel
     {
         public PaginatedList<IRepository> Repositories { get; set; }
         public string ServiceUrlForViewMode { get; set; }

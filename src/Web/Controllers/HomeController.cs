@@ -218,7 +218,7 @@ namespace Web.Controllers
                 ViewData["repositoryNames"] = JsonConvert.SerializeObject(repositoryNames);
                 ViewData["timeToEditInMinutes"] = _lockTimeInMinutes;
 
-                return View(new RepositoryModel
+                return View(new RepositoriesModel
                 {
                     Repositories = repositories,
                     ServiceUrlForViewMode = hostUrl
@@ -227,7 +227,7 @@ namespace Web.Controllers
             catch (Exception ex)
             {
                 _log.Error(ex);
-                return View(new RepositoryModel
+                return View(new RepositoriesModel
                 {
                     Repositories = PaginatedList<IRepository>.CreateAsync(new List<IRepository>(), 1, PAGE_SIZE),
                     ServiceUrlForViewMode = hostUrl
@@ -354,11 +354,11 @@ namespace Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveRepository(RepositoryEntity repository)
+        public async Task<IActionResult> SaveRepository(RepositoryModel repository)
         {
             try
             {
-                var result = string.IsNullOrWhiteSpace(repository.RowKey)
+                var result = string.IsNullOrWhiteSpace(repository.RepositoryId)
                     ? await _repositoriesService.CreateRepositoryAsync(
                         repository,
                         UserInfo.UserName,
@@ -385,9 +385,7 @@ namespace Web.Controllers
         }
 
         [HttpPost("Home/UpdateRepository")]
-        public async Task<IActionResult> UpdateRepository(
-            RepositoryEntity repository,
-            string search = null)
+        public async Task<IActionResult> UpdateRepository(RepositoryModel repository, string search = null)
         {
             try
             {
@@ -563,11 +561,11 @@ namespace Web.Controllers
         }
 
         [HttpPost("/Home/ChangeRepositoryName")]
-        public async Task<IActionResult> ChangeRepositoryName(RepositoryEntity repository)
+        public async Task<IActionResult> ChangeRepositoryName(RepositoryModel repository)
         {
             try
             {
-                var repositoryEntity = await _repositoriesRepository.GetAsync(repository.RowKey);
+                var repositoryEntity = await _repositoriesRepository.GetAsync(repository.RepositoryId);
                 if (repositoryEntity != null)
                 {
                     if (repositoryEntity.Name != repository.Name)

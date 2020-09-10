@@ -6,6 +6,7 @@ namespace AzureRepositories.Repository
     public class RepositoryEntity : TableEntity, IRepository
     {
         private string _repositoryId;
+        private string lastModified;
 
         public static string GeneratePartitionKey() => "R";
 
@@ -16,7 +17,11 @@ namespace AzureRepositories.Repository
             get => _repositoryId ?? RowKey;
             set => _repositoryId = value;
         }
-        public string LastModified { get; set; }
+        public string LastModified
+        {
+            get => lastModified ?? Timestamp.ToString("yyyy/MM/dd");
+            set => lastModified = value;
+        }
         public string Name { get; set; }
         public string GitUrl { get; set; }
         public string Branch { get; set; }

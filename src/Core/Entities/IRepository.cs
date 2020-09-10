@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Core.Entities
+﻿namespace Core.Entities
 {
     public interface IRepository
     {
@@ -15,6 +13,5 @@ namespace Core.Entities
         string OriginalName { get; set; }
         bool UseManualSettings { get; set; }
         string Tag { get; set; }
-        DateTimeOffset Timestamp { get; set; }
     }
 }

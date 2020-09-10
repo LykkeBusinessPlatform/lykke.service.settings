@@ -45,7 +45,12 @@ namespace AzureRepositories.Repository
 
         public async Task SaveRepositoryAsync(IRepository repository)
         {
-            if (!(repository is RepositoryEntity rs))
+            if (repository is RepositoryEntity rs)
+            {
+                rs.PartitionKey = RepositoryEntity.GeneratePartitionKey();
+                rs.RowKey = repository.RepositoryId;
+            }
+            else
             {
                 rs = (RepositoryEntity)await GetAsync(repository.RepositoryId) ?? new RepositoryEntity();
 
@@ -58,8 +63,6 @@ namespace AzureRepositories.Repository
                 rs.UseManualSettings = repository.UseManualSettings;
                 rs.Tag = repository.Tag;
             }
-            rs.PartitionKey = RepositoryEntity.GeneratePartitionKey();
-            rs.RowKey = repository.RepositoryId;
 
             await _tableStorage.InsertOrMergeAsync(rs);
         }

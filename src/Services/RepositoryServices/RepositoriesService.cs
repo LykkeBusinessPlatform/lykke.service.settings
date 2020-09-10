@@ -111,11 +111,11 @@ namespace Services.RepositoryServices
         {
             try
             {
-                var repositoriesData = await GetAllRepos();
+                var repositoriesData = await _repositoriesRepository.GetAllAsync();
 
                 var repositories = (from r in repositoriesData
                                     orderby r.RepositoryId
-                                    select new RepositoryEntity
+                                    select new RepositoryModel
                                     {
                                         RepositoryId = r.RepositoryId,
                                         Name = r.Name,
@@ -127,9 +127,8 @@ namespace Services.RepositoryServices
                                         UseManualSettings = r.UseManualSettings,
                                         Tag = r.Tag,
                                         OriginalName = r.OriginalName,
-                                        Timestamp = r.Timestamp,
-                                        LastModified = r.Timestamp.ToString("MM/dd/yy")
-                                    }).OrderByDescending(x => x.Timestamp)
+                                        LastModified = r.LastModified
+                                    }).OrderByDescending(x => x.LastModified)
                                     .ToList<IRepository>();
 
                 return repositories;
@@ -145,7 +144,7 @@ namespace Services.RepositoryServices
         {
             try
             {
-                var repositoriesData = await GetAllRepos();
+                var repositoriesData = await _repositoriesRepository.GetAllAsync();
                 var repositoryNames = repositoriesData.Select(x => x.Name).Distinct().ToList();
 
                 if (!string.IsNullOrEmpty(search))
@@ -156,7 +155,7 @@ namespace Services.RepositoryServices
 
                 var repositories = (from r in repositoriesData 
                                     orderby r.RepositoryId
-                                    select new RepositoryEntity
+                                    select new RepositoryModel
                                     {
                                         RepositoryId = r.RepositoryId,
                                         Name = r.Name,
@@ -168,9 +167,8 @@ namespace Services.RepositoryServices
                                         UseManualSettings = r.UseManualSettings,
                                         Tag = r.Tag,
                                         OriginalName = r.OriginalName,
-                                        Timestamp = r.Timestamp,
-                                        LastModified = r.Timestamp.ToString("MM/dd/yy")
-                                    }).OrderByDescending(x=>x.Timestamp)
+                                        LastModified = r.LastModified
+                                    }).OrderByDescending(x => x.LastModified)
                                     .ToList<IRepository>();
 
                 var repositoryModel = new RepositoriesServiceModel
@@ -239,12 +237,6 @@ namespace Services.RepositoryServices
             }
             await Task.WhenAll(tasks).ConfigureAwait(false);
             return resultTasks.All(t => t.Result);
-        }
-
-        private async Task<IEnumerable<IRepository>> GetAllRepos()
-        {
-            var repositories = await _repositoriesRepository.GetAllAsync();
-            return repositories;
         }
 
         private async Task<List<IKeyValueEntity>> InitKeyValuesAsync(
@@ -371,9 +363,8 @@ namespace Services.RepositoryServices
             fileFullName += name + "_" + repository.Branch;
             fileFullName += repository.Tag == null ? FILE_FORMAT : "_" + repository.Tag + FILE_FORMAT;
 
-            IRepository repositoryEntity = new RepositoryEntity
+            IRepository repositoryEntity = new RepositoryModel
             {
-                RowKey = Guid.NewGuid().ToString(),
                 GitUrl = repository.GitUrl,
                 Branch = repository.Branch,
                 FileName = fileFullName,
@@ -477,9 +468,8 @@ namespace Services.RepositoryServices
             fileFullName += name + "_" + repository.Branch;
             fileFullName += repository.Tag == null ? FILE_FORMAT : $"_{repository.Tag}{FILE_FORMAT}";
 
-            repositoryEntity = new RepositoryEntity
+            repositoryEntity = new RepositoryModel
             {
-                RowKey = Guid.NewGuid().ToString(),
                 GitUrl = repository.GitUrl,
                 Branch = repository.Branch,
                 FileName = fileFullName,
