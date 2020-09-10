@@ -53,17 +53,17 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="gitUrl">Git url (repository/file): </label>
-                    <input type="text" id="gitUrl" eTag="" class="form-control" placeholder="" value="" />
+                    <input type="text" id="gitUrl" class="form-control" placeholder="" value="" />
                 </div>
 
                 <div class="form-group">
                     <label for="branch">Branch: </label>
-                    <input type="text" id="branch" eTag="" class="form-control" placeholder="" value="" />
+                    <input type="text" id="branch" class="form-control" placeholder="" value="" />
                 </div>
 
                 <div class="form-group">
                     <label for="tag">Tag: </label>
-                    <input type="text" id="tag" eTag="" class="form-control" placeholder="" value="" maxlength="20" />
+                    <input type="text" id="tag" class="form-control" placeholder="" value="" maxlength="20" />
                 </div>
             </div>
             <div class="modal-footer">
@@ -315,10 +315,10 @@
                     '<table class="table table-stripped table-bordered"><tr><th>Modified</th><th>Tag</th><th>Commit</th><th>Name</th><th>URL (git)</th><th>Branch</th><th>Connection URL</th><th style="text-align:center;">Actions</th></tr>';
                 for (var i = 0; i < list.length; i++) {
                     var elem = list[i];
-                    html += '<tr ' + (elem.UseManualSettings ? 'class="highlight"' : '') + ' elemId="' + elem.RowKey + '" useManualSettings="' + elem.UseManualSettings + '" > ' +
+                    html += '<tr ' + (elem.UseManualSettings ? 'class="highlight"' : '') + ' elemId="' + elem.RepositoryId + '" useManualSettings="' + elem.UseManualSettings + '" > ' +
                         '<td class="col-md-2"><span class="viewMode">' + elem.LastModified + ' - ' + elem.UserName + '</span></td>' +
                         '<td class="col-md-1"><span class="viewMode">' + (elem.Tag ? elem.Tag : '') + '</span></td>' +
-                        '<td class="col-md-1"><span class="viewMode">' + elem.RowKey.substring(0, 8) + '</span></td>' +
+                        '<td class="col-md-1"><span class="viewMode">' + elem.RepositoryId.substring(0, 8) + '</span></td>' +
 						'<td class="col-md-1"><span class="viewMode nameSpan">' + elem.Name + '</span><input type="text" class="editMode nameInput" value="' + elem.Name + '"/></td>' +
                         '<td class="col-md-2"><a class="viewMode" style="width:100%;border:none" href="'
                         + ((elem.GitUrl.includes("/settings.")
@@ -336,7 +336,7 @@
                             '<a href="javascript:;" class="elemHistory" title="Connection Url History"></a>' +
                             '<a href="javascript:;" class="elemCopy" title="Copy Settings Url"></a>' +
                             '<a href="javascript:;" class="elemUpdate" title="Update"></a>' +
-                            '<a href="@Url.Action("KeyValue", "Home")?repositoryId=' + elem.RowKey + '" class="elemKeyValues" title="KeyValues"></a>' +
+                            '<a href="@Url.Action("KeyValue", "Home")?repositoryId=' + elem.RepositoryId + '" class="elemKeyValues" title="KeyValues"></a>' +
                             '<a href="javascript:;" class="elemEdit" title="Manual Edit"></a>' +
 							'<a href="javascript:;" class="elemDelete" title="Delete"></a>' +
 							'<a href="javascript:;" class="elemRevert" title="Revert"></a>' +
@@ -407,7 +407,7 @@
 
                         $.repositoryNewName = {
                             'repository': {
-                                'rowKey': repositoryId,
+                                'RepositoryId': repositoryId,
                                 'name': $(this).val()
                             }
                         }
@@ -475,7 +475,7 @@
                         var form = $('.search-form');
                         $.repositoryEdit = {
                             'repository': {
-                                'rowKey': repositoryId,
+                                'RepositoryId': repositoryId,
                                 'branch': $(this).parent().siblings('td.branch').children('input').val()
                             },
                             "search": $('#search', form).val()
@@ -802,9 +802,9 @@
 						continue;
 					}
 					notManualCounter += 1;
-					html += '<tr ' + ' revertId="' + elem.RowKey + '" > ' +
+					html += '<tr ' + ' revertId="' + elem.RepositoryId + '" > ' +
 						'<td class="col-md-2"><span class="viewMode">' + elem.User + '</span></td>' +
-						'<td class="col-md-1"><span class="viewMode">' + elem.RowKey.substring(0, 8) + '</span></td>' +
+						'<td class="col-md-1"><span class="viewMode">' + elem.RepositoryId.substring(0, 8) + '</span></td>' +
 						'<td class="col-md-2"><span class="viewMode">' + elem.Timestamp + '</span></td>' +
 						'<td class="col-md-1"><span class="viewMode">' + elem.Branch + '</span></td>' +
 						'<td class="col-md-2" class="viewMode" >' +
@@ -834,9 +834,9 @@
 							continue;
 						}
 						manualCounter += 1;
-						htmlManual += '<tr ' + ' revertId="' + elem.RowKey + '" > ' +
+						htmlManual += '<tr ' + ' revertId="' + elem.RepositoryId + '" > ' +
 							'<td class="col-md-2"><span class="viewMode">' + elem.User + '</span></td>' +
-							'<td class="col-md-1"><span class="viewMode">' + elem.RowKey.substring(0, 8) + '</span></td>' +
+							'<td class="col-md-1"><span class="viewMode">' + elem.RepositoryId.substring(0, 8) + '</span></td>' +
 							'<td class="col-md-2"><span class="viewMode">' + elem.Timestamp + '</span></td>' +
 							'<td class="col-md-1"><span class="viewMode">' + elem.Branch + '</span></td>' +
 							'<td class="col-md-2" class="viewMode" >' +

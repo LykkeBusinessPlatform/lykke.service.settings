@@ -2,8 +2,9 @@
 
 namespace Core.Entities
 {
-    public interface IRepository : IEntity
+    public interface IRepository
     {
+        string RepositoryId { get; set; }
         string LastModified { get; set; }
         string Name { get; set; }
         string GitUrl { get; set; }

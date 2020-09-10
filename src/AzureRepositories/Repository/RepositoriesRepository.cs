@@ -28,7 +28,7 @@ namespace AzureRepositories.Repository
         {
             var pk = RepositoryEntity.GeneratePartitionKey();
             var list = await _tableStorage.GetDataAsync(pk, filter:filter);
-            return list as IEnumerable<IRepository>;
+            return list;
         }
 
         public async Task<IEnumerable<IRepository>> GetAllAsync()
@@ -47,9 +47,8 @@ namespace AzureRepositories.Repository
         {
             if (!(repository is RepositoryEntity rs))
             {
-                rs = (RepositoryEntity)await GetAsync(repository.RowKey) ?? new RepositoryEntity();
+                rs = (RepositoryEntity)await GetAsync(repository.RepositoryId) ?? new RepositoryEntity();
 
-                rs.ETag = repository.ETag;
                 rs.Name = repository.Name;
                 rs.GitUrl = repository.GitUrl;
                 rs.Branch = repository.Branch;
@@ -60,7 +59,8 @@ namespace AzureRepositories.Repository
                 rs.Tag = repository.Tag;
             }
             rs.PartitionKey = RepositoryEntity.GeneratePartitionKey();
-            rs.RowKey = repository.RowKey;
+            rs.RowKey = repository.RepositoryId;
+
             await _tableStorage.InsertOrMergeAsync(rs);
         }
     }

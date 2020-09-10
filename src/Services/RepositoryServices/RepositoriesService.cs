@@ -93,8 +93,8 @@ namespace Services.RepositoryServices
             //save commit data
             var repositoryUpdateHistory = new RepositoryUpdateHistory()
             {
-                RowKey = isManual ? Guid.NewGuid().ToString() : repository.RowKey,
-                InitialCommit = firtstCommit ? repository.RowKey : lastUpdate.InitialCommit,
+                RowKey = isManual ? Guid.NewGuid().ToString() : repository.RepositoryId,
+                InitialCommit = firtstCommit ? repository.RepositoryId : lastUpdate.InitialCommit,
                 User = userName,
                 Branch = repository.Branch,
                 IsManual = isManual,
@@ -114,10 +114,10 @@ namespace Services.RepositoryServices
                 var repositoriesData = await GetAllRepos();
 
                 var repositories = (from r in repositoriesData
-                                    orderby r.RowKey
+                                    orderby r.RepositoryId
                                     select new RepositoryEntity
                                     {
-                                        RowKey = r.RowKey,
+                                        RepositoryId = r.RepositoryId,
                                         Name = r.Name,
                                         GitUrl = r.GitUrl,
                                         Branch = r.Branch,
@@ -155,10 +155,10 @@ namespace Services.RepositoryServices
                 }
 
                 var repositories = (from r in repositoriesData 
-                                    orderby r.RowKey 
+                                    orderby r.RepositoryId
                                     select new RepositoryEntity
                                     {
-                                        RowKey = r.RowKey,
+                                        RepositoryId = r.RepositoryId,
                                         Name = r.Name,
                                         GitUrl = r.GitUrl,
                                         Branch = r.Branch,
@@ -297,7 +297,7 @@ namespace Services.RepositoryServices
                 }
 
                 keyValueEntity.Types = keyValue.Types;
-                keyValueEntity.RepositoryId = repositoryEntity.RowKey;
+                keyValueEntity.RepositoryId = repositoryEntity.RepositoryId;
                 keyValueEntity.Tag = keyValue.Tag;
                 if (!keyValueEntity.UseNotTaggedValue.HasValue)
                     keyValueEntity.UseNotTaggedValue = keyValue.UseNotTaggedValue;
@@ -383,7 +383,7 @@ namespace Services.RepositoryServices
                 Tag = repository.Tag
             };
 
-            repositoryEntity.ConnectionUrl = _repositoryFileInfoControllerAction + repositoryEntity.RowKey + "/"
+            repositoryEntity.ConnectionUrl = _repositoryFileInfoControllerAction + repositoryEntity.RepositoryId + "/"
                 + (!string.IsNullOrWhiteSpace(repositoryEntity.Tag) ? repositoryEntity.Tag + "/" : string.Empty) + name;
 
             //get json from generated gitUrl
@@ -456,7 +456,7 @@ namespace Services.RepositoryServices
             bool isProduction,
             string search = null)
         {
-            var repositoryEntity = await _repositoriesRepository.GetAsync(repository.RowKey);
+            var repositoryEntity = await _repositoriesRepository.GetAsync(repository.RepositoryId);
             if (repositoryEntity == null)
                 return new RepositoriesServiceModel { Result = UpdateSettingsStatus.NotFound };
 
@@ -489,7 +489,7 @@ namespace Services.RepositoryServices
                 Tag = repository.Tag
             };
 
-            var last = await _repositoriesUpdateHistoryRepository.GetAsync(repository.RowKey);
+            var last = await _repositoriesUpdateHistoryRepository.GetAsync(repository.RepositoryId);
             repositoryEntity.ConnectionUrl = _repositoryFileInfoControllerAction + last.InitialCommit + "/"
                 + (!string.IsNullOrWhiteSpace(repositoryEntity.Tag) ? repositoryEntity.Tag + "/" : string.Empty) + name;
 
@@ -567,10 +567,10 @@ namespace Services.RepositoryServices
                 };
 
             //Adding data to history repository
-            await AddToHistoryRepository(repositoryEntity, settingsJson, repository.RowKey, userName: userName, userIp: userIp);
+            await AddToHistoryRepository(repositoryEntity, settingsJson, repository.RepositoryId, userName: userName, userIp: userIp);
 
             //delete repository to add updated one
-            await _repositoriesRepository.RemoveRepositoryAsync(repository.RowKey);
+            await _repositoriesRepository.RemoveRepositoryAsync(repository.RepositoryId);
 
             // if updating file, we must not create new name for it
             await _repositoryDataRepository.UpdateBlobAsync(settingsJson, userName, userIp, fileFullName);
@@ -630,8 +630,8 @@ namespace Services.RepositoryServices
                 {
                     Last = existingBlob,
                     Current = settingsJson,
-                    Oldid = repository.RowKey,
-                    Newid = repositoryEntity.RowKey,
+                    Oldid = repository.RepositoryId,
+                    Newid = repositoryEntity.RepositoryId,
                     repositories.PageIndex,
                     repositories.TotalPages
                 }

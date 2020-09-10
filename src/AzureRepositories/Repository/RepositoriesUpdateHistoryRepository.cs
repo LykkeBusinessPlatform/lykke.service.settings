@@ -25,12 +25,6 @@ namespace AzureRepositories.Repository
             return await _tableStorage.GetDataAsync(pk, rk);
         }
 
-        public async Task<IEnumerable<IRepositoryUpdateHistory>> GetAllAsync()
-        {
-            var pk = RepositoryUpdateHistory.GeneratePartitionKey();
-            return await _tableStorage.GetDataAsync(pk);
-        }
-
         public async Task RemoveRepositoryUpdateHistoryAsync(string repositoryUpdateHistoryId)
         {
             var pk = RepositoryUpdateHistory.GeneratePartitionKey();
@@ -62,13 +56,6 @@ namespace AzureRepositories.Repository
             ruh.PartitionKey = RepositoryUpdateHistory.GeneratePartitionKey();
             ruh.RowKey = entity.RowKey;
             await _tableStorage.InsertOrMergeAsync(ruh);
-        }
-
-        public async Task<IEnumerable<IRepositoryUpdateHistory>> GetAsync(Func<IRepositoryUpdateHistory, bool> filter)
-        {
-            var pk = RepositoryUpdateHistory.GeneratePartitionKey();
-            var list = await _tableStorage.GetDataAsync(pk, filter);
-            return list;
         }
 
         public async Task<IEnumerable<IRepositoryUpdateHistory>> GetAsyncByInitialCommit(string initialCommit)

@@ -70,7 +70,7 @@ namespace Web.Controllers
         {
             try
             {
-                var repositories = await _repositoriesRepository.GetAsync(x => x.RowKey == id);
+                var repositories = await _repositoriesRepository.GetAsync(x => x.RepositoryId == id);
                 return repositories.FirstOrDefault();
             }
             catch (Exception ex)
@@ -86,28 +86,26 @@ namespace Web.Controllers
             try
             {
                 var repositories = await _repositoriesRepository.GetAllAsync();
-                var repositoryEntity = repositories.FirstOrDefault(x => (x.OriginalName == repositoryName) && (tag == "" || x.Tag == tag) && (x.FileName == fileName) && (fileName.Contains("_git_") ? x.GitUrl.Contains("github.com") : x.FileName.Contains("_bb_")));
+                var repositoryEntity = repositories.FirstOrDefault(x =>
+                    x.OriginalName == repositoryName
+                    && tag == "" || x.Tag == tag
+                    && x.FileName == fileName
+                    && (fileName.Contains("_git_") ? x.GitUrl.Contains("github.com") : x.FileName.Contains("_bb_")));
                 if (repositoryEntity == null)
-                {
                     return null;
-                }
-
-                string rowKey = repositoryEntity.RowKey;
 
                 var connectionUrlHistory = new ConnectionUrlHistory
                 {
                     RowKey = Guid.NewGuid().ToString(),
                     Ip = UserInfo.Ip,
-                    RepositoryId = rowKey,
+                    RepositoryId = repositoryEntity.RepositoryId,
                     UserAgent = Request.Headers["User-Agent"].FirstOrDefault()
                 };
                 await _connectionUrlHistoryRepository.SaveConnectionUrlHistory(connectionUrlHistory);
 
-                var repository = await _repositoriesRepository.GetAsync(rowKey);
+                var repository = await _repositoriesRepository.GetAsync(repositoryEntity.RepositoryId);
                 if (repository == null)
-                {
                     return "Repository not found";
-                }
 
                 var correctFileName = repository.UseManualSettings ? MANUAL_FILE_PREFIX + fileName : fileName;
 
@@ -133,7 +131,7 @@ namespace Web.Controllers
             {
                 var data = new { repositoryName, tag, fileName };
                 _log.Error(ex, context: data);
-                return String.Empty;
+                return string.Empty;
             }
         }
 

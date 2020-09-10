@@ -5,10 +5,17 @@ namespace AzureRepositories.Repository
 {
     public class RepositoryEntity : TableEntity, IRepository
     {
+        private string _repositoryId;
+
         public static string GeneratePartitionKey() => "R";
 
         public static string GenerateRowKey(string repositoryId) => repositoryId;
 
+        public string RepositoryId
+        {
+            get => _repositoryId ?? RowKey;
+            set => _repositoryId = value;
+        }
         public string LastModified { get; set; }
         public string Name { get; set; }
         public string GitUrl { get; set; }

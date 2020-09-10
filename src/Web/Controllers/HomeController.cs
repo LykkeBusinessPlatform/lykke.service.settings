@@ -172,7 +172,13 @@ namespace Web.Controllers
                 var repositoryHistory = await _repositoriesUpdateHistoryRepository.GetAsync(jsonModel.RepositoryId);
 
                 //Adding data to history repository
-                await _repositoriesService.AddToHistoryRepository(repository, jsonModel.Json, repositoryHistory.InitialCommit, true, UserInfo.UserName, UserInfo.Ip);
+                await _repositoriesService.AddToHistoryRepository(
+                    repository,
+                    jsonModel.Json,
+                    repositoryHistory.InitialCommit,
+                    true,
+                    UserInfo.UserName,
+                    UserInfo.Ip);
 
                 var repositoriesModel = await _repositoriesService.GetPaginatedRepositories();
                 var repositories = repositoriesModel.Data as PaginatedList<IRepository>;
@@ -304,7 +310,7 @@ namespace Web.Controllers
                 await UploadJsonChanges(new JsonModel()
                 {
                     Json = fileData,
-                    RepositoryId = repository.RowKey,
+                    RepositoryId = repository.RepositoryId,
                     UseManualSettings = repository.UseManualSettings,
                     UserName = repository.UserName
                 });
@@ -457,7 +463,7 @@ namespace Web.Controllers
                 {
                     RowKey = Guid.NewGuid().ToString(),
                     Ip = UserInfo.Ip,
-                    RepositoryId = repositoryEntity.RowKey,
+                    RepositoryId = repositoryEntity.RepositoryId,
                     UserAgent = Request.Headers["User-Agent"].FirstOrDefault()
                 };
 
@@ -661,7 +667,7 @@ namespace Web.Controllers
                     if (!repositoryUpdateHistory.IsManual)
                     {
                         await _repositoriesRepository.RemoveRepositoryAsync(lastUpdate.RowKey);
-                        repositoryEntity.RowKey = repositoryId;
+                        repositoryEntity.RepositoryId = repositoryId;
                         await _repositoriesRepository.SaveRepositoryAsync(repositoryEntity);
                     }
 
@@ -1233,17 +1239,6 @@ namespace Web.Controllers
             try
             {
                 var origToken = await _serviceTokensRepository.GetAsync(tokenEntity.Token);
-
-                if (origToken != null
-                    && (tokenEntity.SecurityKeyOne != origToken.SecurityKeyOne
-                    || tokenEntity.SecurityKeyTwo != origToken.SecurityKeyTwo))
-                {
-                    return new JsonResult(new
-                    {
-                        Result = UpdateSettingsStatus.OutOfDate,
-                        Json = JsonConvert.SerializeObject(await GetAllServiceTokensAsync())
-                    });
-                }
 
                 if (origToken == null)
                 {
