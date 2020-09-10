@@ -94,14 +94,10 @@ namespace Web.Controllers
                 if (repositoryEntity == null)
                     return null;
 
-                var connectionUrlHistory = new ConnectionUrlHistory
-                {
-                    RowKey = Guid.NewGuid().ToString(),
-                    Ip = UserInfo.Ip,
-                    RepositoryId = repositoryEntity.RepositoryId,
-                    UserAgent = Request.Headers["User-Agent"].FirstOrDefault()
-                };
-                await _connectionUrlHistoryRepository.SaveConnectionUrlHistory(connectionUrlHistory);
+                await _connectionUrlHistoryRepository.SaveConnectionUrlHistoryAsync(
+                    repositoryEntity.RepositoryId,
+                    UserInfo.Ip,
+                    Request.Headers["User-Agent"].FirstOrDefault());
 
                 var repository = await _repositoriesRepository.GetAsync(repositoryEntity.RepositoryId);
                 if (repository == null)

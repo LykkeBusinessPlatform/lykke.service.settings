@@ -1,13 +1,11 @@
-﻿using AzureStorage;
-using Core.Entities;
-using Core.Repositories;
-using Lykke.AzureStorage.Tables.Paging;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.WindowsAzure.Storage.Table;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AzureStorage;
+using Core.Entities;
+using Core.Repositories;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.Repository
 {
@@ -21,14 +19,6 @@ namespace AzureRepositories.Repository
         public ConnectionUrlHistoryRepository(INoSQLTableStorage<ConnectionUrlHistory> tableStorage)
         {
             _tableStorage = tableStorage;
-        }
-
-        public async Task<IConnectionUrlHistory> GetAsync(string connectionUrlHistoryId)
-        {
-            var pk = ConnectionUrlHistory.GeneratePartitionKey();
-            var rk = ConnectionUrlHistory.GenerateRowKey(connectionUrlHistoryId);
-
-            return await _tableStorage.GetDataAsync(pk, rk);
         }
 
         public async Task<(IEnumerable<IConnectionUrlHistory>, int)> GetPageAsync(int pageNum, int pageSize)
@@ -73,26 +63,55 @@ namespace AzureRepositories.Repository
             return (pageItems, totalCount);
         }
 
-        public async Task<IEnumerable<IConnectionUrlHistory>> GetAllAsync(Func<IConnectionUrlHistory, bool> filter)
+        public async Task<IEnumerable<IConnectionUrlHistory>> GetByRepositoryIdAsync(string repositoryId)
         {
-            var pk = ConnectionUrlHistory.GeneratePartitionKey();
-            var list = await _tableStorage.GetDataAsync(pk, filter);
+            var list = await _tableStorage.GetDataAsync(repositoryId);
+            if (!list.Any())
+            {
+                var pk = ConnectionUrlHistory.GeneratePartitionKey();
+                list = await _tableStorage.GetDataAsync(pk, x => x.RepositoryId == repositoryId);
+                foreach(var item in list)
+                {
+                    item.PartitionKey = item.RepositoryId;
+                }
+                await _tableStorage.InsertOrMergeBatchAsync(list);
+            }
+
             return list;
         }
 
-        public async Task SaveConnectionUrlHistory(IConnectionUrlHistory entity)
+        public async Task SaveConnectionUrlHistoryAsync(
+            string repositoryId,
+            string ip,
+            string userAgent)
         {
-            if (!(entity is ConnectionUrlHistory cuh))
+            var id = Guid.NewGuid().ToString();
+            var commonPk = new ConnectionUrlHistory
             {
-                cuh = (ConnectionUrlHistory)await GetAsync(entity.RowKey) ?? new ConnectionUrlHistory();
+                PartitionKey = ConnectionUrlHistory.GeneratePartitionKey(),
+                RowKey = id,
+                RepositoryId = repositoryId,
+                Ip = ip,
+                UserAgent = userAgent,
+            };
+            var repoPk = new ConnectionUrlHistory
+            {
+                PartitionKey = repositoryId,
+                RowKey = id,
+                RepositoryId = repositoryId,
+                Ip = ip,
+                UserAgent = userAgent,
+            };
 
-                cuh.ETag = entity.ETag;
-                cuh.Ip = entity.Ip;
-                cuh.UserAgent = entity.UserAgent;
-            }
-            cuh.PartitionKey = ConnectionUrlHistory.GeneratePartitionKey();
-            cuh.RowKey = entity.RowKey;
-            await _tableStorage.InsertOrMergeAsync(cuh);
+            var tasks = new List<Task>
+            {
+                _tableStorage.InsertOrMergeAsync(commonPk),
+                _tableStorage.InsertOrMergeAsync(repoPk),
+            };
+            await Task.WhenAll(tasks);
+
+            if (_totalCount.HasValue)
+                _totalCount = _totalCount.Value + 1;
         }
 
         private async Task CalculateTotalCountAsync()

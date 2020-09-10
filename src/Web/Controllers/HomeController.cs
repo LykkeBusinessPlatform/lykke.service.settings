@@ -459,18 +459,10 @@ namespace Web.Controllers
                         return Content("Repository not found");
                 }
 
-                var connectionUrlHistory = new ConnectionUrlHistory
-                {
-                    RowKey = Guid.NewGuid().ToString(),
-                    Ip = UserInfo.Ip,
-                    RepositoryId = repositoryEntity.RepositoryId,
-                    UserAgent = Request.Headers["User-Agent"].FirstOrDefault()
-                };
-
-#pragma warning disable 4014
-                // this should not be awaited
-                _connectionUrlHistoryRepository.SaveConnectionUrlHistory(connectionUrlHistory);
-#pragma warning restore 4014
+                await _connectionUrlHistoryRepository.SaveConnectionUrlHistoryAsync(
+                    repositoryEntity.RepositoryId,
+                    UserInfo.Ip,
+                    Request.Headers["User-Agent"].FirstOrDefault());
 
                 var correctFileName = repositoryEntity.UseManualSettings ? MANUAL_FILE_PREFIX + repositoryEntity.FileName : repositoryEntity.FileName;
 
@@ -520,13 +512,13 @@ namespace Web.Controllers
             {
                 var (data , totalCount) = await _connectionUrlHistoryRepository.GetPageAsync(page.Value, PAGE_SIZE);
                 var connectionUrlHistory = data
-                    .OrderByDescending(x => ((ConnectionUrlHistory)x).Timestamp)
+                    .OrderByDescending(x => x.Datetime)
                     .Select(x => new ConnectionUrlHistoryModel
                     {
-                        RowKey = x.RowKey,
+                        Id = x.Id,
                         Ip = x.Ip,
                         RepositoryId = x.RepositoryId,
-                        Timestamp = ((ConnectionUrlHistory)x).Timestamp.ToString("g"),
+                        Datetime = x.Datetime,
                         UserAgent = x.UserAgent
                     })
                     .ToList();
@@ -549,15 +541,17 @@ namespace Web.Controllers
         {
             try
             {
-                var data = await _connectionUrlHistoryRepository.GetAllAsync(x => x.RepositoryId == repositoryId);
-                var connectionUrlHistory = data.OrderByDescending(x => ((ConnectionUrlHistory)x).Timestamp).Select(x => new ConnectionUrlHistoryModel
-                {
-                    RowKey = x.RowKey,
-                    Ip = x.Ip,
-                    RepositoryId = x.RepositoryId,
-                    Timestamp = ((ConnectionUrlHistory)x).Timestamp.ToString("g"),
-                    UserAgent = x.UserAgent
-                });
+                var data = await _connectionUrlHistoryRepository.GetByRepositoryIdAsync(repositoryId);
+                var connectionUrlHistory = data
+                    .OrderByDescending(x => x.Datetime)
+                    .Select(x => new ConnectionUrlHistoryModel
+                    {
+                        Id = x.Id,
+                        Ip = x.Ip,
+                        RepositoryId = x.RepositoryId,
+                        Datetime = x.Datetime,
+                        UserAgent = x.UserAgent
+                    });
 
                 return new JsonResult(new { Result = UpdateSettingsStatus.Ok, Json = connectionUrlHistory });
             }

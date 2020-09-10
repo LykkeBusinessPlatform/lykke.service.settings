@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Core.Entities;
 
 namespace Web.Models
 {
-    public class ConnectionUrlHistoryModel
+    public class ConnectionUrlHistoryModel : IConnectionUrlHistory
     {
-        public string RowKey { get; set; }
+        public string Id { get; set; }
         public string Ip { get; set; }
         public string RepositoryId { get; set; }
         public string UserAgent { get; set; }
-        public string Timestamp { get; set; }
+        public string Datetime { get; set; }
     }
 }

@@ -7,9 +7,11 @@ namespace Core.Repositories
 {
     public interface IConnectionUrlHistoryRepository
     {
-        Task<IConnectionUrlHistory> GetAsync(string connectionUrlHistoryId);
         Task<(IEnumerable<IConnectionUrlHistory>, int)> GetPageAsync(int pageNum, int pageSize);
-        Task<IEnumerable<IConnectionUrlHistory>> GetAllAsync(Func<IConnectionUrlHistory, bool> filter);
-        Task SaveConnectionUrlHistory(IConnectionUrlHistory entity);
+        Task<IEnumerable<IConnectionUrlHistory>> GetByRepositoryIdAsync(string repositoryId);
+        Task SaveConnectionUrlHistoryAsync(
+            string repositoryId,
+            string ip,
+            string userAgent);
     }
 }

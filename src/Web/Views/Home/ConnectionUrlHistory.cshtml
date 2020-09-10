@@ -20,11 +20,11 @@
     @foreach (var item in Model)
     {
         <tr>
-            <td>@item.RowKey</td>
+            <td>@item.Id</td>
             <td>@item.RepositoryId</td>
             <td>@item.Ip</td>
             <td>@item.UserAgent</td>
-            <td>@item.Timestamp</td>
+            <td>@item.Datetime</td>
         </tr>
     }
 </table>
