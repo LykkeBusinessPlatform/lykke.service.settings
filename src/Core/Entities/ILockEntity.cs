@@ -2,7 +2,7 @@
 
 namespace Core.Entities
 {
-    public interface ILockEntity : IEntity
+    public interface ILockEntity
     {
         DateTime DateTime { get; set; }
         string UserName { get; set; }

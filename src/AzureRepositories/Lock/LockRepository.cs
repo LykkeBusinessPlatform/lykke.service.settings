@@ -24,10 +24,9 @@ namespace AzureRepositories.Lock
 
         public async Task SetJsonPageLockAsync(string userEmail, string userName, string ipAddress)
         {
-            var pk = LockEntity.GeneratePartitionKey();
             await _tableStorage.InsertOrMergeAsync(new LockEntity
             {
-                PartitionKey = pk,
+                PartitionKey = LockEntity.GeneratePartitionKey(),
                 RowKey = JsonLockKey,
                 UserEmail = userEmail,
                 DateTime = DateTime.UtcNow,
@@ -38,10 +37,9 @@ namespace AzureRepositories.Lock
 
         public async Task ResetJsonPageLockAsync()
         {
-            var pk = LockEntity.GeneratePartitionKey();
             await _tableStorage.InsertOrReplaceAsync(new LockEntity
             {
-                PartitionKey = pk,
+                PartitionKey = LockEntity.GeneratePartitionKey(),
                 RowKey = JsonLockKey,
                 DateTime = new DateTime(1701, 1, 1), //Storage Azure can't store less
             });
