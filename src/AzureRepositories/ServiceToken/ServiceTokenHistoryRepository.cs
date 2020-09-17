@@ -20,6 +20,7 @@ namespace AzureRepositories.ServiceToken
         {
             var th = new ServiceTokenHistoryEntity
             {
+                PartitionKey = token.Token,
                 RowKey = DateTime.UtcNow.StorageString(),
                 UserName = userName,
                 KeyOne = token.SecurityKeyOne,

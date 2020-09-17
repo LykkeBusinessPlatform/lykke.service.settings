@@ -1,6 +1,6 @@
 ﻿namespace Core.Entities
 {
-    public interface IServiceTokenHistory : IEntity
+    public interface IServiceTokenHistory
     {
         string TokenId { get; set; }
         string KeyOne { get; set; }
