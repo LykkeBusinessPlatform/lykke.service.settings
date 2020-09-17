@@ -1,15 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Core.Entities;
+﻿using Core.Entities;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.ApplicationSettings
 {
-    public class ApplicationSettingsEntity:TableEntity, IApplicationSettingsEntity
+    public class ApplicationSettingsEntity : TableEntity, IApplicationSettingsEntity
     {
+        private string _settingsId;
+
         public static string GeneratePartitionKey() => "AS";
         public static string GenerateRowKey(string applicationSettingsId) => applicationSettingsId;
+
+        public string SettingsId
+        {
+            get => _settingsId ?? RowKey;
+            set => _settingsId = value;
+        }
 
         public string AzureClientId { get; set; }
 
@@ -29,7 +34,7 @@ namespace AzureRepositories.ApplicationSettings
 
         public string AzureApiKey { get; set; }
         public string DefaultMongoDBConnStr { get; set; }
-        public string DefaultRedisConnStr  { get; set; }
-        public string DefaultRabbitMQConnStr  { get; set; }
+        public string DefaultRedisConnStr { get; set; }
+        public string DefaultRabbitMQConnStr { get; set; }
     }
 }

@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using Core.Entities;
 
 namespace Web.Models
 {
-    public class ApplicationSettingsModel
+    public class ApplicationSettingsModel : IApplicationSettingsEntity
     {
-        public string RowKey { get; set; }
-
-        public string ETag { get; set; }
-
+        public string SettingsId { get; set; }
         public DateTimeOffset Timestamp { get; set; }
 
         public string AzureClientId { get; set; }

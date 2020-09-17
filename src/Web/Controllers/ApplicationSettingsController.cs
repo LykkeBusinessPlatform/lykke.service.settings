@@ -33,8 +33,7 @@ namespace Web.Controllers
                 var data = await _applicationSettingsRepostiory.GetAsync();
                 var model = new ApplicationSettingsModel
                 {
-                    ETag = data.ETag,
-                    RowKey = data.RowKey,
+                    SettingsId = data.SettingsId,
                     AzureClientId = data.AzureClientId,
                     AzureRegionName = data.AzureRegionName,
                     AzureClientKey = data.AzureClientKey,

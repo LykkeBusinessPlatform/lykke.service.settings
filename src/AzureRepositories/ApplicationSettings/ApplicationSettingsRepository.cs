@@ -26,11 +26,16 @@ namespace AzureRepositories.ApplicationSettings
 
         public async Task SaveApplicationSettings(IApplicationSettingsEntity entity)
         {
-            if (!(entity is ApplicationSettingsEntity se))
+            if (entity is ApplicationSettingsEntity se)
+            {
+                se.PartitionKey = ApplicationSettingsEntity.GeneratePartitionKey();
+                se.RowKey = entity.SettingsId;
+            }
+            else
             {
                 se = new ApplicationSettingsEntity
                 {
-                    ETag = entity.ETag,
+                    SettingsId = entity.SettingsId,
                     AzureClientId = entity.AzureClientId,
                     AzureRegionName = entity.AzureRegionName,
                     AzureClientKey = entity.AzureClientKey,
@@ -45,8 +50,7 @@ namespace AzureRepositories.ApplicationSettings
                     DefaultRedisConnStr = entity.DefaultRedisConnStr
                 };
             }
-            se.PartitionKey = ApplicationSettingsEntity.GeneratePartitionKey();
-            se.RowKey = entity.RowKey;
+
             await _tableStorage.InsertOrMergeAsync(se);
         }
     }

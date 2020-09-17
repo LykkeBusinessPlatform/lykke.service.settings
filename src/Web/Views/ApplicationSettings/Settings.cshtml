@@ -23,7 +23,7 @@
                 var html = '<table class="table table-stripped table-bordered"><tr><th>Name</th><th>Value</th></tr>';
 
                 var dataKeys = Object.keys(data);
-                var restrictedKeys = ["PartitionKey", "RowKey", "Timestamp", "ETag"];
+                var restrictedKeys = ["SettingsId", "Timestamp"];
 
                 dataKeys.forEach(key => {
                     if (restrictedKeys.findIndex(x=> x == key) == -1) {
@@ -37,7 +37,6 @@
                         html += '<input type="text" class="form-control editMode valueInput" id="' + key + '" value="' + data[key] + '" /></td></tr>';
                     }
                 });
-                    
 
                 html += '</table>';
                 var parent = $('.editItems');
@@ -70,14 +69,14 @@
                         return;
                     }
 
-                    var settingsId = '@Model.RowKey';
+                    var settingsId = '@Model.SettingsId';
                     var type = $(valueInput).attr('id');
 
                     if (confirm('The "' + settingsId + '" will be updated.')) {
                         var url = '@Url.Action("SaveSettings")';
                         var settingsToEdit = {
                             'model': {
-                                'rowKey': settingsId,
+                                'SettingsId': settingsId,
                             }
                         };
 

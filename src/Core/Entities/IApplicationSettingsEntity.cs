@@ -1,7 +1,9 @@
 ﻿namespace Core.Entities
 {
-    public interface IApplicationSettingsEntity : IEntity
+    // TODO rework azure dependencies
+    public interface IApplicationSettingsEntity
     {
+        string SettingsId { get; set; }
         string AzureClientId { get; set; }
 
         string AzureRegionName { get; set; }
