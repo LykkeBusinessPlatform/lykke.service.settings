@@ -25,7 +25,7 @@
             <div class="modal-body" id="editRole">
                 @*<div class="form-group">
                     <label for="name">Name</label>
-                    <input type="text" id="name" eTag="" data-rowKey="" class="form-control" placeholder="" value="" />
+                    <input type="text" id="name" data-roleId="" class="form-control" placeholder="" value="" />
                 </div>*@
             </div>
             <div class="modal-footer">
@@ -70,14 +70,14 @@
                     '<table class="table table-striped table-bordered"><tr><th style="text-align:center">Role</th><th>Key Access <span class="viewSpan" style="background-color:#5cb85c;">Read</span> <span class="viewSpan" style="background-color:#f0ad4e;">Write</span></th><th style="text-align:center">Actions</th></tr>';
                 for (var i = 0; i < list.length; i++) {
                     var elem = list[i];
-                    html += '<tr elemId="' + elem.RowKey + '">' +
+                    html += '<tr elemId="' + elem.RoleId + '">' +
                         '<td><span class="viewMode">' + elem.Name + '</span><input type="text" class="editMode form-control"/></td>';
 
                     html += '<td class="col-md-8">';
                     if (elem.KeyValues.length) {
                         for (var j = 0; j < elem.KeyValues.length; j++) {
                             var keyValue = elem.KeyValues[j];
-                            html += '<span class="viewMode viewSpan" style="background-color:' + (keyValue.HasFullAccess ? '#f0ad4e' : '#5cb85c') + '">' + keyValue.RowKey + '</span>';
+                            html += '<span class="viewMode viewSpan" style="background-color:' + (keyValue.HasFullAccess ? '#f0ad4e' : '#5cb85c') + '">' + keyValue.RoleId + '</span>';
                         }
                     }
                     html += '</td>';
@@ -94,9 +94,9 @@
 
                 $.generateEditHtml = function(role) {
                     var html =
-                        '<div class="form-group"><label for="name">Name</label> <input type="text" id="name" eTag="" data-rowKey="' + role.RowKey + '" class="form-control" placeholder="" value="' + role.Name + '" /></div>';
+                        '<div class="form-group"><label for="name">Name</label> <input type="text" id="name" data-roleId="' + role.RoleId + '" class="form-control" placeholder="" value="' + role.Name + '" /></div>';
 
-                    //$('#name').attr('data-rowKey', role.RowKey).val(role.Name);
+                    //$('#name').attr('data-roleId', role.RoleId).val(role.Name);
 
                     html += 
                         '<table class="table table-striped table-bordered" id="editRoleTable"><tr><th>Name</th><th>Access</th><th>Actions</th></tr>';
@@ -105,7 +105,7 @@
                         for (var i = 0; i < role.KeyValues.length; i++) {
                             var keyValue = role.KeyValues[i];
                             html += '<tr class="keyValues">' +
-                                '<td class="keyValueRowKey"><input type="text" class="viewMode form-control keyValueInput" value="' + keyValue.RowKey + '"/></td>' +
+                                '<td class="keyValueRowKey"><input type="text" class="viewMode form-control keyValueInput" value="' + keyValue.RoleId + '"/></td>' +
                                 '<td class="access"><select class="form-control"><option value="false"' + (!keyValue.HasFullAccess ? 'selected' : '') + '>Read</option><option value="true"' + (keyValue.HasFullAccess ? 'selected' : '') + '>Write</option></select></td>' +
                                 '<td><a href="javascript:;" class="elemCancel col-md-1" onclick="elemCancel(this)" style="width:20px; height:20px;"></a></td></tr>';
                         }
@@ -137,8 +137,8 @@
 
                 $('.elemEdit').click(function() {
                     var parent = $(this).parents('tr');
-                    var rowKey = parent.attr('elemId');
-                    var role = $.keyValuesList.find(x => x.RowKey === rowKey);
+                    var roleId = parent.attr('elemId');
+                    var role = $.keyValuesList.find(x => x.RoleId === roleId);
                     if (role == null)
                         return;
 
@@ -175,10 +175,10 @@
                 $('#editRoleTable').find('tr.keyValues').each(function() {
                     var item = $(this);
                     if (item.find('input').val() !== '') {
-                        var rowKey = item.find('input').val();
+                        var roleId = item.find('input').val();
                         var hasFullAccess = item.find('select').val();
                         var keyValue = {
-                            'rowKey': rowKey,
+                            'roleId': roleId,
                             'hasFullAccess': hasFullAccess
                         }
                         keyValues.push(keyValue);
@@ -188,7 +188,7 @@
                 $.post(url,
                     {
                         'role': {
-                            'rowKey': $('#name').attr('data-rowKey'),
+                            'roleId': $('#name').attr('data-roleId'),
                             'name': $('#name').val(),
                             'keyValues': keyValues
                         }

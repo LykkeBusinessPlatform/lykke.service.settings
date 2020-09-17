@@ -259,7 +259,7 @@ namespace Web.Controllers
 
                 if (usr == null)
                 {
-                    user.Roles = roles.Select(x => x.RowKey).ToArray();
+                    user.Roles = roles.Select(x => x.RoleId).ToArray();
                     await _userRepository.CreateUserAsync(user);
                 }
                 else
@@ -268,7 +268,7 @@ namespace Web.Controllers
                     usr.LastName = user.LastName;
                     usr.Active = user.Active;
                     usr.Admin = user.Admin;
-                    usr.Roles = roles.Select(x => x.RowKey).ToArray();
+                    usr.Roles = roles.Select(x => x.RoleId).ToArray();
 
                     await _userRepository.UpdateUserAsync(usr);
                 }
@@ -305,20 +305,18 @@ namespace Web.Controllers
         {
             try
             {
-                var roleEntity = await _roleRepository.GetAsync(role.RowKey) as RoleEntity ?? new RoleEntity
-                {
-                    RowKey = Guid.NewGuid().ToString()
-                };
+                var roleEntity = await _roleRepository.GetAsync(role.RoleId)
+                    ?? new RoleModel{ RoleId = Guid.NewGuid().ToString() };
 
                 // check for duplications, if role already exists, we must not create it once more
-                var duplications = await _roleRepository.GetAllAsync(x => x.RowKey != roleEntity.RowKey && x.Name == role.Name);
+                var duplications = await _roleRepository.GetAllAsync(x => x.RoleId != roleEntity.RoleId && x.Name == role.Name);
                 if (duplications.Any())
                 {
                     return new JsonResult(new { status = 0 });
                 }
 
                 roleEntity.Name = role.Name;
-                roleEntity.KeyValues = role.KeyValues != null ? role.KeyValues.DistinctBy(x => x.RowKey).ToArray<IRoleKeyValue>() : new IRoleKeyValue[] { };
+                roleEntity.KeyValues = role.KeyValues != null ? role.KeyValues.DistinctBy(x => x.RowKey).ToArray() : new IRoleKeyValue[] { };
 
                 await _roleRepository.SaveAsync(roleEntity);
                 var result = await GetAllRoles();
@@ -452,7 +450,7 @@ namespace Web.Controllers
                 {
                     if (user.Roles != null)
                     {
-                        var roles = await _roleRepository.GetAllAsync(x => user.Roles.Contains(x.RowKey));
+                        var roles = await _roleRepository.GetAllAsync(x => user.Roles.Contains(x.RoleId));
                         var roleNames = roles.Select(x => x.Name).ToArray();
                         // assign roleNames to users
                         user.Roles = roleNames;
@@ -474,15 +472,15 @@ namespace Web.Controllers
             {
                 var result = await _roleRepository.GetAllAsync();
 
-                return (from r in result
-                        let ur = r as RoleEntity
-                        orderby ur.RowKey
-                        select new RoleModel
+                return result
+                    .OrderBy(r => r.RoleId)
+                    .Select(r => new RoleModel
                         {
-                            RowKey = ur.RowKey,
-                            Name = ur.Name,
-                            KeyValues = ur.KeyValues as RoleKeyValue[]
-                        }).ToList();
+                            RoleId = r.RoleId,
+                            Name = r.Name,
+                            KeyValues = r.KeyValues as RoleKeyValue[]
+                        })
+                    .ToList();
             }
             catch (Exception ex)
             {

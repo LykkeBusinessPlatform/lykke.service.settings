@@ -52,7 +52,11 @@ namespace AzureRepositories.Repository
             }
             else
             {
-                rs = (RepositoryEntity)await GetAsync(repository.RepositoryId) ?? new RepositoryEntity();
+                var pk = RepositoryEntity.GeneratePartitionKey();
+                var rk = RepositoryEntity.GenerateRowKey(repository.RepositoryId);
+
+                rs = await _tableStorage.GetDataAsync(pk, rk)
+                    ?? new RepositoryEntity { PartitionKey = pk, RowKey = rk };
 
                 rs.Name = repository.Name;
                 rs.GitUrl = repository.GitUrl;

@@ -34,21 +34,28 @@ namespace AzureRepositories.User
         {
             var pk = RoleEntity.GeneratePartitionKey();
             var list = await _tableStorage.GetDataAsync(pk, filter: filter);
-            return list as IEnumerable<IRoleEntity>;
+            return list;
         }
 
         public async Task SaveAsync(IRoleEntity roleEntity)
         {
-            if (!(roleEntity is RoleEntity role))
+            if (roleEntity is RoleEntity role)
             {
-                role = (RoleEntity)await GetAsync(roleEntity.RowKey) ?? new RoleEntity();
+                role.PartitionKey = RoleEntity.GeneratePartitionKey();
+                role.RowKey = roleEntity.RoleId;
+            }
+            else
+            {
+                var pk = RoleEntity.GeneratePartitionKey();
+                var rk = RoleEntity.GenerateRowKey(roleEntity.RoleId);
+                role = await _tableStorage.GetDataAsync(pk, rk)
+                    ?? new RoleEntity { PartitionKey = pk, RowKey = rk };
 
-                role.ETag = roleEntity.ETag;
+                role.RoleId = roleEntity.RoleId;
                 role.Name = roleEntity.Name;
                 role.KeyValues = roleEntity.KeyValues;
             }
-            role.PartitionKey = RoleEntity.GeneratePartitionKey();
-            role.RowKey = roleEntity.RowKey;
+
             await _tableStorage.InsertOrMergeAsync(role);
         }
 

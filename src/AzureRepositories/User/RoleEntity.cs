@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Core.Entities;
-using Core.KeyValue;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
@@ -11,15 +8,25 @@ namespace AzureRepositories.User
 {
     public class RoleEntity : TableEntity, IRoleEntity
     {
-        public static string GeneratePartitionKey() => "UR";
-        public static string GenerateRowKey (string roleId) => roleId;
+        private string _roleId;
 
+        public static string GeneratePartitionKey() => "UR";
+        public static string GenerateRowKey(string roleId) => roleId;
+
+        public string RoleId
+        {
+            get => _roleId ?? RowKey;
+            set => _roleId = value;
+        }
         public string Name { get; set; }
         public IRoleKeyValue[] KeyValues { get; set; }
 
         public override void ReadEntity(IDictionary<string, EntityProperty> properties, OperationContext operationContext)
         {
-            if (properties.TryGetValue("KeyValues", out var keyValues))
+            if (properties.TryGetValue(nameof(RoleId), out var roleId))
+                RoleId = roleId.StringValue;
+
+            if (properties.TryGetValue(nameof(KeyValues), out var keyValues))
             {
                 var json = keyValues.StringValue;
                 if (!string.IsNullOrEmpty(json))
@@ -28,18 +35,17 @@ namespace AzureRepositories.User
                 }
             }
 
-            if (properties.TryGetValue("Name", out var name))
-            {
+            if (properties.TryGetValue(nameof(Name), out var name))
                 Name = name.StringValue;
-            }
         }
 
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
             var dict = new Dictionary<string, EntityProperty>
             {
-                {"KeyValues", new EntityProperty(JsonConvert.SerializeObject(KeyValues))},
-                {"Name", new EntityProperty(Name)}
+                {nameof(RoleId), new EntityProperty(RoleId)},
+                {nameof(KeyValues), new EntityProperty(JsonConvert.SerializeObject(KeyValues))},
+                {nameof(Name), new EntityProperty(Name)}
             };
 
             return dict;

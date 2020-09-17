@@ -53,7 +53,8 @@ namespace AzureRepositories.Token
             {
                 var pk = TokenEntity.GeneratePartitionKey();
                 var rk = TokenEntity.GenerateRowKey(token.TokenId);
-                ts = await _tableStorage.GetDataAsync(pk, rk) ?? new TokenEntity();
+                ts = await _tableStorage.GetDataAsync(pk, rk)
+                    ?? new TokenEntity { PartitionKey = pk, RowKey = rk };
 
                 ts.TokenId = token.TokenId;
                 ts.AccessList = token.AccessList;

@@ -1,11 +1,11 @@
-﻿using AzureRepositories.User;
+﻿using Core.Entities;
 
 namespace Web.Models
 {
-    public class RoleModel
+    public class RoleModel : IRoleEntity
     {
-        public string RowKey { get; set; }
+        public string RoleId { get; set; }
         public string Name { get; set; }
-        public RoleKeyValue[] KeyValues { get; set; }
+        public IRoleKeyValue[] KeyValues { get; set; }
     }
 }

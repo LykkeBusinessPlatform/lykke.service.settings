@@ -50,7 +50,8 @@ namespace AzureRepositories.Repository
             {
                 var pk = RepositoryUpdateHistoryEntity.GeneratePartitionKey();
                 var rk = RepositoryUpdateHistoryEntity.GenerateRowKey(entity.RepositoryId);
-                ruh = await _tableStorage.GetDataAsync(pk, rk) ?? new RepositoryUpdateHistoryEntity();
+                ruh = await _tableStorage.GetDataAsync(pk, rk)
+                    ?? new RepositoryUpdateHistoryEntity { PartitionKey = pk, RowKey = rk };
 
                 ruh.RepositoryId = entity.RepositoryId;
                 ruh.InitialCommit = entity.InitialCommit;
