@@ -5,11 +5,7 @@ namespace AzureRepositories.Token
 {
     public class AccountTokenHistoryEntity : TableEntity, IAccountTokenHistory
     {
-        public string TokenId
-        {
-            get => PartitionKey;
-            set => PartitionKey = value;
-        }
+        public string TokenId { get; set; }
 
         public string UserName { get; set; }
         public string AccessList { get; set; }

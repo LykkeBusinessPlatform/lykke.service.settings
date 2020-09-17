@@ -20,6 +20,7 @@ namespace AzureRepositories.Token
         {
             var th = new AccountTokenHistoryEntity
             {
+                PartitionKey = token.TokenId,
                 RowKey = DateTime.UtcNow.StorageString(),
                 UserName = userName,
                 AccessList = token.AccessList,
@@ -27,7 +28,7 @@ namespace AzureRepositories.Token
                 TokenId = token.TokenId,
                 UserIpAddress = userIpAddress
             };
-            
+
             await _tableStorage.InsertOrMergeAsync(th);
         }
     }

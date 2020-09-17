@@ -1,6 +1,6 @@
 ﻿namespace Core.Entities
 {
-    public interface IAccountTokenHistory : IEntity
+    public interface IAccountTokenHistory
     {
         string TokenId { get; set; }
         string AccessList { get; set; }
