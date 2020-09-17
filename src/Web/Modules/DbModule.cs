@@ -111,7 +111,7 @@ namespace Web.Modules
 
             builder.Register(c=>
                 new RepositoriesUpdateHistoryRepository(
-                    AzureTableStorage<RepositoryUpdateHistory>.Create(connectionString, "RepositoryUpdateHistory", c.Resolve<ILogFactory>())))
+                    AzureTableStorage<RepositoryUpdateHistoryEntity>.Create(connectionString, "RepositoryUpdateHistory", c.Resolve<ILogFactory>())))
                 .As<IRepositoriesUpdateHistoryRepository>()
                 .SingleInstance();
 

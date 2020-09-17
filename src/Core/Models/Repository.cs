@@ -2,7 +2,7 @@
 
 namespace Core.Models
 {
-    public class RepositoryModel : IRepository
+    public class Repository : IRepository
     {
         public string RepositoryId { get; set; }
         public string LastModified { get; set; }

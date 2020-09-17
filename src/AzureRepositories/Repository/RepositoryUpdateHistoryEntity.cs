@@ -4,9 +4,10 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.Repository
 {
-    public class RepositoryUpdateHistory : TableEntity, IRepositoryUpdateHistory
+    public class RepositoryUpdateHistoryEntity : TableEntity, IRepositoryUpdateHistory
     {
         private string _repositoryId;
+        private DateTimeOffset? _createdAt;
 
         public static string GeneratePartitionKey() => "RUH";
 
@@ -16,7 +17,11 @@ namespace AzureRepositories.Repository
         public string User { get; set; }
         public string Branch { get; set; }
         public bool IsManual { get; set; }
-        public DateTimeOffset? CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt
+        {
+            get => _createdAt ?? Timestamp;
+            set => _createdAt = value;
+        }
 
         public string RepositoryId
         {

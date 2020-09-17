@@ -91,9 +91,9 @@ namespace Services.RepositoryServices
                 await GetFileData(HISTORY_FILE_PREFIX + "settings_" + lastUpdate.RepositoryId + FILE_FORMAT);
 
             //save commit data
-            var repositoryUpdateHistory = new RepositoryUpdateHistory()
+            var repositoryUpdateHistory = new RepositoryUpdateHistory
             {
-                RowKey = isManual ? Guid.NewGuid().ToString() : repository.RepositoryId,
+                RepositoryId = isManual ? Guid.NewGuid().ToString() : repository.RepositoryId,
                 InitialCommit = firtstCommit ? repository.RepositoryId : lastUpdate.InitialCommit,
                 User = userName,
                 Branch = repository.Branch,
@@ -103,7 +103,7 @@ namespace Services.RepositoryServices
             await _repositoriesUpdateHistoryRepository.SaveRepositoryUpdateHistory(repositoryUpdateHistory);
 
             //save history-settings_ file
-            var blobFileName = HISTORY_FILE_PREFIX + "settings_" + repositoryUpdateHistory.RowKey + FILE_FORMAT;
+            var blobFileName = HISTORY_FILE_PREFIX + "settings_" + repositoryUpdateHistory.RepositoryId + FILE_FORMAT;
             await _repositoryDataRepository.UpdateBlobAsync(settingsJson, userName, userIp, blobFileName);
         }
 
@@ -115,7 +115,7 @@ namespace Services.RepositoryServices
 
                 var repositories = (from r in repositoriesData
                                     orderby r.RepositoryId
-                                    select new RepositoryModel
+                                    select new Repository
                                     {
                                         RepositoryId = r.RepositoryId,
                                         Name = r.Name,
@@ -155,7 +155,7 @@ namespace Services.RepositoryServices
 
                 var repositories = (from r in repositoriesData 
                                     orderby r.RepositoryId
-                                    select new RepositoryModel
+                                    select new Repository
                                     {
                                         RepositoryId = r.RepositoryId,
                                         Name = r.Name,
@@ -363,7 +363,7 @@ namespace Services.RepositoryServices
             fileFullName += name + "_" + repository.Branch;
             fileFullName += repository.Tag == null ? FILE_FORMAT : "_" + repository.Tag + FILE_FORMAT;
 
-            IRepository repositoryEntity = new RepositoryModel
+            IRepository repositoryEntity = new Repository
             {
                 GitUrl = repository.GitUrl,
                 Branch = repository.Branch,
@@ -468,7 +468,7 @@ namespace Services.RepositoryServices
             fileFullName += name + "_" + repository.Branch;
             fileFullName += repository.Tag == null ? FILE_FORMAT : $"_{repository.Tag}{FILE_FORMAT}";
 
-            repositoryEntity = new RepositoryModel
+            repositoryEntity = new Repository
             {
                 GitUrl = repository.GitUrl,
                 Branch = repository.Branch,

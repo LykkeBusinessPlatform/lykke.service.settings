@@ -9,6 +9,6 @@ namespace Core.Entities
         string User { get; }
         string Branch { get; }
         bool IsManual { get; }
-        DateTimeOffset? CreatedAt { get; }
+        DateTimeOffset CreatedAt { get; }
     }
 }

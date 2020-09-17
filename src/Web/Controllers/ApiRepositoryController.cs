@@ -76,7 +76,7 @@ namespace Web.Controllers
             catch (Exception ex)
             {
                 _log.Error(ex, context: id);
-                return new RepositoryModel();
+                return new Repository();
             }
         }
 
@@ -132,19 +132,19 @@ namespace Web.Controllers
         }
 
         [HttpPost]
-        public async Task<RepositoriesServiceModel> Post([FromBody] RepositoryModel repository)
+        public async Task<RepositoriesServiceModel> Post([FromBody] Repository repository)
         {
             return await CreateOrUpdateRepository(repository);
         }
 
         [HttpPut]
-        public async Task<RepositoriesServiceModel> Put([FromBody] RepositoryModel repository)
+        public async Task<RepositoriesServiceModel> Put([FromBody] Repository repository)
         {
             return await CreateOrUpdateRepository(repository);
         }
 
         #region Private Methods
-        private async Task<RepositoriesServiceModel> CreateOrUpdateRepository(RepositoryModel repository)
+        private async Task<RepositoriesServiceModel> CreateOrUpdateRepository(Repository repository)
         {
             try
             {

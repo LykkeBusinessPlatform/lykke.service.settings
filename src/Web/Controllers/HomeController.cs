@@ -354,7 +354,7 @@ namespace Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveRepository(RepositoryModel repository)
+        public async Task<IActionResult> SaveRepository(Repository repository)
         {
             try
             {
@@ -385,7 +385,7 @@ namespace Web.Controllers
         }
 
         [HttpPost("Home/UpdateRepository")]
-        public async Task<IActionResult> UpdateRepository(RepositoryModel repository, string search = null)
+        public async Task<IActionResult> UpdateRepository(Repository repository, string search = null)
         {
             try
             {
@@ -431,14 +431,13 @@ namespace Web.Controllers
                     entitiesToOrder = repositoryUpdateHistoryEntities;
 
                 var lastUpdate = entitiesToOrder
-                    .OrderByDescending(x => x.CreatedAt ?? ((RepositoryUpdateHistory)x).Timestamp)
+                    .OrderByDescending(x => x.CreatedAt)
                     .FirstOrDefault();
 
                 if (lastUpdate == null)
                     return Content("Repository not found");
 
                 // get repository data
-
                 var repositoryEntity = await _repositoriesRepository.GetAsync(lastUpdate.RepositoryId);
                 if (repositoryEntity == null)
                 {
@@ -447,7 +446,6 @@ namespace Web.Controllers
                         repositoryEntity = await _repositoriesRepository.GetAsync(history.RepositoryId);
                         if (repositoryEntity != null)
                         {
-                            ((RepositoryUpdateHistory)history).CreatedAt = DateTime.UtcNow;
                             await _repositoriesUpdateHistoryRepository.SaveRepositoryUpdateHistory(history);
                             break;
                         }
@@ -561,7 +559,7 @@ namespace Web.Controllers
         }
 
         [HttpPost("/Home/ChangeRepositoryName")]
-        public async Task<IActionResult> ChangeRepositoryName(RepositoryModel repository)
+        public async Task<IActionResult> ChangeRepositoryName(Repository repository)
         {
             try
             {
@@ -611,7 +609,7 @@ namespace Web.Controllers
 
                 if (repositories != null)
                 {
-                    repositories = repositories.OrderByDescending(x => x.CreatedAt ?? ((RepositoryUpdateHistory)x).Timestamp);
+                    repositories = repositories.OrderByDescending(x => x.CreatedAt);
                     return new JsonResult(new
                     {
                         Result = UpdateSettingsStatus.Ok,
@@ -645,7 +643,7 @@ namespace Web.Controllers
                     var repositoryUpdateHistoryEntity = await _repositoriesUpdateHistoryRepository.GetAsyncByInitialCommit(repositoryUpdateHistory.InitialCommit);
                     var lastUpdate = repositoryUpdateHistoryEntity
                         .Where(x => x.IsManual == false)
-                        .OrderByDescending(x => x.CreatedAt ?? ((RepositoryUpdateHistory)x).Timestamp)
+                        .OrderByDescending(x => x.CreatedAt)
                         .FirstOrDefault();
 
                     // get repository data and commit file data
