@@ -33,7 +33,6 @@ namespace AzureRepositories.Lock
                 DateTime = DateTime.UtcNow,
                 UserName = userName,
                 IpAddress = ipAddress,
-                ETag = "*"
             });
         }
 
@@ -45,7 +44,6 @@ namespace AzureRepositories.Lock
                 PartitionKey = pk,
                 RowKey = JsonLockKey,
                 DateTime = new DateTime(1701, 1, 1), //Storage Azure can't store less
-                ETag = "*"
             });
         }
     }

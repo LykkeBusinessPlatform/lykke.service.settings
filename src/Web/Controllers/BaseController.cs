@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AzureRepositories.User;
 using Common;
 using Common.Log;
+using Core.Models;
 using Core.Repositories;
 using Lykke.Common.Extensions;
 using Lykke.Common.Log;
@@ -74,18 +75,18 @@ namespace Web.Controllers
 
                 Task.Factory.StartNew(async () =>
                 {
-                    await _userActionHistoryRepository.SaveUserActionHistoryAsync(new UserActionHistoryEntity
-                    {
-                        UserEmail = UserInfo.UserEmail,
-                        ActionDate = DateTime.UtcNow,
-                        ActionName = actionDescription.ActionName,
-                        ControllerName = actionDescription.ControllerName,
-                        ETag = "*",
-                        IpAddress = UserInfo.Ip,
-                        Params = filterContext.ActionArguments.Count > 0
-                            ? JsonConvert.SerializeObject(filterContext.ActionArguments)
-                            : string.Empty,
-                    });
+                    await _userActionHistoryRepository.SaveUserActionHistoryAsync(
+                        new UserActionHistory
+                        {
+                            UserEmail = UserInfo.UserEmail,
+                            ActionDate = DateTime.UtcNow,
+                            ActionName = actionDescription.ActionName,
+                            ControllerName = actionDescription.ControllerName,
+                            IpAddress = UserInfo.Ip,
+                            Params = filterContext.ActionArguments.Count > 0
+                                ? JsonConvert.SerializeObject(filterContext.ActionArguments)
+                                : string.Empty,
+                        });
                 });
             }
             catch (Exception ex)
