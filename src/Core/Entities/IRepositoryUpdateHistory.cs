@@ -2,8 +2,9 @@
 
 namespace Core.Entities
 {
-    public interface IRepositoryUpdateHistory : IEntity
+    public interface IRepositoryUpdateHistory
     {
+        string RepositoryId { get; }
         string InitialCommit { get; }
         string User { get; }
         string Branch { get; }

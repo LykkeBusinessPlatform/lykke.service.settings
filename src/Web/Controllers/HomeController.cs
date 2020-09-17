@@ -439,12 +439,12 @@ namespace Web.Controllers
 
                 // get repository data
 
-                var repositoryEntity = await _repositoriesRepository.GetAsync(lastUpdate.RowKey);
+                var repositoryEntity = await _repositoriesRepository.GetAsync(lastUpdate.RepositoryId);
                 if (repositoryEntity == null)
                 {
                     foreach (var history in entitiesToOrder)
                     {
-                        repositoryEntity = await _repositoriesRepository.GetAsync(history.RowKey);
+                        repositoryEntity = await _repositoriesRepository.GetAsync(history.RepositoryId);
                         if (repositoryEntity != null)
                         {
                             ((RepositoryUpdateHistory)history).CreatedAt = DateTime.UtcNow;
@@ -649,7 +649,7 @@ namespace Web.Controllers
                         .FirstOrDefault();
 
                     // get repository data and commit file data
-                    var repositoryEntity = await _repositoriesRepository.GetAsync(lastUpdate.RowKey);
+                    var repositoryEntity = await _repositoriesRepository.GetAsync(lastUpdate.RepositoryId);
                     var existingBlob = await _repositoriesService.GetFileData(HISTORY_FILE_PREFIX + "settings_" + repositoryId + FILE_FORMAT);
 
                     //generate name
@@ -659,13 +659,13 @@ namespace Web.Controllers
                     await _repositoryDataRepository.UpdateBlobAsync(existingBlob, UserInfo.UserName, UserInfo.Ip, fileName);
 
                     // removing old and adding same with current date
-                    await _repositoriesUpdateHistoryRepository.RemoveRepositoryUpdateHistoryAsync(repositoryUpdateHistory.RowKey);
+                    await _repositoriesUpdateHistoryRepository.RemoveRepositoryUpdateHistoryAsync(repositoryUpdateHistory.RepositoryId);
                     await _repositoriesUpdateHistoryRepository.SaveRepositoryUpdateHistory(repositoryUpdateHistory);
 
                     //update repository table
                     if (!repositoryUpdateHistory.IsManual)
                     {
-                        await _repositoriesRepository.RemoveRepositoryAsync(lastUpdate.RowKey);
+                        await _repositoriesRepository.RemoveRepositoryAsync(lastUpdate.RepositoryId);
                         repositoryEntity.RepositoryId = repositoryId;
                         await _repositoriesRepository.SaveRepositoryAsync(repositoryEntity);
                     }
@@ -711,7 +711,7 @@ namespace Web.Controllers
                         //delete each commit file
                         foreach (var repoHist in repositoriesUpdateHistory)
                         {
-                            await _repositoryDataRepository.DelBlobAsync(HISTORY_FILE_PREFIX + FILENAME + repoHist.RowKey + FILE_FORMAT);
+                            await _repositoryDataRepository.DelBlobAsync(HISTORY_FILE_PREFIX + FILENAME + repoHist.RepositoryId + FILE_FORMAT);
                         }
                         await _repositoriesUpdateHistoryRepository.RemoveRepositoryUpdateHistoryAsync(repositoriesUpdateHistory);
                     }

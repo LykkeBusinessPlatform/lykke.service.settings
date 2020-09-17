@@ -88,7 +88,7 @@ namespace Services.RepositoryServices
 
             //cheking if last commit is the same. Skip manual edits. If it is do noting - to not duplicate           
             if (lastUpdate != null)
-                await GetFileData(HISTORY_FILE_PREFIX + "settings_" + lastUpdate.RowKey + FILE_FORMAT);
+                await GetFileData(HISTORY_FILE_PREFIX + "settings_" + lastUpdate.RepositoryId + FILE_FORMAT);
 
             //save commit data
             var repositoryUpdateHistory = new RepositoryUpdateHistory()

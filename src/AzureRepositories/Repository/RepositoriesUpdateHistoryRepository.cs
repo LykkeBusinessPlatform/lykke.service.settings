@@ -39,11 +39,19 @@ namespace AzureRepositories.Repository
 
         public async Task SaveRepositoryUpdateHistory(IRepositoryUpdateHistory entity)
         {
-            if (!(entity is RepositoryUpdateHistory ruh))
+            if (entity is RepositoryUpdateHistory ruh)
             {
-                ruh = (RepositoryUpdateHistory)await GetAsync(entity.RowKey) ?? new RepositoryUpdateHistory();
+                if (ruh.CreatedAt == null)
+                    ruh.CreatedAt = ruh.Timestamp;
+                ruh.PartitionKey = RepositoryUpdateHistory.GeneratePartitionKey();
+                ruh.RowKey = entity.RepositoryId;
+            }
+            else
+            {
+                var pk = RepositoryUpdateHistory.GeneratePartitionKey();
+                var rk = RepositoryUpdateHistory.GenerateRowKey(entity.RepositoryId);
+                ruh = await _tableStorage.GetDataAsync(pk, rk) ?? new RepositoryUpdateHistory();
 
-                ruh.ETag = entity.ETag;
                 ruh.InitialCommit = entity.InitialCommit;
                 ruh.User = entity.User;
                 ruh.Branch = entity.Branch;
@@ -51,10 +59,6 @@ namespace AzureRepositories.Repository
                 ruh.CreatedAt = DateTime.UtcNow;
             }
 
-            if (ruh.CreatedAt == null)
-                ruh.CreatedAt = ruh.Timestamp;
-            ruh.PartitionKey = RepositoryUpdateHistory.GeneratePartitionKey();
-            ruh.RowKey = entity.RowKey;
             await _tableStorage.InsertOrMergeAsync(ruh);
         }
 
