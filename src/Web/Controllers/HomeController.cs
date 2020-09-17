@@ -1142,27 +1142,12 @@ namespace Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveAccessToken(TokenEntity token)
+        public async Task<IActionResult> SaveAccessToken(TokenModel token)
         {
             try
             {
-                token.ETag = WebUtility.UrlDecode(token.ETag);
                 token.IpList = token.IpList ?? string.Empty;
-                var origToken = await _tokensRepository.GetAsync(token.RowKey);
-
-                if (origToken != null && !token.ETag.Equals(origToken.ETag))
-                {
-                    return new JsonResult(new
-                    {
-                        Result = UpdateSettingsStatus.OutOfDate,
-                        Json = JsonConvert.SerializeObject(await GetAllTokens())
-                    });
-                }
-
-                if (origToken == null)
-                {
-                    token.ETag = "*";
-                }
+                var origToken = await _tokensRepository.GetAsync(token.TokenId);
 
                 await _tokensRepository.SaveTokenAsync(token);
                 await _tokenHistoryRepository.SaveTokenHistoryAsync(token, UserInfo.UserEmail, UserInfo.Ip);
@@ -1181,11 +1166,10 @@ namespace Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ForceSaveAccessToken(TokenEntity token)
+        public async Task<IActionResult> ForceSaveAccessToken(TokenModel token)
         {
             try
             {
-                token.ETag = "*";
                 token.IpList = token.IpList ?? string.Empty;
                 await _tokensRepository.SaveTokenAsync(token);
                 await _tokenHistoryRepository.SaveTokenHistoryAsync(token, UserInfo.UserEmail, UserInfo.Ip);
@@ -1209,9 +1193,9 @@ namespace Web.Controllers
             try
             {
                 await _tokensRepository.RemoveTokenAsync(tokenId);
-                var token = new TokenEntity
+                var token = new TokenModel
                 {
-                    RowKey = tokenId,
+                    TokenId = tokenId,
                     AccessList = "[WAS DELETED]",
                     IpList = "[WAS DELETED]"
                 };
@@ -1337,9 +1321,10 @@ namespace Web.Controllers
         {
             try
             {
-                return (from t in await _tokensRepository.GetAllAsync()
-                        orderby t.RowKey
-                        select t).ToList();
+                var tokens = await _tokensRepository.GetAllAsync();
+                return tokens
+                    .OrderBy(t => t.TokenId)
+                    .ToList();
             }
             catch (Exception ex)
             {

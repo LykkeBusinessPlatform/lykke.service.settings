@@ -44,16 +44,22 @@ namespace AzureRepositories.Token
 
         public async Task SaveTokenAsync(IToken token)
         {
-            if (!(token is TokenEntity ts))
+            if (token is TokenEntity ts)
             {
-                ts = (TokenEntity) await GetAsync(token.RowKey) ?? new TokenEntity();
-                
-                ts.ETag = token.ETag;
+                ts.PartitionKey = TokenEntity.GeneratePartitionKey();
+                ts.RowKey = token.TokenId;
+            }
+            else
+            {
+                var pk = TokenEntity.GeneratePartitionKey();
+                var rk = TokenEntity.GenerateRowKey(token.TokenId);
+                ts = await _tableStorage.GetDataAsync(pk, rk) ?? new TokenEntity();
+
+                ts.TokenId = token.TokenId;
                 ts.AccessList = token.AccessList;
                 ts.IpList = token.IpList;
             }
-            ts.PartitionKey = TokenEntity.GeneratePartitionKey();
-            ts.RowKey = token.RowKey;
+
             await _tableStorage.InsertOrMergeAsync(ts);
         }
     }

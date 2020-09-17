@@ -52,6 +52,7 @@ namespace AzureRepositories.Repository
                 var rk = RepositoryUpdateHistoryEntity.GenerateRowKey(entity.RepositoryId);
                 ruh = await _tableStorage.GetDataAsync(pk, rk) ?? new RepositoryUpdateHistoryEntity();
 
+                ruh.RepositoryId = entity.RepositoryId;
                 ruh.InitialCommit = entity.InitialCommit;
                 ruh.User = entity.User;
                 ruh.Branch = entity.Branch;

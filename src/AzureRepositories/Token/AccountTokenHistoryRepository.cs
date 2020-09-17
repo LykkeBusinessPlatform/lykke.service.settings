@@ -24,7 +24,7 @@ namespace AzureRepositories.Token
                 UserName = userName,
                 AccessList = token.AccessList,
                 IpList = token.IpList,
-                TokenId = token.RowKey,
+                TokenId = token.TokenId,
                 UserIpAddress = userIpAddress
             };
             
