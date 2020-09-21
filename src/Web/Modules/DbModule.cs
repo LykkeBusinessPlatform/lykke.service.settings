@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using AzureRepositories.ApplicationSettings;
 using AzureRepositories.Blob;
 using AzureRepositories.KeyValue;
 using AzureRepositories.Lock;
@@ -119,12 +118,6 @@ namespace Web.Modules
                 new NetworkRepository(
                     AzureTableStorage<NetworkEntity>.Create(connectionString, "Networks", c.Resolve<ILogFactory>())))
                 .As<INetworkRepository>()
-                .SingleInstance();
-
-            builder.Register(c=>
-                new ApplicationSettingsRepository(
-                    AzureTableStorage<ApplicationSettingsEntity>.Create(connectionString, "ApplicationSettings",  c.Resolve<ILogFactory>())))
-                .As<IApplicationSettingsRepostiory>()
                 .SingleInstance();
 
             builder.Register(c =>
