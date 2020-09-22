@@ -229,7 +229,7 @@ namespace Web.Controllers
                 _log.Error(ex);
                 return View(new RepositoriesModel
                 {
-                    Repositories = PaginatedList<IRepository>.CreateAsync(new List<IRepository>(), 1, PAGE_SIZE),
+                    Repositories = new PaginatedList<IRepository>(new List<IRepository>(), 0, 1, PAGE_SIZE),
                     ServiceUrlForViewMode = hostUrl
                 });
             }
@@ -528,7 +528,7 @@ namespace Web.Controllers
             catch (Exception ex)
             {
                 _log.Error(ex, context: page?.ToString());
-                return View(PaginatedList<ConnectionUrlHistoryModel>.CreateAsync(new List<ConnectionUrlHistoryModel>(), page ?? 1, PAGE_SIZE));
+                return View(new PaginatedList<ConnectionUrlHistoryModel>(new List<ConnectionUrlHistoryModel>(), 0, page ?? 1, PAGE_SIZE));
             }
         }
 
@@ -694,60 +694,58 @@ namespace Web.Controllers
             try
             {
                 var repository = await _repositoriesRepository.GetAsync(repositoryId);
-                if (repository != null)
-                {
-                    var fileName = repository.FileName;
-                    await _repositoryDataRepository.DelBlobAsync(fileName);
-                    await _repositoryDataRepository.DelBlobAsync(MANUAL_FILE_PREFIX + fileName);
-                    await _repositoriesRepository.RemoveRepositoryAsync(repositoryId);
-
-                    //delete data from history repository
-                    var repositoryUpdateHistory = await _repositoriesUpdateHistoryRepository.GetAsync(repositoryId);
-                    var repositoriesUpdateHistory = await _repositoriesUpdateHistoryRepository.GetAsyncByInitialCommit(repositoryUpdateHistory.InitialCommit);
-                    if (repositoriesUpdateHistory != null)
-                    {
-                        //delete each commit file
-                        foreach (var repoHist in repositoriesUpdateHistory)
-                        {
-                            await _repositoryDataRepository.DelBlobAsync(HISTORY_FILE_PREFIX + FILENAME + repoHist.RepositoryId + FILE_FORMAT);
-                        }
-                        await _repositoriesUpdateHistoryRepository.RemoveRepositoryUpdateHistoryAsync(repositoriesUpdateHistory);
-                    }
-
-                    var keyRepoName = !string.IsNullOrEmpty(repository.Tag) ? repository.Tag + "-" + repository.OriginalName : repository.OriginalName;
-                    // remove repositoryName from all related keyValues repositoryName
-                    var relatedKeyValues = await _keyValuesRepository.GetKeyValuesAsync(x => x.RepositoryNames != null && x.RepositoryNames.Contains(keyRepoName));
-                    if (relatedKeyValues != null)
-                    {
-                        foreach (var keyValue in relatedKeyValues)
-                        {
-                            var tempRepoNames = keyValue.RepositoryNames.ToList();
-                            tempRepoNames.Remove(keyRepoName);
-                            keyValue.RepositoryNames = tempRepoNames != null && tempRepoNames.Count > 0 ? tempRepoNames.ToArray() : null;
-                        }
-
-                        // await _keyValuesRepository.UpdateKeyValueAsync(relatedKeyValues);
-                        await _repositoriesService.SaveKeyValuesAsync(relatedKeyValues, UserInfo.UserEmail, UserInfo.Ip, IS_PRODUCTION);
-                    }
-
-                    var repositories = await _repositoriesService.GetAllRepositories();
-                    var repositoryNameDuplications = repositories.Where(x => x.OriginalName == repository.OriginalName);
-                    if (!repositoryNameDuplications.Any())
-                        await DeleteKeyValuesByRepositoryName(repository.OriginalName);
-
-                    var paginatedRepositories = PaginatedList<IRepository>.CreateAsync(repositories, 1, PAGE_SIZE);
+                if (repository == null)
                     return new JsonResult(new
                     {
-                        Result = UpdateSettingsStatus.Ok,
-                        Json = JsonConvert.SerializeObject(paginatedRepositories),
-                        pageIndex = paginatedRepositories.PageIndex,
-                        totalPages = paginatedRepositories.TotalPages
+                        Result = UpdateSettingsStatus.NotFound
                     });
+
+                var fileName = repository.FileName;
+                await _repositoryDataRepository.DelBlobAsync(fileName);
+                await _repositoryDataRepository.DelBlobAsync(MANUAL_FILE_PREFIX + fileName);
+                await _repositoriesRepository.RemoveRepositoryAsync(repositoryId);
+
+                //delete data from history repository
+                var repositoryUpdateHistory = await _repositoriesUpdateHistoryRepository.GetAsync(repositoryId);
+                var repositoriesUpdateHistory = await _repositoriesUpdateHistoryRepository.GetAsyncByInitialCommit(repositoryUpdateHistory.InitialCommit);
+                if (repositoriesUpdateHistory != null)
+                {
+                    //delete each commit file
+                    foreach (var repoHist in repositoriesUpdateHistory)
+                    {
+                        await _repositoryDataRepository.DelBlobAsync(HISTORY_FILE_PREFIX + FILENAME + repoHist.RepositoryId + FILE_FORMAT);
+                    }
+                    await _repositoriesUpdateHistoryRepository.RemoveRepositoryUpdateHistoryAsync(repositoriesUpdateHistory);
                 }
 
+                var keyRepoName = !string.IsNullOrEmpty(repository.Tag) ? repository.Tag + "-" + repository.OriginalName : repository.OriginalName;
+                // remove repositoryName from all related keyValues repositoryName
+                var relatedKeyValues = await _keyValuesRepository.GetKeyValuesAsync(x => x.RepositoryNames != null && x.RepositoryNames.Contains(keyRepoName));
+                if (relatedKeyValues != null)
+                {
+                    foreach (var keyValue in relatedKeyValues)
+                    {
+                        var tempRepoNames = keyValue.RepositoryNames.ToList();
+                        tempRepoNames.Remove(keyRepoName);
+                        keyValue.RepositoryNames = tempRepoNames != null && tempRepoNames.Count > 0 ? tempRepoNames.ToArray() : null;
+                    }
+
+                    // await _keyValuesRepository.UpdateKeyValueAsync(relatedKeyValues);
+                    await _repositoriesService.SaveKeyValuesAsync(relatedKeyValues, UserInfo.UserEmail, UserInfo.Ip, IS_PRODUCTION);
+                }
+
+                var repositories = await _repositoriesService.GetAllRepositories();
+                var repositoryNameDuplications = repositories.Where(x => x.OriginalName == repository.OriginalName);
+                if (!repositoryNameDuplications.Any())
+                    await DeleteKeyValuesByRepositoryName(repository.OriginalName);
+
+                var paginatedRepositories = PaginatedList<IRepository>.CreateAsync(repositories, 1, PAGE_SIZE);
                 return new JsonResult(new
                 {
-                    Result = UpdateSettingsStatus.NotFound
+                    Result = UpdateSettingsStatus.Ok,
+                    Json = JsonConvert.SerializeObject(paginatedRepositories),
+                    pageIndex = paginatedRepositories.PageIndex,
+                    totalPages = paginatedRepositories.TotalPages
                 });
             }
             catch (Exception ex)

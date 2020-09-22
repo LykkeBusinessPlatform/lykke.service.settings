@@ -153,23 +153,24 @@ namespace Services.RepositoryServices
                     repositoriesData = repositoriesData.Where(r => r.Name.ToLower().Contains(search)); 
                 }
 
-                var repositories = (from r in repositoriesData 
-                                    orderby r.RepositoryId
-                                    select new Repository
-                                    {
-                                        RepositoryId = r.RepositoryId,
-                                        Name = r.Name,
-                                        GitUrl = r.GitUrl,
-                                        Branch = r.Branch,
-                                        FileName = r.FileName,
-                                        UserName = r.UserName,
-                                        ConnectionUrl = r.ConnectionUrl,
-                                        UseManualSettings = r.UseManualSettings,
-                                        Tag = r.Tag,
-                                        OriginalName = r.OriginalName,
-                                        LastModified = r.LastModified
-                                    }).OrderByDescending(x => x.LastModified)
-                                    .ToList<IRepository>();
+                var repositories = repositoriesData
+                    .Select(r =>
+                        new Repository
+                        {
+                            RepositoryId = r.RepositoryId,
+                            Name = r.Name,
+                            GitUrl = r.GitUrl,
+                            Branch = r.Branch,
+                            FileName = r.FileName,
+                            UserName = r.UserName,
+                            ConnectionUrl = r.ConnectionUrl,
+                            UseManualSettings = r.UseManualSettings,
+                            Tag = r.Tag,
+                            OriginalName = r.OriginalName,
+                            LastModified = r.LastModified
+                        })
+                    .OrderByDescending(x => x.LastModified)
+                    .ToList<IRepository>();
 
                 var repositoryModel = new RepositoriesServiceModel
                 {
