@@ -1,5 +1,7 @@
 ﻿using Autofac;
 using Core.Services;
+using Services;
+using Services.Extensions;
 using Services.GitServices;
 using Services.RepositoryServices;
 using Web.Code;
@@ -26,6 +28,11 @@ namespace Web.Modules
                 .As<IRepositoriesService>()
                 .SingleInstance()
                 .WithParameter(TypedParameter.From(!string.IsNullOrEmpty(_settings.Db.SecretsConnString)));
+
+            builder.RegisterType<UsersService>()
+                .As<IUsersService>()
+                .WithParameter("defaultUserEmail", _settings.DefaultUserEmail)
+                .WithParameter("defaultPasswordHash", _settings.DefaultPassword.GetHash());
 
             builder.RegisterType<GitService>()
                 .As<IGitService>()

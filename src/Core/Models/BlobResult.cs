@@ -4,17 +4,14 @@ using Common;
 
 namespace Core.Models
 {
-    public struct AzureBlobResult
+    public struct BlobResult
     {
         private readonly MemoryStream _stream;
 
-        public string ETag { get; private set; }
-
-        public AzureBlobResult(MemoryStream stream, string eTag)
+        public BlobResult(MemoryStream stream)
         {
             _stream = stream;
             _stream.Position = 0;
-            ETag = eTag;
         }
 
         public Stream AsStream()

@@ -26,7 +26,7 @@ namespace Core.Blob
         /// </summary>
         Task<DateTime> GetBlobsLastModifiedAsync(string container);
 
-        Task<AzureBlobResult> GetAsync(string blobContainer, string key);
+        Task<BlobResult> GetAsync(string blobContainer, string key);
 
         string GetBlobUrl(string container, string key);
 
@@ -35,7 +35,7 @@ namespace Core.Blob
 
         Task<IEnumerable<string>> GetListOfBlobsAsync(string container);
 
-        Task<IEnumerable<AzureBlobResult>> GetBlobFilesDataAsync(string container);
+        Task<IEnumerable<BlobResult>> GetBlobFilesDataAsync(string container);
 
         Task<List<string>> GetExistingFileNames(string container);
 

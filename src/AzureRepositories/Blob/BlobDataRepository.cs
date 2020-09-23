@@ -79,7 +79,7 @@ namespace AzureRepositories.Blob
             }
         }
 
-        public async Task<IEnumerable<AzureBlobResult>> GetBlobFilesDataAsync()
+        public async Task<IEnumerable<BlobResult>> GetBlobFilesDataAsync()
         {
             return await _blobStorage.GetBlobFilesDataAsync(_container);
         }

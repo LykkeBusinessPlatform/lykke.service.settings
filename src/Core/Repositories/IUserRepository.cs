@@ -16,7 +16,7 @@ namespace Core.Repositories
         Task<IUserEntity> GetUserByUserEmailAsync(string userEmail, string passwordHash);
 
         /// <summary>Create initial admin</summary>
-        Task CreateInitialAdminAsync();
+        Task CreateInitialAdminAsync(string defaultUserEmail, string defaultUserPasswordHash);
 
         /// <summary>Create user</summary>
         Task CreateUserAsync(IUserEntity user);

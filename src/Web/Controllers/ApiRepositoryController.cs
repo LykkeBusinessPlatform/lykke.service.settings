@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AzureRepositories.Repository;
 using Core.Entities;
 using Core.Enums;
 using Core.Models;

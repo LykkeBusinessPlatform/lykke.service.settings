@@ -1,13 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
-using AzureRepositories.KeyValue;
-using AzureRepositories.Lock;
-using AzureRepositories.Repository;
-using AzureRepositories.ServiceToken;
-using AzureRepositories.Token;
 using Common;
 using Core.Entities;
 using Core.Enums;
@@ -739,7 +733,8 @@ namespace Web.Controllers
                 if (!repositoryNameDuplications.Any())
                     await DeleteKeyValuesByRepositoryName(repository.OriginalName);
 
-                var paginatedRepositories = PaginatedList<IRepository>.CreateAsync(repositories, 1, PAGE_SIZE);
+                var firstPageItems = repositories.GetRange(0, PAGE_SIZE);
+                var paginatedRepositories = new PaginatedList<IRepository>(firstPageItems, repositories.Count, 1, PAGE_SIZE);
                 return new JsonResult(new
                 {
                     Result = UpdateSettingsStatus.Ok,
@@ -994,20 +989,18 @@ namespace Web.Controllers
             {
                 var lockData = await _lockRepository.GetJsonPageLockAsync();
 
-                if (!(lockData is LockEntity locInfo))
-                {
+                if (lockData == null)
                     return new JsonResult(new
                     {
                         diff = _lockTimeInMinutes + 1
                     });
-                }
 
                 return new JsonResult(new
                 {
-                    diff = (DateTime.Now.ToUniversalTime() - locInfo.DateTime).TotalMinutes,
-                    userName = locInfo.UserName,
-                    userEmail = locInfo.UserEmail,
-                    ipAddress = locInfo.IpAddress,
+                    diff = (DateTime.Now.ToUniversalTime() - lockData.DateTime).TotalMinutes,
+                    userName = lockData.UserName,
+                    userEmail = lockData.UserEmail,
+                    ipAddress = lockData.IpAddress,
                 });
             }
             catch (Exception ex)

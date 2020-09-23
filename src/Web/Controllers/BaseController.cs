@@ -3,7 +3,6 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
-using AzureRepositories.User;
 using Common;
 using Common.Log;
 using Core.Models;

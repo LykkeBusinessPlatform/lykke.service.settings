@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using AzureRepositories.KeyValue;
-using AzureRepositories.Repository;
 using Common;
 using Common.Log;
 using Core.Entities;
@@ -153,7 +151,10 @@ namespace Services.RepositoryServices
                     repositoriesData = repositoriesData.Where(r => r.Name.ToLower().Contains(search)); 
                 }
 
-                var repositories = repositoriesData
+                var pageItems = repositoriesData
+                    .OrderByDescending(x => x.LastModified)
+                    .Skip((page.Value - 1) * PAGE_SIZE)
+                    .Take(PAGE_SIZE)
                     .Select(r =>
                         new Repository
                         {
@@ -169,13 +170,12 @@ namespace Services.RepositoryServices
                             OriginalName = r.OriginalName,
                             LastModified = r.LastModified
                         })
-                    .OrderByDescending(x => x.LastModified)
                     .ToList<IRepository>();
 
                 var repositoryModel = new RepositoriesServiceModel
                 {
                     Result = UpdateSettingsStatus.Ok,
-                    Data = PaginatedList<IRepository>.CreateAsync(repositories, page ?? 1, PAGE_SIZE),
+                    Data = new PaginatedList<IRepository>(pageItems, repositoriesData.Count(), page ?? 1, PAGE_SIZE),
                     CollectionData = repositoryNames
                 };
 

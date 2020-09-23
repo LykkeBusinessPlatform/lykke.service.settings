@@ -5,10 +5,10 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using AzureRepositories.User;
 using Core.Entities;
 using Core.Enums;
 using Core.Repositories;
+using Core.Services;
 using Lykke.Common.Log;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -31,6 +31,7 @@ namespace Web.Controllers
         private readonly IRoleRepository _roleRepository;
         private readonly IUserSignInHistoryRepository _userHistoryRepository;
         private readonly IKeyValuesRepository _keyValuesRepository;
+        private readonly IUsersService _usersService;
         private readonly string _googleApiClientId;
         private readonly string _availableEmailsRegex;
         private readonly string _defaultUserPasswordHash;
@@ -44,13 +45,15 @@ namespace Web.Controllers
             IRoleRepository roleRepository,
             IUserSignInHistoryRepository userHistoryRepository,
             IUserActionHistoryRepository userActionHistoryRepository,
-            IKeyValuesRepository keyValuesRepository)
+            IKeyValuesRepository keyValuesRepository,
+            IUsersService usersService)
             : base(userActionHistoryRepository, logFactory)
         {
             _userRepository = userRepository;
             _roleRepository = roleRepository;
             _userHistoryRepository = userHistoryRepository;
             _keyValuesRepository = keyValuesRepository;
+            _usersService = usersService;
 
             _googleApiClientId = appSettings.GoogleApiClientId;
             _availableEmailsRegex = appSettings.AvailableEmailsRegex;
@@ -63,9 +66,7 @@ namespace Web.Controllers
         {
             try
             {
-                var topUser = await _userRepository.GetTopUserRecordAsync();
-                if (topUser == null)
-                    await _userRepository.CreateInitialAdminAsync();
+                await _usersService.CheckInitialAdminAsync();
 
                 ViewData["ReturnUrl"] = returnUrl;
 
@@ -255,12 +256,13 @@ namespace Web.Controllers
             try
             {
                 var usr = await _userRepository.GetUserByUserEmailAsync(user.Email);
-                var roles = await _roleRepository.GetAllAsync(x => user.Roles.Contains(x.Name));
+                var roleItems = await _roleRepository.GetAllAsync(x => user.Roles.Contains(x.Name));
+                var roles = roleItems.Select(x => x.RoleId).ToArray();
 
                 if (usr == null)
                 {
-                    user.Roles = roles.Select(x => x.RoleId).ToArray();
-                    await _userRepository.CreateUserAsync(user);
+                    user.Roles = roles;
+                    await _usersService.CreateUserAsync(user);
                 }
                 else
                 {
@@ -268,7 +270,7 @@ namespace Web.Controllers
                     usr.LastName = user.LastName;
                     usr.Active = user.Active;
                     usr.Admin = user.Admin;
-                    usr.Roles = roles.Select(x => x.RoleId).ToArray();
+                    usr.Roles = roles;
 
                     await _userRepository.UpdateUserAsync(usr);
                 }
@@ -478,7 +480,7 @@ namespace Web.Controllers
                         {
                             RoleId = r.RoleId,
                             Name = r.Name,
-                            KeyValues = r.KeyValues as RoleKeyValue[]
+                            KeyValues = r.KeyValues
                         })
                     .ToList();
             }

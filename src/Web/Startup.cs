@@ -2,8 +2,6 @@
 using System.Globalization;
 using System.Threading.Tasks;
 using Autofac;
-using Lykke.AzureStorage.Tables.Entity.Metamodel;
-using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.Log;
 using Lykke.Logs;
@@ -78,9 +76,6 @@ namespace web
             });
 
             ConfigureLogging(services);
-
-            var provider = new AnnotationsBasedMetamodelProvider();
-            EntityMetamodel.Configure(provider);
         }
 
         public void ConfigureContainer(ContainerBuilder builder)

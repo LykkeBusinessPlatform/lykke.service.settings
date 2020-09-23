@@ -70,13 +70,13 @@ namespace AzureRepositories.Blob
             return dateTimeOffset.GetValueOrDefault().UtcDateTime;
         }
 
-        public async Task<AzureBlobResult> GetAsync(string blobContainer, string key)
+        public async Task<BlobResult> GetAsync(string blobContainer, string key)
         {
             var containerRef = _blobClient.GetContainerReference(blobContainer);
             var blockBlob = containerRef.GetBlockBlobReference(key);
             var memStream = new MemoryStream();
             await blockBlob.DownloadToStreamAsync(memStream);
-            return new AzureBlobResult(memStream, blockBlob.Properties.ETag);
+            return new BlobResult(memStream);
         }
 
         public string GetBlobUrl(string container, string key)
@@ -128,12 +128,12 @@ namespace AzureRepositories.Blob
             return results;
         }
 
-        public async Task<IEnumerable<AzureBlobResult>> GetBlobFilesDataAsync(string container)
+        public async Task<IEnumerable<BlobResult>> GetBlobFilesDataAsync(string container)
         {
             var containerRef = _blobClient.GetContainerReference(container);
 
             BlobContinuationToken token = null;
-            var azureBlobs = new List<AzureBlobResult>();
+            var azureBlobs = new List<BlobResult>();
             do
             {
                 var result = await containerRef.ListBlobsSegmentedAsync(token);
@@ -146,7 +146,7 @@ namespace AzureRepositories.Blob
                         var blockBlob = containerRef.GetBlockBlobReference(fileName);
                         var memStream = new MemoryStream();
                         await blockBlob.DownloadToStreamAsync(memStream);
-                        azureBlobs.Add(new AzureBlobResult(memStream, blockBlob.Properties.ETag));
+                        azureBlobs.Add(new BlobResult(memStream));
                     }
                 }
 

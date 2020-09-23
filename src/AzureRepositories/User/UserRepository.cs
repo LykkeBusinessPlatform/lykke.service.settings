@@ -10,17 +10,10 @@ namespace AzureRepositories.User
     public class UserRepository : IUserRepository
     {
         private readonly INoSQLTableStorage<UserEntity> _tableStorage;
-        private readonly string _defaultUserEmail;
-        private readonly string _defaultUserPasswordHash;
 
-        public UserRepository(
-            INoSQLTableStorage<UserEntity> tableStorage,
-            string defaultUserEmail,
-            string defaultPasswordHash)
+        public UserRepository(INoSQLTableStorage<UserEntity> tableStorage)
         {
             _tableStorage = tableStorage;
-            _defaultUserEmail = defaultUserEmail;
-            _defaultUserPasswordHash = defaultPasswordHash;
         }
 
         public async Task<IUserEntity> GetUserByUserEmailAsync(string userEmail)
@@ -39,14 +32,14 @@ namespace AzureRepositories.User
             return result.PasswordHash.Equals(passwordHash) ? result : null;
         }
 
-        public async Task CreateInitialAdminAsync()
+        public async Task CreateInitialAdminAsync(string defaultUserEmail, string defaultUserPasswordHash)
         {
             var usr = new UserEntity
             {
                 PartitionKey = UserEntity.GeneratePartitionKey(),
-                RowKey = _defaultUserEmail,
-                Email = _defaultUserEmail,
-                PasswordHash = _defaultUserPasswordHash,
+                RowKey = defaultUserEmail,
+                Email = defaultUserEmail,
+                PasswordHash = defaultUserPasswordHash,
                 FirstName = "Admin",
                 LastName = "Initial",
                 Active = true,
@@ -63,7 +56,7 @@ namespace AzureRepositories.User
                 PartitionKey = UserEntity.GeneratePartitionKey(),
                 RowKey = email,
                 Email = email,
-                PasswordHash = _defaultUserPasswordHash,
+                PasswordHash = user.PasswordHash,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Active = user.Active,
