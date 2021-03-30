@@ -474,7 +474,7 @@ namespace Services.RepositoryServices
 
             string fileFullName = FILENAME;
 
-            fileFullName += type == SourceControlTypes.GithubPublic ? "git_" : "bb_";
+            fileFullName += type == SourceControlTypes.Github ? "git_" : "bb_";
             fileFullName += name + "_" + repository.Branch;
             fileFullName += repository.Tag == null ? FILE_FORMAT : $"_{repository.Tag}{FILE_FORMAT}";
 
