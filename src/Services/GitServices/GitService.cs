@@ -35,11 +35,11 @@ namespace Services.GitServices
         public SourceControlTypes ResolveSourceControlTypeFromUrl(string url)
         {
             if (url.Contains(GITHUB_URL))
-                return SourceControlTypes.GithubPublic;
+                return SourceControlTypes.Github;
             if (url.Contains(BITBUCKET_URL))
                 return SourceControlTypes.Bitbucket;
 
-            return SourceControlTypes.GithubPrivate;
+            throw new NotSupportedException($"Url {url} can't be resolved into any known GIT provider");
         }
 
         public string GenerateRepositorySettingsGitUrl(string gitUrl, SourceControlTypes type, string branch = "")
@@ -70,10 +70,10 @@ namespace Services.GitServices
             var repositoryUrl = string.Empty;
 
             //checking if file is uploaded on github or bitbucket
-            if (type == SourceControlTypes.GithubPublic || type == SourceControlTypes.GithubPrivate)
+            if (type == SourceControlTypes.Github)
             {
                 var gitAccountStartIndex = gitUrl.IndexOf("/", 8);
-                if (type == SourceControlTypes.GithubPublic)
+                if (type == SourceControlTypes.Github)
                 {
                     repositoryUrl = gitUrl.Insert(gitAccountStartIndex + 1, "repos/");
                     var domainStartIndex = gitUrl.LastIndexOf("/", 8);
@@ -151,38 +151,30 @@ namespace Services.GitServices
 
             switch (type)
             {
-                case SourceControlTypes.GithubPublic:
+                case SourceControlTypes.Github:
                     request.UserAgent = "Test";
                     request.Accept = "application/vnd.github.v3.raw";
-                    break;
-                case SourceControlTypes.GithubPrivate:
-                    request.Accept = "application/vnd.github.v3.raw";
-                    request.Headers.Add("Authorization", "token " + _gitHubToken);
-                    break;
+
+                    var result = LoadGitData(request, log);
+                    if (!result.Success && !string.IsNullOrWhiteSpace(_gitHubToken))
+                    {
+                        request = (HttpWebRequest)WebRequest.Create(url);
+                        request.UserAgent = "Test";
+                        request.Accept = "application/vnd.github.v3.raw";
+                        request.Headers.Add("Authorization", "token " + _gitHubToken);
+                        result = LoadGitData(request, log);
+                    }
+
+                    return result;
                 case SourceControlTypes.Bitbucket:
                     // we need to be authenticated on bitbucket to get access on repository. so, appending encoded username and password to request headers
                     var credentials = _bitbucketEmail + ":" + _bitbucketPassword;
                     string encoded = Convert.ToBase64String(_encoding.GetBytes(credentials));
                     request.Headers.Add("Authorization", "Basic " + encoded);
-                    break;
+
+                    return LoadGitData(request, log);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
-            }
-
-            try
-            {
-                using (var response = request.GetResponse())
-                using (var stream = response.GetResponseStream())
-                using (var reader = new StreamReader(stream))
-                {
-                    string result = reader.ReadToEnd();
-                    return new ServiceResult { Success = true, Data = result };
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Error(ex, context: url);
-                return new ServiceResult { Success = false, Message = ex.Message };
             }
         }
 
@@ -199,6 +191,25 @@ namespace Services.GitServices
             // substring repositoryName
             var length = (endIndex > 0 ? endIndex - repoStartIndex : gitUrl.Length - repoStartIndex) - separatorLength;
             return gitUrl.Substring(repoStartIndex + separatorLength, length).Replace(".git", "");
+        }
+
+        private ServiceResult LoadGitData(HttpWebRequest request, ILog log)
+        {
+            try
+            {
+                using (var response = request.GetResponse())
+                using (var stream = response.GetResponseStream())
+                using (var reader = new StreamReader(stream))
+                {
+                    string result = reader.ReadToEnd();
+                    return new ServiceResult { Success = true, Data = result };
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex, context: request.RequestUri);
+                return new ServiceResult { Success = false, Message = ex.Message };
+            }
         }
     }
 }
