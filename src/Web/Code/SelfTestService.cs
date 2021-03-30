@@ -75,7 +75,6 @@ namespace Web.Code
             TestSettingString(nameof(_appSettings.Db.ConnectionString), _appSettings.Db.ConnectionString);
             TestSettingString(nameof(_appSettings.DefaultPassword), _appSettings.DefaultPassword);
             TestSettingString(nameof(_appSettings.DefaultUserEmail), _appSettings.DefaultUserEmail);
-            TestSettingString(nameof(_appSettings.GoogleApiClientId), _appSettings.GoogleApiClientId);
             TestSettingRx(nameof(_appSettings.AvailableEmailsRegex), _appSettings.AvailableEmailsRegex);
         }
 
