@@ -183,9 +183,9 @@ namespace web
             configBuilder.AddJsonFile("serilogsettings.json", optional: false);
             serilogConfigurator.AddFromConfiguration(configBuilder.Build());
 #else
-            if (!string.IsNullOrWhiteSpace(_appSettings.ConnectionString))
+            if (!string.IsNullOrWhiteSpace(_appSettings.Db.ConnectionString))
                 serilogConfigurator.AddAzureTable(
-                    _appSettings.ConnectionString,
+                    _appSettings.Db.ConnectionString,
                     "SettingsServiceLog");
 
             if (!string.IsNullOrWhiteSpace(_appSettings.SlackNotificationsConnString)
