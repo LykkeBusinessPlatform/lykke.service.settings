@@ -695,30 +695,37 @@ namespace Web.Controllers
             try
             {
                 var repository = await _repositoriesRepository.GetAsync(repositoryId);
-                if (repository != null)
-                {
-                    var fileName = repository.FileName;
-                    await _repositoryDataRepository.DelBlobAsync(fileName);
-                    await _repositoryDataRepository.DelBlobAsync(MANUAL_FILE_PREFIX + fileName);
-                    await _repositoriesRepository.RemoveRepositoryAsync(repositoryId);
-
-                    //delete data from history repository
-                    var repositoryUpdateHistory = await _repositoriesUpdateHistoryRepository.GetAsync(repositoryId);
-                    var repositoriesUpdateHistory = await _repositoriesUpdateHistoryRepository.GetAsyncByInitialCommit(repositoryUpdateHistory.InitialCommit);
-                    if (repositoriesUpdateHistory != null)
+                if (repository == null)
+                    return new JsonResult(new
                     {
-                        //delete each commit file
-                        foreach (var repoHist in repositoriesUpdateHistory)
-                        {
-                            await _repositoryDataRepository.DelBlobAsync(HISTORY_FILE_PREFIX + FILENAME + repoHist.RowKey + FILE_FORMAT);
-                        }
-                        await _repositoriesUpdateHistoryRepository.RemoveRepositoryUpdateHistoryAsync(repositoriesUpdateHistory);
-                    }
+                        Result = UpdateSettingsStatus.NotFound
+                    });
 
-                    var keyRepoName = !string.IsNullOrEmpty(repository.Tag) ? repository.Tag + "-" + repository.OriginalName : repository.OriginalName;
-                    // remove repositoryName from all related keyValues repositoryName
-                    var relatedKeyValues = await _keyValuesRepository.GetKeyValuesAsync(x => x.RepositoryNames != null && x.RepositoryNames.Contains(keyRepoName));
-                    if (relatedKeyValues != null)
+                var fileName = repository.FileName;
+                await _repositoryDataRepository.DelBlobAsync(fileName);
+                await _repositoryDataRepository.DelBlobAsync(MANUAL_FILE_PREFIX + fileName);
+                await _repositoriesRepository.RemoveRepositoryAsync(repositoryId);
+
+                //delete data from history repository
+                var repositoryUpdateHistory = await _repositoriesUpdateHistoryRepository.GetAsync(repositoryId);
+                var repositoriesUpdateHistory = await _repositoriesUpdateHistoryRepository.GetAsyncByInitialCommit(repositoryUpdateHistory.InitialCommit);
+                if (repositoriesUpdateHistory != null)
+                {
+                    //delete each commit file
+                    foreach (var repoHist in repositoriesUpdateHistory)
+                    {
+                        await _repositoryDataRepository.DelBlobAsync(HISTORY_FILE_PREFIX + FILENAME + repoHist.RowKey + FILE_FORMAT);
+                    }
+                    await _repositoriesUpdateHistoryRepository.RemoveRepositoryUpdateHistoryAsync(repositoriesUpdateHistory);
+                }
+
+                var keyRepoName = !string.IsNullOrEmpty(repository.Tag) ? repository.Tag + "-" + repository.OriginalName : repository.OriginalName;
+                // remove repositoryName from all related keyValues repositoryName
+                var relatedKeyValues = await _keyValuesRepository.GetKeyValuesAsync(x => x.RepositoryNames != null && x.RepositoryNames.Contains(keyRepoName));
+                if (relatedKeyValues != null)
+                {
+                    bool repoExistsForOtherBranches = await _repositoriesRepository.ExistsWithNameAsync(repository.Name, repository.Tag);
+                    if (!repoExistsForOtherBranches)
                     {
                         foreach (var keyValue in relatedKeyValues)
                         {
@@ -726,29 +733,23 @@ namespace Web.Controllers
                             tempRepoNames.Remove(keyRepoName);
                             keyValue.RepositoryNames = tempRepoNames != null && tempRepoNames.Count > 0 ? tempRepoNames.ToArray() : null;
                         }
-
                         // await _keyValuesRepository.UpdateKeyValueAsync(relatedKeyValues);
                         await _repositoriesService.SaveKeyValuesAsync(relatedKeyValues, UserInfo.UserEmail, UserInfo.Ip, IS_PRODUCTION);
                     }
-
-                    var repositories = await _repositoriesService.GetAllRepositories();
-                    var repositoryNameDuplications = repositories.Where(x => x.OriginalName == repository.OriginalName);
-                    if (!repositoryNameDuplications.Any())
-                        await DeleteKeyValuesByRepositoryName(repository.OriginalName);
-
-                    var paginatedRepositories = PaginatedList<IRepository>.CreateAsync(repositories, 1, PAGE_SIZE);
-                    return new JsonResult(new
-                    {
-                        Result = UpdateSettingsStatus.Ok,
-                        Json = JsonConvert.SerializeObject(paginatedRepositories),
-                        pageIndex = paginatedRepositories.PageIndex,
-                        totalPages = paginatedRepositories.TotalPages
-                    });
                 }
 
+                var repositories = await _repositoriesService.GetAllRepositories();
+                var repositoryNameDuplications = repositories.Where(x => x.OriginalName == repository.OriginalName);
+                if (!repositoryNameDuplications.Any())
+                    await DeleteKeyValuesByRepositoryName(repository.OriginalName);
+
+                var paginatedRepositories = PaginatedList<IRepository>.CreateAsync(repositories, 1, PAGE_SIZE);
                 return new JsonResult(new
                 {
-                    Result = UpdateSettingsStatus.NotFound
+                    Result = UpdateSettingsStatus.Ok,
+                    Json = JsonConvert.SerializeObject(paginatedRepositories),
+                    pageIndex = paginatedRepositories.PageIndex,
+                    totalPages = paginatedRepositories.TotalPages
                 });
             }
             catch (Exception ex)
