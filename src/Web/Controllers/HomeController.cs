@@ -717,15 +717,19 @@ namespace Web.Controllers
                 var relatedKeyValues = await _keyValuesRepository.GetKeyValuesAsync(x => x.RepositoryNames != null && x.RepositoryNames.Contains(keyRepoName));
                 if (relatedKeyValues != null)
                 {
-                    foreach (var keyValue in relatedKeyValues)
+                    bool repoExistsForOtherBranches = await _repositoriesRepository.ExistsWithNameAsync(repository.Name, repository.Tag);
+                    if (!repoExistsForOtherBranches)
                     {
-                        var tempRepoNames = keyValue.RepositoryNames.ToList();
-                        tempRepoNames.Remove(keyRepoName);
-                        keyValue.RepositoryNames = tempRepoNames != null && tempRepoNames.Count > 0 ? tempRepoNames.ToArray() : null;
-                    }
+                        foreach (var keyValue in relatedKeyValues)
+                        {
+                            var tempRepoNames = keyValue.RepositoryNames.ToList();
+                            tempRepoNames.Remove(keyRepoName);
+                            keyValue.RepositoryNames = tempRepoNames != null && tempRepoNames.Count > 0 ? tempRepoNames.ToArray() : null;
+                        }
 
-                    // await _keyValuesRepository.UpdateKeyValueAsync(relatedKeyValues);
-                    await _repositoriesService.SaveKeyValuesAsync(relatedKeyValues, UserInfo.UserEmail, UserInfo.Ip, IS_PRODUCTION);
+                        // await _keyValuesRepository.UpdateKeyValueAsync(relatedKeyValues);
+                        await _repositoriesService.SaveKeyValuesAsync(relatedKeyValues, UserInfo.UserEmail, UserInfo.Ip, IS_PRODUCTION);
+                    }
                 }
 
                 var repositories = await _repositoriesService.GetAllRepositories();

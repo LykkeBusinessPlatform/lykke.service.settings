@@ -1,9 +1,11 @@
-﻿using AzureStorage;
-using Core.Entities;
-using Core.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using AzureStorage;
+using Core.Entities;
+using Core.Repositories;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.Repository
 {
@@ -22,6 +24,17 @@ namespace AzureRepositories.Repository
             var rk = RepositoryEntity.GenerateRowKey(repositoryId);
 
             return await _tableStorage.GetDataAsync(pk, rk);
+        }
+
+        public async Task<bool> ExistsWithNameAsync(string repositoryName, string tag)
+        {
+            string queryText = TableQuery.GenerateFilterCondition(nameof(RepositoryEntity.PartitionKey), QueryComparisons.Equal, RepositoryEntity.GeneratePartitionKey());
+            string repositoryFilter = TableQuery.GenerateFilterCondition(nameof(RepositoryEntity.Name), QueryComparisons.Equal, repositoryName);
+            queryText = TableQuery.CombineFilters(queryText, TableOperators.And, repositoryFilter);
+            var query = new TableQuery<RepositoryEntity>().Where(queryText);
+
+            var records = await _tableStorage.WhereAsync(query, i => i.Tag == tag);
+            return records.Any();
         }
 
         public async Task<IEnumerable<IRepository>> GetAsync(Func<IRepository, bool> filter)
